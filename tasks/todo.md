@@ -109,22 +109,22 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: tests de componente y revisión visual.
   - Deps: T14, T7 · Files: `web/src/pages/Standings.tsx`, tests
 
-- [ ] **T16 — Lector RSS/Atom y ESPN news** (M)
+- [x] **T16 — Lector RSS/Atom y ESPN news** (M)
   - Acceptance: parser genérico RSS/Atom con `ETag`/`If-Modified-Since`; adaptador de ESPN news; normalización a `NewsItem` con `media_kind`, `media_url` y `embed_url` (ESPN Media/Story, RSS media:thumbnail, r/nba); fixtures reales.
   - Verify: tests con fixtures de al menos Yahoo, CBS y Atom de r/nba.
   - Deps: T4 · Files: `modules/news/{rss,espn-adapter}.ts`, `shared/src/news.ts`, fixtures, tests
 
-- [ ] **T17 — Repo, deduplicación y etiquetado** (M)
+- [x] **T17 — Repo, deduplicación y etiquetado** (M)
   - Acceptance: migración `news_items` y `news_tags`; `url` único; etiquetado por equipo y jugador; purga de más de 90 días; `/api/news?team=&player=&lang=&before=&limit=`.
   - Verify: tests con duplicados y etiquetado; filtrar por LAL devuelve solo LAL.
   - Deps: T16, T9 · Files: `modules/news/{repo,tagger,routes,jobs}.ts`, `migrations/0004_news.sql`, tests
 
-- [ ] **T18 — Fuentes configurables y feed de Gigantes** (S)
+- [x] **T18 — Fuentes configurables y feed de Gigantes** (S)
   - Acceptance: `sources.json` con ≥ 4 fuentes más Gigantes verificado; si no existe feed, se documenta y se propone alternativa; una fuente caída no afecta a las demás.
   - Verify: ejecutar el job real; `job_runs` muestra cada fuente.
   - Deps: T17 · Files: `modules/news/sources.json`, tests
 
-- [ ] **T19 — Pantalla Noticias** (M)
+- [x] **T19 — Pantalla Noticias** (M)
   - Acceptance: feed de posts según `docs/design.md` (banda de equipo con su paleta, fuente, titular, medio 16:9 con imagen o vídeo embebido, enlace al original), filtros de equipo, jugador e idioma, paginación por cursor; favoritos primero en la portada.
   - Verify: tests de componente; revisión visual.
   - Deps: T17, T7 · Files: `web/src/pages/News.tsx`, `components/NewsCard.tsx`, tests

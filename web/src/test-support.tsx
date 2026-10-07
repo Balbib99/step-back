@@ -1,4 +1,4 @@
-import type { Game, GameTeam, TeamWithCrest } from '@step-back/shared';
+import type { Game, GameTeam, NewsItem, TeamWithCrest } from '@step-back/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -118,6 +118,55 @@ export const HEALTH = {
   jobs: [],
 };
 
+export function newsItem(id: number, extra: Partial<NewsItem> = {}): NewsItem {
+  return {
+    id,
+    sourceId: 'espn',
+    sourceName: 'ESPN',
+    url: `https://www.espn.com/story/${id}`,
+    title: `Titular ${id}`,
+    summary: null,
+    lang: 'en',
+    // Newer items have lower ids: 10:00 Madrid on the 7th minus an hour per id.
+    publishedAt: new Date(Date.parse('2026-10-07T08:00:00Z') - id * 3_600_000).toISOString(),
+    mediaKind: 'none',
+    imageUrl: null,
+    embedUrl: null,
+    durationSeconds: null,
+    teams: [],
+    players: [],
+    ...extra,
+  };
+}
+
+/** A small feed that covers every kind of post. */
+export const NEWS: NewsItem[] = [
+  newsItem(1, {
+    title: 'Lakers ganan en la prórroga',
+    summary: 'LeBron lidera la remontada.',
+    lang: 'es',
+    sourceId: 'gigantes',
+    sourceName: 'Gigantes del Basket',
+    teams: ['LAL'],
+    players: ['LeBron James'],
+  }),
+  newsItem(2, {
+    title: 'Game Highlights: Timberwolves vs. Lakers',
+    mediaKind: 'video',
+    imageUrl: '/api/news/2/image',
+    teams: ['MIN', 'LAL'],
+  }),
+  newsItem(3, {
+    title: 'Embiid vuelve a entrenar',
+    mediaKind: 'image',
+    imageUrl: '/api/news/3/image',
+    teams: ['PHI'],
+    players: ['Joel Embiid'],
+  }),
+  newsItem(4, { title: 'Rumores del mercado de fichajes', sourceName: 'Yahoo Sports' }),
+  newsItem(5, { title: 'Nuggets contra Warriors', teams: ['DEN', 'GS'] }),
+];
+
 const entry = (rank: number, abbr: string, name: string, wins: number, losses: number) => ({
   teamId: abbr,
   abbr,
@@ -169,6 +218,10 @@ export function standingsTable(
 /** What the fake server was asked, and what it should answer. Reset by `stubApi`. */
 export const api = {
   requests: [] as string[],
+  /** News to answer /api/news with, or a status to fail with. */
+  news: [] as NewsItem[] | number,
+  /** Page size of the fake /api/news, to try paging with a small feed. */
+  newsPageSize: 20,
   /** Tables to answer /api/standings with, or a status to fail with. */
   standings: [] as ReturnType<typeof standingsTable>[] | number,
   /** Statuses to answer /api/games with, one per request; 200 once exhausted. */
@@ -180,6 +233,8 @@ export const api = {
 export function stubApi() {
   api.requests = [];
   api.gamesStatus = [];
+  api.news = NEWS;
+  api.newsPageSize = 20;
   api.standings = [standingsTable('east', 'regular'), standingsTable('west', 'regular')];
   api.games = GAMES;
   api.config = CONFIG;
@@ -194,6 +249,26 @@ export function stubApi() {
         return json(api.config);
       }
       if (url.includes('/api/teams')) return json({ teams: TEAMS });
+      if (url.includes('/api/news')) {
+        if (typeof api.news === 'number') return json({ error: 'boom' }, api.news);
+        const params = new URL(url, 'http://x').searchParams;
+        const wantedTeams = params.get('team')?.split(',');
+        const matching = api.news.filter(
+          (n) =>
+            (!wantedTeams || n.teams.some((t) => wantedTeams.includes(t))) &&
+            (!params.get('player') || n.players.includes(params.get('player')!)) &&
+            (!params.get('lang') || n.lang === params.get('lang')) &&
+            (!params.get('media') || n.mediaKind === params.get('media')),
+        );
+        // The cursor is just the offset: the app only hands it back.
+        const start = Number(params.get('before') ?? 0);
+        const size = Math.min(Number(params.get('limit') ?? 20), api.newsPageSize);
+        const page = matching.slice(start, start + size);
+        return json({
+          news: page,
+          nextBefore: start + size < matching.length ? String(start + size) : null,
+        });
+      }
       if (url.includes('/api/standings')) {
         if (typeof api.standings === 'number') return json({ error: 'boom' }, api.standings);
         return json({ standings: api.standings });

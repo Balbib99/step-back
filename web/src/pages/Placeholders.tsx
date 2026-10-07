@@ -1,15 +1,6 @@
 import { EmptyState, PageHeader } from '../components/PageHeader';
 
-// Each screen below is replaced by its real version in its own task (T19, T22).
-
-export function News() {
-  return (
-    <>
-      <PageHeader title="Noticias" />
-      <EmptyState>Aquí aparecerán las noticias, con su imagen o vídeo.</EmptyState>
-    </>
-  );
-}
+// Each screen below is replaced by its real version in its own task (T22).
 
 export function Highlights() {
   return (

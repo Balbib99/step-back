@@ -2,11 +2,13 @@ import {
   configResponseSchema,
   gamesResponseSchema,
   healthResponseSchema,
+  newsResponseSchema,
   standingsResponseSchema,
   teamsResponseSchema,
 } from '@step-back/shared';
-import { QueryClient, useQuery } from '@tanstack/react-query';
+import { QueryClient, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { fetchJson } from './api';
+import { newsQuery, type NewsFilters } from './news';
 
 export function createQueryClient(): QueryClient {
   return new QueryClient({
@@ -61,5 +63,17 @@ export function useGamesRange(from: string, to: string) {
       ),
     refetchInterval: (query) =>
       query.state.data?.games.some((game) => game.status === 'live') ? 30_000 : 5 * 60_000,
+  });
+}
+
+/** News, newest first, a page at a time. A new set of filters starts again from the first page. */
+export function useNews(filters: NewsFilters) {
+  return useInfiniteQuery({
+    queryKey: ['news', filters],
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam, signal }) =>
+      fetchJson(`/api/news${newsQuery(filters, pageParam)}`, newsResponseSchema, signal),
+    getNextPageParam: (last) => last.nextBefore ?? undefined,
+    refetchInterval: 5 * 60_000,
   });
 }

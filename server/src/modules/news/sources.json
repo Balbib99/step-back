@@ -1,0 +1,39 @@
+[
+  {
+    "id": "espn",
+    "name": "ESPN",
+    "lang": "en",
+    "type": "espn",
+    "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news"
+  },
+  {
+    "id": "yahoo",
+    "name": "Yahoo Sports",
+    "lang": "en",
+    "type": "feed",
+    "url": "https://sports.yahoo.com/nba/rss/",
+    "imageFromContent": true
+  },
+  {
+    "id": "cbs",
+    "name": "CBS Sports",
+    "lang": "en",
+    "type": "feed",
+    "url": "https://www.cbssports.com/rss/headlines/nba/"
+  },
+  {
+    "id": "reddit",
+    "name": "r/nba",
+    "lang": "en",
+    "type": "feed",
+    "url": "https://www.reddit.com/r/nba/.rss",
+    "skipTitles": ["^Daily Discussion Thread", "^Free Talk Friday", "^\\[Serious\\] "]
+  },
+  {
+    "id": "gigantes",
+    "name": "Gigantes del Basket",
+    "lang": "es",
+    "type": "feed",
+    "url": "https://www.gigantes.com/nba/feed/"
+  }
+]

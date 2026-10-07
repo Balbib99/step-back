@@ -48,10 +48,10 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 ### Phase 4: Datos (`standings`, `news`)
 - [x] T14 Adaptador de clasificación y `/api/standings`
 - [x] T15 Pantalla Clasificación
-- [ ] T16 Lector RSS/Atom genérico y adaptador ESPN news
-- [ ] T17 Repo de noticias, deduplicación y etiquetado por equipo/jugador
-- [ ] T18 Verificar y añadir feed de Gigantes; fuentes en `sources.json`
-- [ ] T19 Pantalla Noticias con filtros
+- [x] T16 Lector RSS/Atom genérico y adaptador ESPN news
+- [x] T17 Repo de noticias, deduplicación y etiquetado por equipo/jugador
+- [x] T18 Verificar y añadir feed de Gigantes; fuentes en `sources.json`
+- [x] T19 Pantalla Noticias con filtros
 
 ### Checkpoint D: Clasificación y noticias funcionando
 
@@ -92,7 +92,7 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 | ESPN cambia o bloquea su API no oficial | Alto | Adaptador aislado, fixtures y script de comprobación de formato. Segunda fuente (`nba_api`/balldontlie) solo si ocurre, previa consulta. |
 | DuckDNS, puertos o certificados no encajan con el Caddy actual | Alto | Despliegue en la fase 3, no al final. Probar HTTP-01 y, si no, plugin de DNS. |
 | La PWA no se instala o las push no llegan en Android | Medio | Probar instalación en T13 y push en T26 con el móvil real. |
-| El feed RSS de Gigantes no existe | Medio | Verificar en T18. Plan B: otras fuentes en español o web scraping ligero con permiso. |
+| El feed RSS de Gigantes no existe | Medio | Verificado en T18: existe (`gigantes.com/nba/feed/`). Plan B: otras fuentes en español o web scraping ligero con permiso. |
 | Emparejar vídeos con partidos falla | Medio | Pruebas con títulos reales, tolerancia de ±36 h y fallback a jugada suelta. |
 | `better-sqlite3` no compila en ARM64 | Medio | Compilar en la imagen ARM64 en T12. Alternativa: `node:sqlite`. |
 | Cuota de DeepL | Bajo | Solo a demanda, caché de 7 días y contador. |
@@ -100,5 +100,5 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 
 ## Open Questions
 
-- Pendientes de verificar en la implementación: RSS de Gigantes (T18) y `channel_id` de la NBA en YouTube (T20).
+- Pendiente de verificar en la implementación: `channel_id` de la NBA en YouTube (T20).
 - Dirección visual: el usuario la decide en T6.

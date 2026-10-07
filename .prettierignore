@@ -6,3 +6,4 @@ package-lock.json
 SPEC*.md
 tasks
 docs
+server/test/fixtures

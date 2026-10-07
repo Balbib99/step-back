@@ -1,0 +1,624 @@
+{
+  "articles": [
+    {
+      "type": "HeadlineNews",
+      "headline": "Trail Blazers' Dundon says he intends to bring title to Portland",
+      "description": "New Trail Blazers owner Tom Dundon told season ticket holders that he intends to bring a championship to Portland.",
+      "published": "2026-10-07T21:36:01Z",
+      "images": [
+        {
+          "url": "https://a.espncdn.com/photo/2026/0403/r1637876_600x400_3-2.jpg",
+          "type": "header"
+        }
+      ],
+      "categories": [
+        {
+          "type": "team",
+          "description": "Portland Trail Blazers",
+          "teamId": 22
+        }
+      ],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/nba/story/_/id/50127764/trail-blazers-dundon-says-intends-bring-title-portland"
+        }
+      }
+    },
+    {
+      "type": "Media",
+      "headline": "Why Danny Green doesn't see Kyrie Irving staying in Dallas the entire season",
+      "description": "Why Danny Green doesn't see Kyrie Irving staying in Dallas the entire season",
+      "published": "2026-10-07T20:06:02Z",
+      "images": [
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1007/ss_20261007_155345622_3687872959/ss_20261007_155345622_3687872959.jpg"
+        }
+      ],
+      "categories": [
+        {
+          "type": "athlete",
+          "description": "Kyrie Irving",
+          "athleteId": 6442
+        },
+        {
+          "type": "team",
+          "description": "Dallas Mavericks",
+          "teamId": 6
+        }
+      ],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/video/clip/_/id/50127157/why-danny-green-see-kyrie-irving-staying-dallas-entire-season"
+        }
+      }
+    },
+    {
+      "type": "HeadlineNews",
+      "headline": "Mike Breen apologizes after LeBron James refutes Embiid story",
+      "description": "Broadcaster Mike Breen apologized Wednesday for the reaction to a story he shared about LeBron James calling out Joel Embiid for showing up late, a story James has since disputed.",
+      "published": "2026-10-07T20:58:30Z",
+      "images": [
+        {
+          "url": "https://a.espncdn.com/photo/2026/1007/r1727490_600x400_3-2.jpg",
+          "type": "header"
+        },
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1001/ss_20261001_164537987_3680997/ss_20261001_164537987_3680997.jpg",
+          "type": "Media"
+        }
+      ],
+      "categories": [
+        {
+          "type": "team",
+          "description": "Philadelphia 76ers",
+          "teamId": 20
+        },
+        {
+          "type": "athlete",
+          "description": "LeBron James",
+          "athleteId": 1966
+        },
+        {
+          "type": "athlete",
+          "description": "Joel Embiid",
+          "athleteId": 3059318
+        }
+      ],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/nba/story/_/id/50127138/mike-breen-apologizes-lebron-james-refutes-embiid-story"
+        }
+      }
+    },
+    {
+      "type": "Story",
+      "headline": "NBA preseason buzz: Latest on trades, news and intel",
+      "description": "The NBA regular season is just a few weeks away, and we're tracking all the news, deals, and trades across the league.",
+      "published": "2026-10-07T14:55:46Z",
+      "images": [
+        {
+          "url": "https://a.espncdn.com/photo/2026/0929/r1723601_608x342_16-9.jpg",
+          "type": "header"
+        },
+        {
+          "url": "https://a.espncdn.com/photo/2025/1112/r1574764_608x342_16-9.jpg",
+          "type": "header"
+        },
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1005/ss_20261005_194200676_3686413/ss_20261005_194200676_3686413.jpg",
+          "type": "Media"
+        }
+      ],
+      "categories": [],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/nba/story/_/id/50028196/2026-27-nba-buzz-latest-live-updates-news-intel-trades-deals"
+        }
+      }
+    },
+    {
+      "type": "Media",
+      "headline": "United grind out much needed win",
+      "description": "Melbourne United survive a late surge from the Adelaide 36ers in their 96-91 win on the road in the NBL Ignite Cup.",
+      "published": "2026-10-07T11:06:36Z",
+      "images": [
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1007/dm_261007_NBL_Highlight_United_grind_out_much_needed_win_20260710_PACRIM_AND_US_ONLY/dm_261007_NBL_Highlight_United_grind_out_much_needed_win_20260710_PACRIM_AND_US_ONLY.jpg"
+        }
+      ],
+      "categories": [
+        {
+          "type": "team",
+          "description": "ADELAIDE 36ers",
+          "teamId": 111837
+        },
+        {
+          "type": "team",
+          "description": "Melbourne United",
+          "teamId": 5
+        }
+      ],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/video/clip/_/id/50124074/united-grind-much-needed-win"
+        }
+      }
+    },
+    {
+      "type": "Story",
+      "headline": "Basketball Power Index: NBA projections, playoff chances for 2026-27 season",
+      "description": "ESPN's Basketball Power Index projections for the 2026-27 NBA season are out, including a ranking of all 30 teams.",
+      "published": "2026-10-07T14:18:28Z",
+      "images": [
+        {
+          "url": "https://a.espncdn.com/photo/2026/0209/nba_all-star-preview_2_16x9_608x342.jpg",
+          "type": "header"
+        },
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/0928/ss_20260928_210548329_3678903/ss_20260928_210548329_3678903.jpg",
+          "type": "Media"
+        }
+      ],
+      "categories": [
+        {
+          "type": "team",
+          "description": "Atlanta Hawks",
+          "teamId": 1
+        },
+        {
+          "type": "team",
+          "description": "Boston Celtics",
+          "teamId": 2
+        },
+        {
+          "type": "team",
+          "description": "Brooklyn Nets",
+          "teamId": 17
+        },
+        {
+          "type": "team",
+          "description": "Charlotte Hornets",
+          "teamId": 30
+        },
+        {
+          "type": "team",
+          "description": "Chicago Bulls",
+          "teamId": 4
+        },
+        {
+          "type": "team",
+          "description": "Cleveland Cavaliers",
+          "teamId": 5
+        },
+        {
+          "type": "team",
+          "description": "Dallas Mavericks",
+          "teamId": 6
+        },
+        {
+          "type": "team",
+          "description": "Denver Nuggets",
+          "teamId": 7
+        },
+        {
+          "type": "team",
+          "description": "Detroit Pistons",
+          "teamId": 8
+        },
+        {
+          "type": "team",
+          "description": "Golden State Warriors",
+          "teamId": 9
+        },
+        {
+          "type": "team",
+          "description": "Houston Rockets",
+          "teamId": 10
+        },
+        {
+          "type": "team",
+          "description": "Indiana Pacers",
+          "teamId": 11
+        },
+        {
+          "type": "team",
+          "description": "LA Clippers",
+          "teamId": 12
+        },
+        {
+          "type": "team",
+          "description": "Los Angeles Lakers",
+          "teamId": 13
+        },
+        {
+          "type": "team",
+          "description": "Memphis Grizzlies",
+          "teamId": 29
+        },
+        {
+          "type": "team",
+          "description": "Miami Heat",
+          "teamId": 14
+        },
+        {
+          "type": "team",
+          "description": "Milwaukee Bucks",
+          "teamId": 15
+        },
+        {
+          "type": "team",
+          "description": "Minnesota Timberwolves",
+          "teamId": 16
+        },
+        {
+          "type": "team",
+          "description": "New Orleans Pelicans",
+          "teamId": 3
+        },
+        {
+          "type": "team",
+          "description": "New York Knicks",
+          "teamId": 18
+        },
+        {
+          "type": "team",
+          "description": "Oklahoma City Thunder",
+          "teamId": 25
+        },
+        {
+          "type": "team",
+          "description": "Orlando Magic",
+          "teamId": 19
+        },
+        {
+          "type": "team",
+          "description": "Philadelphia 76ers",
+          "teamId": 20
+        },
+        {
+          "type": "team",
+          "description": "Phoenix Suns",
+          "teamId": 21
+        },
+        {
+          "type": "team",
+          "description": "Portland Trail Blazers",
+          "teamId": 22
+        },
+        {
+          "type": "team",
+          "description": "Sacramento Kings",
+          "teamId": 23
+        },
+        {
+          "type": "team",
+          "description": "San Antonio Spurs",
+          "teamId": 24
+        },
+        {
+          "type": "team",
+          "description": "Toronto Raptors",
+          "teamId": 28
+        },
+        {
+          "type": "team",
+          "description": "Utah Jazz",
+          "teamId": 26
+        },
+        {
+          "type": "team",
+          "description": "Washington Wizards",
+          "teamId": 27
+        }
+      ],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/nba/story/_/id/50111217/nba-season-projections-2026-27-bpi"
+        }
+      }
+    },
+    {
+      "type": "Media",
+      "headline": "Los Angeles Lakers vs. Golden State Warriors: Game Highlights",
+      "description": "Los Angeles Lakers vs. Golden State Warriors: Game Highlights",
+      "published": "2026-10-07T04:43:54Z",
+      "images": [
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/wsc/2026/1007/101a8a1d-a214-42a4-a9f0-9166f0fafcc6/101a8a1d-a214-42a4-a9f0-9166f0fafcc6.jpg"
+        }
+      ],
+      "categories": [
+        {
+          "type": "athlete",
+          "description": "Charles Bassey",
+          "athleteId": 4397886
+        },
+        {
+          "type": "team",
+          "description": "Los Angeles Lakers",
+          "teamId": 13
+        },
+        {
+          "type": "athlete",
+          "description": "Yaxel Lendeborg",
+          "athleteId": 5175737
+        },
+        {
+          "type": "athlete",
+          "description": "Adou Thiero",
+          "athleteId": 5060631
+        },
+        {
+          "type": "team",
+          "description": "Golden State Warriors",
+          "teamId": 9
+        },
+        {
+          "type": "athlete",
+          "description": "Brandon Williams",
+          "athleteId": 4397040
+        },
+        {
+          "type": "athlete",
+          "description": "Sandro Mamukelashvili",
+          "athleteId": 4278580
+        }
+      ],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/video/clip/_/id/50122353/game-highlights"
+        }
+      }
+    },
+    {
+      "type": "Media",
+      "headline": "Denver Nuggets vs. Utah Jazz: Game Highlights",
+      "description": "Denver Nuggets vs. Utah Jazz: Game Highlights",
+      "published": "2026-10-07T04:22:20Z",
+      "images": [
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/wsc/2026/1007/4dd538b9-d729-4fda-a354-924443ac1045/4dd538b9-d729-4fda-a354-924443ac1045.jpg"
+        }
+      ],
+      "categories": [
+        {
+          "type": "athlete",
+          "description": "Aaron Gordon",
+          "athleteId": 3064290
+        },
+        {
+          "type": "athlete",
+          "description": "Trevon Brazile",
+          "athleteId": 4698719
+        },
+        {
+          "type": "athlete",
+          "description": "Darryn Peterson",
+          "athleteId": 5041955
+        },
+        {
+          "type": "team",
+          "description": "Utah Jazz",
+          "teamId": 26
+        },
+        {
+          "type": "team",
+          "description": "Denver Nuggets",
+          "teamId": 7
+        },
+        {
+          "type": "athlete",
+          "description": "Isaiah Collier",
+          "athleteId": 4683766
+        },
+        {
+          "type": "athlete",
+          "description": "Josh Okogie",
+          "athleteId": 4065663
+        }
+      ],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/video/clip/_/id/50122305/game-highlights"
+        }
+      }
+    },
+    {
+      "type": "Media",
+      "headline": "New Orleans Pelicans vs. Oklahoma City Thunder: Game Highlights",
+      "description": "New Orleans Pelicans vs. Oklahoma City Thunder: Game Highlights",
+      "published": "2026-10-07T03:44:48Z",
+      "images": [
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/wsc/2026/1007/1bc6cff2-ad91-4f4b-9cb5-6c1880ad4f3a/1bc6cff2-ad91-4f4b-9cb5-6c1880ad4f3a.jpg"
+        }
+      ],
+      "categories": [
+        {
+          "type": "athlete",
+          "description": "Andrew Holifield",
+          "athleteId": 5116468
+        },
+        {
+          "type": "athlete",
+          "description": "Bennedict Mathurin",
+          "athleteId": 4683634
+        },
+        {
+          "type": "athlete",
+          "description": "Bennett Stirtz",
+          "athleteId": 5241364
+        },
+        {
+          "type": "team",
+          "description": "Oklahoma City Thunder",
+          "teamId": 25
+        },
+        {
+          "type": "athlete",
+          "description": "Karlo Matkovic",
+          "athleteId": 4997538
+        },
+        {
+          "type": "team",
+          "description": "New Orleans Pelicans",
+          "teamId": 3
+        },
+        {
+          "type": "athlete",
+          "description": "Zion Williamson",
+          "athleteId": 4395628
+        }
+      ],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/video/clip/_/id/50121999/game-highlights"
+        }
+      }
+    },
+    {
+      "type": "Media",
+      "headline": "Adam Silver discusses NBA's plans in Europe",
+      "description": "Adam Silver discusses NBA's plans in Europe",
+      "published": "2026-10-07T02:23:46Z",
+      "images": [
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1006/ss_20261006_221632721_3687329/ss_20261006_221632721_3687329.jpg"
+        }
+      ],
+      "categories": [],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/video/clip/_/id/50121705/adam-silver-discusses-nba-plans-europe"
+        }
+      }
+    },
+    {
+      "type": "HeadlineNews",
+      "headline": "Sources: EuroLeague teams reject offer to merge into NBA Europe",
+      "description": "Members of the EuroLeague rejected a formal offer from the NBA this week to merge and create a single NBA Europe operation, sources told ESPN.",
+      "published": "2026-10-07T02:34:37Z",
+      "images": [
+        {
+          "url": "https://a.espncdn.com/photo/2026/1007/r1727134_600x400_3-2.jpg",
+          "type": "header"
+        },
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/1006/ss_20261006_221632721_3687329/ss_20261006_221632721_3687329.jpg",
+          "type": "Media"
+        }
+      ],
+      "categories": [],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/nba/story/_/id/50121620/sources-euroleague-teams-reject-offer-merge-nba-europe"
+        }
+      }
+    },
+    {
+      "type": "Media",
+      "headline": "Brooklyn Nets vs. Charlotte Hornets: Game Highlights",
+      "description": "Brooklyn Nets vs. Charlotte Hornets: Game Highlights",
+      "published": "2026-10-07T02:16:20Z",
+      "images": [
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/wsc/2026/1007/f6f4b1bd-5990-4bc3-883d-823bf707ee06/f6f4b1bd-5990-4bc3-883d-823bf707ee06.jpg"
+        }
+      ],
+      "categories": [
+        {
+          "type": "athlete",
+          "description": "Michael Porter Jr",
+          "athleteId": 4278104
+        },
+        {
+          "type": "athlete",
+          "description": "Julius Randle",
+          "athleteId": 3064514
+        },
+        {
+          "type": "athlete",
+          "description": "Liam McNeeley",
+          "athleteId": 5239590
+        },
+        {
+          "type": "team",
+          "description": "Charlotte Hornets",
+          "teamId": 30
+        },
+        {
+          "type": "athlete",
+          "description": "Wyatt Fricks",
+          "athleteId": 4897504
+        }
+      ],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/video/clip/_/id/50121469/game-highlights"
+        }
+      }
+    },
+    {
+      "type": "HeadlineNews",
+      "headline": "Haliburton buys Iowa St. students tickets for Pacers game",
+      "description": "Tyrese Haliburton purchased tickets for the student section at his alma mater Iowa State for the Pacers' first preseason game Wednesday.",
+      "published": "2026-10-07T10:50:12Z",
+      "images": [
+        {
+          "url": "https://a.espncdn.com/photo/2026/1007/r1727087_600x400_3-2.jpg",
+          "type": "header"
+        },
+        {
+          "url": "https://espnmedia-cdn.akamaized.net/espn/media/common/2026/0819/ss_20260819_120233023_3629079/ss_20260819_120233023_3629079.jpg",
+          "type": "Media"
+        }
+      ],
+      "categories": [
+        {
+          "type": "team",
+          "description": "Indiana Pacers",
+          "teamId": 11
+        },
+        {
+          "type": "athlete",
+          "description": "Tyrese Haliburton",
+          "athleteId": 4396993
+        }
+      ],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/nba/story/_/id/50121039/haliburton-buys-iowa-st-students-tickets-pacers-game"
+        }
+      }
+    },
+    {
+      "type": "HeadlineNews",
+      "headline": "76ers lose backup center Ariel Hukporti to torn Achilles",
+      "description": "The 76ers' thin frontcourt took a big blow Tuesday after an MRI confirmed backup center Ariel Hukporti suffered a torn right Achilles.",
+      "published": "2026-10-07T10:50:34Z",
+      "images": [
+        {
+          "url": "https://a.espncdn.com/photo/2026/1006/r1726939_600x400_3-2.jpg",
+          "type": "header"
+        }
+      ],
+      "categories": [
+        {
+          "type": "team",
+          "description": "Philadelphia 76ers",
+          "teamId": 20
+        },
+        {
+          "type": "athlete",
+          "description": "Ariel Hukporti",
+          "athleteId": 4871141
+        }
+      ],
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/nba/story/_/id/50118908/76ers-lose-backup-center-ariel-hukporti-torn-achilles"
+        }
+      }
+    }
+  ]
+}

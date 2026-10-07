@@ -3,6 +3,7 @@ import { APP_NAME } from '@step-back/shared';
 import { buildApp } from './core/app.js';
 import { ConfigError, loadConfig } from './core/config.js';
 import { gamesModule } from './modules/games/index.js';
+import { newsModule } from './modules/news/index.js';
 import { standingsModule } from './modules/standings/index.js';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
@@ -10,7 +11,10 @@ if (existsSync('.env')) process.loadEnvFile('.env');
 async function main(): Promise<void> {
   const config = loadConfig();
   // Feature modules (games, news, ...) are added to this list as they are built.
-  const { server, scheduler } = await buildApp({ config, modules: [gamesModule, standingsModule] });
+  const { server, scheduler } = await buildApp({
+    config,
+    modules: [gamesModule, standingsModule, newsModule],
+  });
 
   const shutdown = (signal: string) => {
     server.log.info({ signal }, 'shutting down');
