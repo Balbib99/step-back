@@ -1,4 +1,7 @@
 import { gamesResponseSchema, gameSchema, teamsResponseSchema } from '@step-back/shared';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readEspnFixture } from '../../../test/fixtures/espn/read.js';
 import { buildApp, type App } from '../../core/app.js';
@@ -8,19 +11,42 @@ import { gamesModule } from './index.js';
 import { createGamesRepo } from './repo.js';
 
 let app: App | undefined;
+let crestsDir: string | undefined;
 afterEach(async () => {
   await app?.server.close();
   app = undefined;
+  if (crestsDir) rmSync(crestsDir, { recursive: true, force: true });
+  crestsDir = undefined;
 });
 
+const PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 7, 7, 7]);
+
+/** What ESPN's image service answers: a PNG for crests, and nothing else is reachable. */
+function espnImages(options: { failing?: boolean } = {}) {
+  return vi.fn(async (url: string | URL | Request) => {
+    if (!options.failing && String(url).includes('/combiner/')) {
+      return new Response(PNG, { status: 200, headers: { 'content-type': 'image/png' } });
+    }
+    if (options.failing) return new Response('down', { status: 404 });
+    throw new Error('tests must not hit the network');
+  });
+}
+
 /** An app with the games module and the recorded ESPN games already stored. */
-async function seeded(env: Record<string, string> = {}) {
+async function seeded(
+  env: Record<string, string> = {},
+  fetchImpl: ReturnType<typeof espnImages> = espnImages(),
+) {
+  crestsDir = mkdtempSync(join(tmpdir(), 'step-back-routes-'));
   app = await buildApp({
-    config: loadConfig({ NODE_ENV: 'test', DB_PATH: ':memory:', ...env }),
-    modules: [gamesModule],
-    fetch: vi.fn(async () => {
-      throw new Error('tests must not hit the network');
+    config: loadConfig({
+      NODE_ENV: 'test',
+      DB_PATH: ':memory:',
+      CRESTS_DIR: crestsDir,
+      ...env,
     }),
+    modules: [gamesModule],
+    fetch: fetchImpl as unknown as typeof fetch,
   });
   const repo = createGamesRepo(app.db);
   repo.upsertTeams(parseTeams(readEspnFixture('teams.json')));
@@ -42,6 +68,50 @@ describe('GET /api/teams', () => {
     const { teams } = teamsResponseSchema.parse((await server.inject('/api/teams')).json());
     expect(teams).toHaveLength(30);
     expect(teams[0]?.name).toBe('Atlanta Hawks');
+  });
+
+  it('tells where each crest is served from, so the browser never goes to ESPN', async () => {
+    const server = await seeded();
+    const { teams } = teamsResponseSchema.parse((await server.inject('/api/teams')).json());
+    expect(teams[0]?.crestUrl).toBe('/api/crests/ATL.png');
+    expect(teams.every((team) => team.crestUrl === `/api/crests/${team.abbr}.png`)).toBe(true);
+  });
+});
+
+describe('GET /api/crests/:file', () => {
+  it('serves the crest as a cacheable PNG', async () => {
+    const server = await seeded();
+    const response = await server.inject('/api/crests/MIN.png');
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toBe('image/png');
+    expect(response.headers['cache-control']).toBe('public, max-age=604800');
+    expect(new Uint8Array(response.rawPayload)).toEqual(PNG);
+  });
+
+  it('downloads it once: the second request comes from disk', async () => {
+    const fetchImpl = espnImages();
+    const server = await seeded({}, fetchImpl);
+    await server.inject('/api/crests/MIN.png');
+    await server.inject('/api/crests/MIN.png');
+    await server.inject('/api/crests/min.png'); // the abbreviation is not case sensitive
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['LON.png', 'MIN.jpg', 'MIN', '..%2Fsecret.png', 'TOOLONGNAME.png'])(
+    'answers 404 for %s',
+    async (file) => {
+      const server = await seeded();
+      const response = await server.inject(`/api/crests/${file}`);
+      expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual({ error: 'not_found' });
+    },
+  );
+
+  it('answers 502 when the crest cannot be downloaded, without caching the failure', async () => {
+    const server = await seeded({}, espnImages({ failing: true }));
+    const response = await server.inject('/api/crests/MIN.png');
+    expect(response.statusCode).toBe(502);
+    expect(response.json()).toEqual({ error: 'crest_unavailable' });
   });
 });
 

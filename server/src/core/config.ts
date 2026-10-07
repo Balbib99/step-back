@@ -1,3 +1,4 @@
+import { dirname, join } from 'node:path';
 import { z } from 'zod';
 
 const VAPID_KEYS = ['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT'] as const;
@@ -40,6 +41,8 @@ const envSchema = z
     PORT: z.coerce.number().int().min(1).max(65535).default(3000),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
     DB_PATH: z.string().min(1).default('./data/step-back.db'),
+    // Where downloaded team crests are kept. Defaults to a `crests` folder next to the database.
+    CRESTS_DIR: z.string().min(1).optional(),
     TZ_DISPLAY: timeZone.default('Europe/Madrid'),
     FAVORITE_TEAMS: teamList.default('MIN,LAL,PHI'),
     DEEPL_API_KEY: optionalText,
@@ -68,6 +71,7 @@ export interface Config {
   port: number;
   logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
   dbPath: string;
+  crestsDir: string;
   timeZone: string;
   favoriteTeams: string[];
   deeplApiKey: string | undefined;
@@ -100,6 +104,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     port: data.PORT,
     logLevel: data.LOG_LEVEL,
     dbPath: data.DB_PATH,
+    crestsDir:
+      data.CRESTS_DIR ??
+      join(data.DB_PATH === ':memory:' ? './data' : dirname(data.DB_PATH), 'crests'),
     timeZone: data.TZ_DISPLAY,
     favoriteTeams: data.FAVORITE_TEAMS,
     deeplApiKey: data.DEEPL_API_KEY,

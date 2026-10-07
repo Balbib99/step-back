@@ -173,3 +173,25 @@ describe('createHttpClient', () => {
     });
   });
 });
+
+describe('getBytes', () => {
+  const bytes = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0, 255, 128]);
+
+  it('returns binary content untouched, which reading it as text would corrupt', async () => {
+    const { client } = setup([new Response(bytes, { status: 200 })]);
+    const response = await client.getBytes('https://example.com/crest.png');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(bytes);
+  });
+
+  it('shares the retries and the errors of get', async () => {
+    const retried = setup([reply(503), new Response(bytes, { status: 200 })]);
+    expect((await retried.client.getBytes('https://example.com/a.png')).body).toEqual(bytes);
+    expect(retried.sleeps).toEqual([500]);
+
+    const missing = setup([reply(404)]);
+    await expect(missing.client.getBytes('https://example.com/b.png')).rejects.toMatchObject({
+      status: 404,
+    });
+  });
+});

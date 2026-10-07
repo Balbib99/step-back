@@ -6,17 +6,18 @@ import { useState } from 'react';
  */
 export function TeamCrest({
   abbr,
-  logoUrl,
+  src,
   size = 26,
 }: {
   abbr: string;
-  logoUrl: string | null | undefined;
+  /** Where the server serves the crest from; absent for a club that is not in the NBA. */
+  src: string | null | undefined;
   size?: number;
 }) {
   const [failed, setFailed] = useState(false);
   const style = { width: size, height: size };
 
-  if (!logoUrl || failed) {
+  if (!src || failed) {
     return (
       <span
         aria-hidden="true"
@@ -29,7 +30,7 @@ export function TeamCrest({
   }
   return (
     <img
-      src={logoUrl}
+      src={src}
       alt=""
       loading="lazy"
       style={style}

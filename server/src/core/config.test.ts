@@ -46,6 +46,16 @@ describe('loadConfig', () => {
     expect(config.deeplApiKey).toBe('abc:fx');
   });
 
+  it('keeps crests next to the database unless told otherwise', () => {
+    // Compared with forward slashes so the test means the same on Windows and Linux.
+    const slashes = (path: string) => path.replaceAll('\\', '/');
+    expect(slashes(loadConfig({}).crestsDir)).toBe('data/crests');
+    expect(slashes(loadConfig({ DB_PATH: '/srv/step-back/db/app.db' }).crestsDir)).toBe(
+      '/srv/step-back/db/crests',
+    );
+    expect(loadConfig({ CRESTS_DIR: '/tmp/crests' }).crestsDir).toBe('/tmp/crests');
+  });
+
   it('treats empty optional variables as unset', () => {
     expect(loadConfig({ DEEPL_API_KEY: '' }).deeplApiKey).toBeUndefined();
   });

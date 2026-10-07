@@ -1,7 +1,9 @@
 import { fileURLToPath } from 'node:url';
 import { loadMigrationsFromDir } from '../../core/migrations.js';
 import type { AppModule } from '../../core/modules.js';
+import type { ModuleContext } from '../../core/modules.js';
 import { loadCalendar } from './calendar.js';
+import { createCrestStore, type CrestStore } from './crests.js';
 import { seasonForDate } from './dates.js';
 import { createGamesRepo } from './repo.js';
 import { registerGamesRoutes } from './routes.js';
@@ -12,13 +14,29 @@ const RELOAD_AFTER_MS = 6 * DAY_MS;
 
 export const CALENDAR_JOB_ID = 'games:calendar';
 
+// Routes and jobs share one crest store (and so one in-flight download per crest).
+const crestStores = new WeakMap<ModuleContext, CrestStore>();
+function crestStoreFor(context: ModuleContext): CrestStore {
+  let store = crestStores.get(context);
+  if (!store) {
+    store = createCrestStore({
+      dir: context.config.crestsDir,
+      http: context.http,
+      repo: createGamesRepo(context.db),
+      logger: context.logger,
+    });
+    crestStores.set(context, store);
+  }
+  return store;
+}
+
 export const gamesModule: AppModule = {
   id: 'games',
 
   migrations: loadMigrationsFromDir(fileURLToPath(new URL('./migrations', import.meta.url))),
 
   routes: (app, context) => {
-    registerGamesRoutes(app, createGamesRepo(context.db), context.config);
+    registerGamesRoutes(app, createGamesRepo(context.db), context.config, crestStoreFor(context));
   },
 
   jobs: (context) => {
@@ -30,21 +48,30 @@ export const gamesModule: AppModule = {
         timeoutMs: 5 * 60_000,
         run: async ({ logger }) => {
           const lastLoad = context.jobRuns.lastSuccess(CALENDAR_JOB_ID);
-          if (
-            lastLoad &&
+          const recent =
+            lastLoad !== undefined &&
             repo.countGames() > 0 &&
-            Date.now() - lastLoad.finishedAt < RELOAD_AFTER_MS
-          ) {
-            return; // restarts of the server must not repeat ~90 requests
-          }
-          const { failures } = await loadCalendar({
-            http: context.http,
-            repo,
-            logger,
-            season: seasonForDate(new Date()),
-          });
-          if (failures.length > 0) {
-            throw new Error(`${failures.length} schedule requests failed (first: ${failures[0]})`);
+            Date.now() - lastLoad.finishedAt < RELOAD_AFTER_MS; // restarts must not repeat ~90 requests
+
+          const calendar = recent
+            ? undefined
+            : await loadCalendar({
+                http: context.http,
+                repo,
+                logger,
+                season: seasonForDate(new Date()),
+              });
+
+          // Only the crests missing on disk are downloaded, so this is free once they are all there.
+          const { downloaded, failed } = await crestStoreFor(context).warm();
+          if (downloaded > 0) logger.info({ downloaded }, 'team crests downloaded');
+          if (failed.length > 0)
+            logger.warn({ failed }, 'some team crests could not be downloaded');
+
+          if (calendar && calendar.failures.length > 0) {
+            throw new Error(
+              `${calendar.failures.length} schedule requests failed (first: ${calendar.failures[0]})`,
+            );
           }
         },
       },

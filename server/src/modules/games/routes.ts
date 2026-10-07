@@ -2,9 +2,12 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { Config } from '../../core/config.js';
 import { addDays, isRealDate, localDaysRangeUtc } from './dates.js';
+import { CrestUnavailableError, type CrestStore } from './crests.js';
 import type { GamesRepo } from './repo.js';
 
 const MAX_RANGE_DAYS = 400;
+
+export const crestPath = (abbr: string) => `/api/crests/${abbr}.png`;
 
 const day = z.string().refine(isRealDate, 'must be a real date as YYYY-MM-DD');
 
@@ -34,8 +37,34 @@ const gamesQuery = z
  * Days are local days of the configured time zone (Europe/Madrid by default), the same ones the
  * app shows, not the US Eastern days ESPN groups games by.
  */
-export function registerGamesRoutes(app: FastifyInstance, repo: GamesRepo, config: Config): void {
-  app.get('/teams', async () => ({ teams: repo.teams() }));
+export function registerGamesRoutes(
+  app: FastifyInstance,
+  repo: GamesRepo,
+  config: Config,
+  crests: CrestStore,
+): void {
+  app.get('/teams', async () => ({
+    teams: repo.teams().map((team) => ({ ...team, crestUrl: crestPath(team.abbr) })),
+  }));
+
+  // Crests are downloaded from ESPN once, shrunk and kept on disk; the browser never talks to ESPN.
+  app.get<{ Params: { file: string } }>('/crests/:file', async (request, reply) => {
+    const abbr = /^([A-Za-z]{2,5}).png$/.exec(request.params.file)?.[1]?.toUpperCase();
+    if (!abbr) return reply.code(404).send({ error: 'not_found' });
+    try {
+      const image = await crests.get(abbr);
+      if (!image) return reply.code(404).send({ error: 'not_found' });
+      return reply
+        .header('content-type', 'image/png')
+        .header('cache-control', 'public, max-age=604800')
+        .send(Buffer.from(image));
+    } catch (error) {
+      if (error instanceof CrestUnavailableError) {
+        return reply.code(502).send({ error: 'crest_unavailable' });
+      }
+      throw error;
+    }
+  });
 
   app.get('/games', async (request, reply) => {
     const parsed = gamesQuery.safeParse(request.query);

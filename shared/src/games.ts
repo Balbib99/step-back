@@ -49,12 +49,15 @@ export const gameSchema = z.object({
   away: gameTeamSchema,
 });
 
-export const teamsResponseSchema = z.object({ teams: z.array(teamSchema) });
+/** A team as the API serves it: with the path of its crest, resized and cached by the server. */
+export const teamWithCrestSchema = teamSchema.extend({ crestUrl: z.string() });
+export const teamsResponseSchema = z.object({ teams: z.array(teamWithCrestSchema) });
 export const gamesResponseSchema = z.object({ games: z.array(gameSchema) });
 
 export type SeasonType = z.infer<typeof seasonTypeSchema>;
 export type GameStatus = z.infer<typeof gameStatusSchema>;
 export type Team = z.infer<typeof teamSchema>;
+export type TeamWithCrest = z.infer<typeof teamWithCrestSchema>;
 export type GameTeam = z.infer<typeof gameTeamSchema>;
 export type Game = z.infer<typeof gameSchema>;
 export type TeamsResponse = z.infer<typeof teamsResponseSchema>;

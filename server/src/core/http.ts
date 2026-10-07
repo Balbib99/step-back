@@ -10,10 +10,10 @@ export class HttpError extends Error {
   }
 }
 
-export interface HttpResponse {
+export interface HttpResponse<Body = string> {
   status: number;
   headers: Headers;
-  body: string;
+  body: Body;
 }
 
 export interface RequestOptions {
@@ -26,6 +26,8 @@ export interface RequestOptions {
 export interface HttpClient {
   /** Resolves for 2xx and 304; throws HttpError for anything else once retries are exhausted. */
   get(url: string, options?: RequestOptions): Promise<HttpResponse>;
+  /** Like `get`, for binary content such as images. */
+  getBytes(url: string, options?: RequestOptions): Promise<HttpResponse<Uint8Array>>;
   getJson<T = unknown>(url: string, options?: RequestOptions): Promise<T>;
 }
 
@@ -91,7 +93,11 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     if (delay > 0) await sleep(delay);
   }
 
-  async function get(rawUrl: string, request: RequestOptions = {}): Promise<HttpResponse> {
+  async function send<Body>(
+    rawUrl: string,
+    request: RequestOptions,
+    read: (response: Response) => Promise<Body>,
+  ): Promise<HttpResponse<Body>> {
     const url = buildUrl(rawUrl, request.params);
     const host = new URL(url).host;
     const timeoutMs = request.timeoutMs ?? defaultTimeoutMs;
@@ -106,7 +112,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
           headers: { 'user-agent': userAgent, accept: '*/*', ...request.headers },
           signal: AbortSignal.timeout(timeoutMs),
         });
-        const body = await response.text();
+        const body = await read(response);
         if ((response.status >= 200 && response.status < 300) || response.status === 304) {
           return { status: response.status, headers: response.headers, body };
         }
@@ -130,8 +136,13 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     throw lastError ?? new HttpError(`Request failed: ${url}`, url);
   }
 
+  const get = (rawUrl: string, request: RequestOptions = {}) =>
+    send(rawUrl, request, (response) => response.text());
+
   return {
     get,
+    getBytes: (rawUrl, request = {}) =>
+      send(rawUrl, request, async (response) => new Uint8Array(await response.arrayBuffer())),
     async getJson<T>(url: string, request?: RequestOptions) {
       const response = await get(url, {
         ...request,

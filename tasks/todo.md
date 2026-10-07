@@ -64,8 +64,8 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: tests de componente; revisión visual en el móvil emulado.
   - Deps: T7, T9 · Files: `web/src/pages/Calendar.tsx`, `components/GameCard.tsx`, `lib/api.ts`, tests
 
-- [ ] **T10b — Escudos servidos por el servidor** (S)
-  - Acceptance: `GET /api/crests/:abbr.png` devuelve el escudo reducido (~96 px) y cacheado en disco; se descarga de ESPN una sola vez; la web usa esa ruta en vez de la URL de ESPN, así que no se ve ningún disco en blanco al cargar y los escudos funcionan sin conexión. Hasta entonces la web usa `logoUrl` de ESPN (PNG de 500 px, hasta 95 KB cada uno).
+- [x] **T10b — Escudos servidos por el servidor** (S)
+  - Acceptance: `GET /api/crests/:abbr.png` devuelve el escudo reducido (~96 px) y cacheado en disco; se descarga de ESPN una sola vez; la web usa esa ruta en vez de la URL de ESPN, así que no se ve ningún disco en blanco al cargar y los escudos funcionan sin conexión. `/api/teams` incluye `crestUrl` de cada equipo.
   - Verify: test del endpoint con ESPN simulado (primera petición descarga, segunda sirve de caché); tamaño de cada escudo < 15 KB.
   - Deps: T9 · Files: `server/src/modules/games/crests.ts`, `web/src/components/TeamCrest.tsx`, tests
 

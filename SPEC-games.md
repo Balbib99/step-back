@@ -18,7 +18,8 @@ Los días (`date`, `from`, `to`) son **días locales de la zona configurada** (E
 - `GET /api/games?date=YYYY-MM-DD` — partidos de un día.
 - `GET /api/games?team=MIN&from=&to=` — calendario de un equipo.
 - `GET /api/games/:id` — detalle (marcador por cuarto, líderes si la fuente lo da).
-- `GET /api/teams` — los 30 equipos.
+- `GET /api/teams` — los 30 equipos, cada uno con `crestUrl`.
+- `GET /api/crests/:abbr.png` — el escudo reducido a 128 px (3-12 KB). Se descarga de ESPN una sola vez (servicio de imágenes de ESPN; si falla, el original de 500 px), se guarda en `CRESTS_DIR` (por defecto `data/crests`) y se sirve con caché de 7 días. 404 si el equipo no existe; 502 si no se pudo descargar. La tarea diaria del calendario descarga los que falten.
 - Respuestas: `{ games: Game[] }`, `{ teams: Team[] }` y `Game` (esquemas en `shared/src/games.ts`). Consultas inválidas: 400 `invalid_query`.
 
 ## Datos que ESPN publica (comprobado el 2026-10-07)

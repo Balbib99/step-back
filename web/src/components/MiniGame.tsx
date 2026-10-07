@@ -3,7 +3,7 @@ import {
   onDarkColor,
   type Game,
   type GameTeam,
-  type Team,
+  type TeamWithCrest,
 } from '@step-back/shared';
 import { formatClock } from '../lib/format';
 import { TeamCrest } from './TeamCrest';
@@ -50,13 +50,13 @@ function Side({
   showScore,
 }: {
   side: GameTeam;
-  team: Team | undefined;
+  team: TeamWithCrest | undefined;
   dim: boolean;
   showScore: boolean;
 }) {
   return (
     <span className="flex items-center gap-2.5">
-      <TeamCrest abbr={side.abbr} logoUrl={team?.logoUrl} size={26} />
+      <TeamCrest abbr={side.abbr} src={team?.crestUrl} size={26} />
       <span className="voice-name min-w-0 flex-1 truncate text-base font-semibold">
         {team?.shortName ?? side.name}
       </span>
@@ -83,7 +83,7 @@ export function MiniGame({
   timeZone,
 }: {
   game: Game;
-  teams: ReadonlyMap<string, Team>;
+  teams: ReadonlyMap<string, TeamWithCrest>;
   favorites: readonly string[];
   timeZone: string;
 }) {

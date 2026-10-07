@@ -1,4 +1,4 @@
-import type { Game, GameTeam, Team } from '@step-back/shared';
+import type { Game, GameTeam, TeamWithCrest } from '@step-back/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -90,7 +90,7 @@ const GAMES: Game[] = [
   }),
 ];
 
-const TEAMS: Team[] = [
+const TEAMS: TeamWithCrest[] = [
   ['MIN', MIN, 'Timberwolves'],
   ['LAL', LAL, 'Lakers'],
   ['PHI', 'Philadelphia 76ers', '76ers'],
@@ -107,6 +107,7 @@ const TEAMS: Team[] = [
   shortName: shortName!,
   location: '',
   logoUrl: null,
+  crestUrl: `/api/crests/${abbr}.png`,
 }));
 
 const CONFIG = {
