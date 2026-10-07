@@ -39,7 +39,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
 
 ## Phase 2: Primer corte vertical (`games` + `app-shell`)
 
-- [ ] **T6 — Dirección visual** (S, documental)
+- [x] **T6 — Dirección visual** (S, documental)
   - Acceptance: `docs/design.md` con paleta, tipografía, componentes clave, tono "noticiero/red social" y 2-3 maquetas estáticas de Hoy, Calendario y Noticias; **aprobado por el usuario**.
   - Verify: el usuario revisa y aprueba (visión previa en el navegador).
   - Deps: — (puede ir en paralelo a T1-T5) · Files: `docs/design.md`, `docs/mockups/*`
@@ -104,7 +104,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Deps: T14, T7 · Files: `web/src/pages/Standings.tsx`, tests
 
 - [ ] **T16 — Lector RSS/Atom y ESPN news** (M)
-  - Acceptance: parser genérico RSS/Atom con `ETag`/`If-Modified-Since`; adaptador de ESPN news; normalización a `NewsItem`; fixtures reales.
+  - Acceptance: parser genérico RSS/Atom con `ETag`/`If-Modified-Since`; adaptador de ESPN news; normalización a `NewsItem` con `media_kind`, `media_url` y `embed_url` (ESPN Media/Story, RSS media:thumbnail, r/nba); fixtures reales.
   - Verify: tests con fixtures de al menos Yahoo, CBS y Atom de r/nba.
   - Deps: T4 · Files: `modules/news/{rss,espn-adapter}.ts`, `shared/src/news.ts`, fixtures, tests
 
@@ -119,7 +119,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Deps: T17 · Files: `modules/news/sources.json`, tests
 
 - [ ] **T19 — Pantalla Noticias** (M)
-  - Acceptance: feed con tarjetas (fuente, hora, imagen, enlace al original), filtros de equipo, jugador e idioma, paginación por cursor; favoritos primero en la portada.
+  - Acceptance: feed de posts según `docs/design.md` (banda de equipo con su paleta, fuente, titular, medio 16:9 con imagen o vídeo embebido, enlace al original), filtros de equipo, jugador e idioma, paginación por cursor; favoritos primero en la portada.
   - Verify: tests de componente; revisión visual.
   - Deps: T17, T7 · Files: `web/src/pages/News.tsx`, `components/NewsCard.tsx`, tests
 

@@ -12,7 +12,7 @@ Un feed unificado de noticias de la NBA, filtrable por equipo y jugador, con pri
 - Cada fuente declara `id`, `name`, `lang`, `url`, `type`. Añadir una fuente no requiere cambiar código.
 
 ## Modelo
-`news_items(id, source_id, url, title, summary, image_url, lang, published_utc, fetched_at)` con `url` único para evitar duplicados; `news_tags(news_id, kind team|player, ref)`.
+`news_items(id, source_id, url, title, summary, lang, published_utc, fetched_at, media_kind, media_url, embed_url, media_duration_s)` con `url` único para evitar duplicados (`media_kind`: `none | image | video`); `news_tags(news_id, kind team|player, ref)`.
 
 ## Etiquetado
 Por coincidencia de nombres de equipos y jugadores plantilla en título/resumen (lista de equipos desde `games`, jugadores desde ESPN rosters). Un artículo puede tener varias etiquetas.
@@ -24,7 +24,11 @@ Por coincidencia de nombres de equipos y jugadores plantilla en título/resumen 
 ## Tareas programadas
 Cada 10-15 min por fuente, con respeto a `ETag`/`If-Modified-Since`. Se purgan noticias con más de 90 días.
 
+## Formato de presentación
+Cada noticia se muestra como **post** con el medio (imagen o vídeo) como protagonista, según [docs/design.md](docs/design.md). Fuentes con medio: ESPN (imágenes y vídeos "Game Highlights" ya etiquetados por equipo), r/nba (clips), YouTube (vía `highlights`) y Gigantes (imagen de la web). Las imágenes se sirven desde el propio servidor (caché) y los vídeos se embeben, nunca se alojan.
+
 ## Acceptance
+- Una noticia con imagen o vídeo en su fuente conserva el medio y se muestra en 16:9; una sin medio se muestra solo con texto.
 - Aparecen noticias de ≥ 4 fuentes distintas, sin duplicados.
 - Filtrar por Lakers devuelve solo noticias etiquetadas con LAL.
 - Cada tarjeta enlaza a la fuente original y muestra su nombre; el servidor no guarda el artículo completo, solo titular, resumen e imagen.

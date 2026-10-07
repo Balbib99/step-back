@@ -10,6 +10,7 @@ Una web privada, de solo lectura, que reúne en un solo sitio lo que hoy el usua
 - **Favoritos:** Minnesota Timberwolves, Los Angeles Lakers, Philadelphia 76ers (priorizados en portada, calendario y notificaciones).
 - **Idioma de la interfaz:** español. Contenido en inglés o español según la fuente; traducción al español a demanda.
 - **Alcance v1:** NBA, temporada 2026-27 (pretemporada y temporada regular). Playoffs se contemplan en el modelo de datos pero no son criterio de aceptación.
+- **Dirección visual:** La camiseta (ver [docs/design.md](docs/design.md)). Noticias en formato post con imagen o vídeo.
 - **Fuera de alcance v1:** X/Twitter (módulo `x-source`, fase 2), apuestas, fantasy, estadísticas avanzadas, otras ligas, multiusuario.
 
 ### Fuentes de datos (decididas)
@@ -21,7 +22,7 @@ Una web privada, de solo lectura, que reúne en un solo sitio lo que hoy el usua
 | Noticias en español | RSS de GIGANTESbasket / Gigantes.com (URL exacta por verificar) | Pendiente confirmar que el feed existe. |
 | Mejores jugadas | RSS de YouTube del canal oficial NBA (`youtube.com/feeds/videos.xml?channel_id=...`) + embed | Se vincula cada vídeo a su partido por título y fecha. |
 | Traducción | DeepL API Free (500k caracteres/mes) | A demanda, con caché en SQLite. |
-| X/Twitter | Fuera de v1 | PasionBasketNBA solo se evalúa en fase 2. |
+| X/Twitter | Fuera de v1 (decisión del usuario, 2026-10-07) | PasionBasketNBA solo existe en X; el usuario decide aplazar `x-source` a una v2. Su cuenta en Bluesky está inactiva desde enero de 2025. El formato post de la interfaz sirve ya para cualquier fuente. |
 
 ## Capability Map
 
