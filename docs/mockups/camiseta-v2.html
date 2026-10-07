@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>step-back · Mockup · La camiseta v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground: #0e1015; --surface: #1a1d25; --surface-2: #232733; --line: #2f3442;
+    --text: #eef0f3; --text-2: #a7adba; --text-3: #7d8493;
+    --r: 10px;
+    --font: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { color-scheme: dark; }
+  body { background: var(--ground); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.4; padding: 24px 16px 64px; }
+  .page-head, .section { max-width: 1240px; margin: 0 auto 28px; }
+  .page-head h1 { font-size: 28px; font-weight: 800; font-stretch: 75%; }
+  .page-head p { color: var(--text-2); max-width: 74ch; margin-top: 6px; }
+  .sample { color: var(--text-3); font-size: 13px; margin-top: 8px; }
+  h2.sec { font-size: 20px; font-weight: 800; font-stretch: 75%; margin-bottom: 4px; }
+  .sec-note { color: var(--text-2); max-width: 74ch; margin-bottom: 14px; }
+
+  /* team colour tokens come from the palette file via data-team (see script) */
+  [data-team] { background: var(--field); color: var(--ink); }
+
+  /* palette board */
+  .teams { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .chip { position: relative; border-radius: var(--r); padding: 10px 12px 14px; min-height: 84px; overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); display: grid; align-content: space-between; }
+  .chip b { font-size: 34px; font-weight: 900; font-stretch: 62%; line-height: 1; color: var(--numeral); letter-spacing: .01em; }
+  .chip span { font-size: 12px; font-weight: 600; font-stretch: 90%; opacity: .92; line-height: 1.2; }
+  .chip::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--trim); }
+
+  /* phones */
+  .phones { max-width: 1240px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; }
+  figure { width: min(390px, 100%); }
+  figcaption { color: var(--text-2); font-size: 14px; margin-bottom: 10px; font-weight: 600; }
+  .phone { height: 860px; border: 9px solid #1f232d; border-radius: 38px; background: var(--ground); overflow-y: auto; scrollbar-width: none; }
+  .phone::-webkit-scrollbar { display: none; }
+  .appbar { position: sticky; top: 0; z-index: 3; background: var(--ground); display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; }
+  .brand { font-weight: 800; font-stretch: 62%; font-size: 24px; letter-spacing: .02em; }
+  .fresh { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+  .fresh::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #5dd39e; }
+  main { padding: 0 16px 96px; }
+  .title { font-size: 30px; font-weight: 800; font-stretch: 62%; line-height: 1; margin-top: 4px; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 8px; scrollbar-width: none; }
+  .fchip { flex: none; font: inherit; font-size: 14px; font-weight: 600; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--text-2); }
+  .fchip[aria-pressed="true"] { background: var(--text); color: var(--ground); border-color: var(--text); }
+
+  /* ---------- post card: media-first news ---------- */
+  .post { background: var(--surface); border-radius: var(--r); overflow: hidden; margin: 12px 0 16px; }
+  .band { display: flex; align-items: stretch; min-height: 44px; }
+  .band .side { flex: 1; display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--field); color: var(--ink); min-width: 0; }
+  .band .side + .side { border-left: 4px solid var(--trim); }
+  .band img { width: 28px; height: 28px; padding: 3px; border-radius: 50%; background: rgba(255,255,255,.94); object-fit: contain; flex: none; }
+  .band b { font-size: 22px; font-weight: 900; font-stretch: 62%; color: var(--numeral); line-height: 1; }
+  .band em { font-style: normal; font-size: 13px; font-weight: 600; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .band .when { margin-left: auto; font-size: 12px; font-weight: 600; padding-left: 8px; white-space: nowrap; opacity: .9; }
+  .post-body { padding: 12px 14px 4px; }
+  .post-body .src { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-3); margin-bottom: 6px; }
+  .src .av { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font-size: 10px; font-weight: 800; color: var(--text); }
+  .src strong { color: var(--text); font-weight: 700; }
+  .post h3 { font-size: 21px; font-weight: 700; font-stretch: 80%; line-height: 1.15; }
+  .post p.sum { color: var(--text-2); font-size: 14px; margin-top: 6px; }
+  .media { position: relative; margin: 12px 14px 0; border-radius: 8px; overflow: hidden; aspect-ratio: 16 / 9; background: var(--surface-2); }
+  .media img, .media .ph { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .media .ph { display: grid; place-items: center; background: var(--field); color: var(--ink); font-size: 120px; font-weight: 900; font-stretch: 62%; opacity: .95; }
+  .media .play { position: absolute; inset: 0; display: grid; place-items: center; }
+  .media .play span { width: 56px; height: 56px; border-radius: 50%; background: rgba(0,0,0,.55); display: grid; place-items: center; box-shadow: 0 0 0 2px rgba(255,255,255,.7) inset; }
+  .media .play svg { width: 24px; height: 24px; margin-left: 3px; }
+  .media .tag { position: absolute; left: 8px; bottom: 8px; font-size: 12px; font-weight: 700; background: rgba(0,0,0,.65); padding: 3px 8px; border-radius: 999px; color: #fff; }
+  .media .scorebug { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; }
+  .quote { margin: 12px 14px 0; border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; grid-template-columns: 72px 1fr; gap: 10px; align-items: center; }
+  .quote .th { width: 72px; aspect-ratio: 1; border-radius: 6px; background: var(--field); color: var(--ink); display: grid; place-items: center; font-size: 28px; font-weight: 900; font-stretch: 62%; }
+  .quote div small { color: var(--text-3); font-size: 12px; }
+  .quote div b { display: block; font-size: 15px; font-weight: 600; font-stretch: 90%; line-height: 1.25; margin-top: 2px; }
+  .post-foot { display: flex; align-items: center; gap: 8px; padding: 12px 14px 14px; color: var(--text-3); font-size: 12px; }
+  .post-foot .sp { flex: 1; }
+  .btn { font: inherit; font-size: 13px; font-weight: 600; color: var(--text); background: var(--surface-2); border: 0; border-radius: 999px; padding: 9px 14px; min-height: 40px; }
+  .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--text-2); }
+  .example { display: inline-block; font-size: 11px; font-weight: 700; color: #ffd37a; border: 1px solid #5b4a1c; border-radius: 999px; padding: 2px 8px; margin: 0 14px; position: relative; top: 10px; }
+
+  /* team page header */
+  .team-head { background: var(--field); color: var(--ink); padding: 18px 16px 0; position: relative; overflow: hidden; }
+  .team-head::before { content: attr(data-chest); position: absolute; right: -8px; top: -18px; font-size: 170px; font-weight: 900; font-stretch: 62%; line-height: 1; opacity: .1; }
+  .team-head .row { display: flex; gap: 14px; align-items: center; position: relative; }
+  .team-head img { width: 64px; height: 64px; padding: 7px; border-radius: 50%; background: rgba(255,255,255,.94); object-fit: contain; }
+  .team-head h1 { font-size: 30px; font-weight: 800; font-stretch: 70%; line-height: 1; }
+  .team-head small { display: block; font-size: 13px; opacity: .9; margin-top: 4px; }
+  .team-head .record { margin: 16px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); position: relative; }
+  .team-head .record div { padding: 10px 0 12px; }
+  .team-head .record b { display: block; font-size: 34px; font-weight: 800; font-stretch: 62%; color: var(--numeral); line-height: 1; }
+  .team-head .record span { font-size: 12px; opacity: .9; }
+  .team-head .stripe { height: 6px; background: var(--trim); margin: 0 -16px; }
+  .tabs2 { display: flex; gap: 20px; padding: 0 16px; border-bottom: 1px solid var(--line); background: var(--ground); position: sticky; top: 0; z-index: 2; }
+  .tabs2 a { color: var(--text-3); text-decoration: none; font-weight: 600; font-size: 15px; padding: 14px 0 12px; border-bottom: 3px solid transparent; min-height: 44px; }
+  .tabs2 a[aria-current="page"] { color: var(--text); border-bottom-color: var(--numeral-live, var(--text)); }
+
+  .nav { position: sticky; bottom: 0; z-index: 3; display: grid; grid-template-columns: repeat(5, 1fr); background: #12151c; border-top: 1px solid var(--line); padding: 6px 4px 10px; }
+  .nav a { display: grid; justify-items: center; gap: 3px; min-height: 52px; align-content: center; color: var(--text-3); font-size: 11px; font-weight: 600; text-decoration: none; }
+  .nav a[aria-current="page"] { color: var(--text); }
+  .nav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  a:focus-visible, button:focus-visible { outline: 3px solid #8ab4ff; outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <h1>La camiseta · versión 2</h1>
+  <p>Dos cambios sobre la primera maqueta: una paleta propia para cada uno de los 30 equipos, y noticias en formato "post" con el vídeo o la imagen como protagonista. Todos los equipos tienen campo, número y franja; los tuyos se distinguen por ir siempre primero, no por tener más color.</p>
+  <p class="sample">Mockup estático. Los titulares y miniaturas de ESPN son reales y de hoy; marcadores y el post de Pasión Basket son de ejemplo. Los escudos se cargan de internet.</p>
+</header>
+
+<section class="section">
+  <h2 class="sec">Los 30 equipos</h2>
+  <p class="sec-note">Cada equipo tiene tres colores: el campo (fondo), el número (marcador y abreviatura) y la franja. Salen de la paleta oficial de cada club, ajustados cuando hacía falta para que el texto se lea bien. Hay muchos equipos que comparten familia de color (siete rojos, ocho azules), así que el color te dice "familia" y la combinación con el número y la franja te dice "equipo".</p>
+  <div class="teams" id="teams"></div>
+</section>
+
+<div class="phones">
+
+  <!-- ============ NOTICIAS (media first) ============ -->
+  <figure>
+    <figcaption>Noticias con vídeo e imagen</figcaption>
+    <div class="phone" tabindex="0" aria-label="Pantalla Noticias">
+      <div class="appbar"><span class="brand">step-back</span><span class="fresh">Actualizado 17:21</span></div>
+      <main>
+        <div class="title">Noticias</div>
+        <div class="chips">
+          <button class="fchip" aria-pressed="true">Mis equipos</button>
+          <button class="fchip" aria-pressed="false">Todas</button>
+          <button class="fchip" aria-pressed="false">Vídeos</button>
+          <button class="fchip" aria-pressed="false">Español</button>
+        </div>
+
+        <!-- 1. video with two teams -->
+        <article class="post">
+          <div class="band">
+            <div class="side" data-team="LAL"><img data-crest="LAL" alt=""><b>LAL</b><em>Lakers</em></div>
+            <div class="side" data-team="GS"><img data-crest="GS" alt=""><b>GS</b><em>Warriors</em></div>
+          </div>
+          <div class="post-body">
+            <div class="src"><span class="av">E</span><strong>ESPN</strong> · Vídeo · EN · hace 13 h</div>
+            <h3>Los Angeles Lakers vs. Golden State Warriors: Game Highlights</h3>
+          </div>
+          <div class="media">
+            <img src="https://espnmedia-cdn.akamaized.net/espn/media/common/wsc/2026/1007/101a8a1d-a214-42a4-a9f0-9166f0fafcc6/101a8a1d-a214-42a4-a9f0-9166f0fafcc6.jpg" alt="Miniatura del resumen del partido" onerror="this.remove()">
+            <div class="play"><span><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="#fff"/></svg></span></div>
+            <span class="tag">Resumen</span>
+          </div>
+          <div class="post-foot"><span>Reproduce aquí mismo</span><span class="sp"></span><button class="btn ghost">Abrir fuente</button></div>
+        </article>
+
+        <!-- 2. story with image + translate -->
+        <article class="post">
+          <div class="band">
+            <div class="side" data-team="NBA" style="--field:#232733;--ink:#eef0f3;--numeral:#eef0f3;--trim:#3a4050"><b>NBA</b><em>Toda la liga</em><span class="when">hace 2 h</span></div>
+          </div>
+          <div class="post-body">
+            <div class="src"><span class="av">E</span><strong>ESPN</strong> · EN</div>
+            <h3>NBA preseason buzz: Latest on trades, news and intel</h3>
+            <p class="sum">The NBA regular season is just a few weeks away, and we're tracking all the news, deals, and trades across the league.</p>
+          </div>
+          <div class="media"><img src="https://a.espncdn.com/photo/2026/0929/r1723601_608x342_16-9.jpg" alt="" onerror="this.remove()"></div>
+          <div class="post-foot"><button class="btn">Traducir al español</button><span class="sp"></span><button class="btn ghost">Abrir fuente</button></div>
+        </article>
+
+        <!-- 3. social-style post, the format the user likes (example, X source = phase 2) -->
+        <span class="example">Formato de ejemplo · fuente X (fase 2)</span>
+        <article class="post">
+          <div class="band">
+            <div class="side" data-team="OKC"><img data-crest="OKC" alt=""><b>OKC</b><em>Thunder</em></div>
+            <div class="side" data-team="NO"><img data-crest="NO" alt=""><b>NO</b><em>Pelicans</em></div>
+          </div>
+          <div class="post-body">
+            <div class="src"><span class="av">PB</span><strong>Pasion Basket</strong> @PasionBasketNBA · ES · hace 2 h</div>
+            <h3>La reacción de todo el banquillo de OKC Thunder a esta acción de Aday Mara</h3>
+          </div>
+          <div class="media">
+            <div class="ph" data-team="OKC" style="color:var(--numeral)">NOP 31 – 38 OKC</div>
+            <div class="play"><span><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="#fff"/></svg></span></div>
+            <span class="tag">Vídeo · 0:21</span>
+          </div>
+          <div class="quote">
+            <div class="th" data-team="OKC">OKC</div>
+            <div><small>Pasion Basket · hace 7 h</small><b>Así fue anoche el debut de Aday Mara en pretemporada con los OKC Thunder</b></div>
+          </div>
+          <div class="post-foot"><span>14:57 · 07 oct 26</span><span class="sp"></span><button class="btn ghost">Abrir en X</button></div>
+        </article>
+
+        <!-- 4. video DEN-UTAH -->
+        <article class="post">
+          <div class="band">
+            <div class="side" data-team="DEN"><img data-crest="DEN" alt=""><b>DEN</b><em>Nuggets</em></div>
+            <div class="side" data-team="UTAH"><img data-crest="UTAH" alt=""><b>UTAH</b><em>Jazz</em></div>
+          </div>
+          <div class="post-body">
+            <div class="src"><span class="av">E</span><strong>ESPN</strong> · Vídeo · EN · hace 13 h</div>
+            <h3>Denver Nuggets vs. Utah Jazz: Game Highlights</h3>
+          </div>
+          <div class="media">
+            <img src="https://espnmedia-cdn.akamaized.net/espn/media/common/wsc/2026/1007/4dd538b9-d729-4fda-a354-924443ac1045/4dd538b9-d729-4fda-a354-924443ac1045.jpg" alt="Miniatura del resumen del partido" onerror="this.remove()">
+            <div class="play"><span><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="#fff"/></svg></span></div>
+            <span class="tag">Resumen</span>
+          </div>
+          <div class="post-foot"><span>Reproduce aquí mismo</span><span class="sp"></span><button class="btn ghost">Abrir fuente</button></div>
+        </article>
+      </main>
+      <nav class="nav" aria-label="Principal">
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>Hoy</a>
+        <a href="#"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Calendario</a>
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Clasificación</a>
+        <a href="#" aria-current="page"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Noticias</a>
+        <a href="#"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5l5 2.5-5 2.5z"/></svg>Jugadas</a>
+      </nav>
+    </div>
+  </figure>
+
+  <!-- ============ EQUIPO: la camiseta entera ============ -->
+  <figure>
+    <figcaption>Página de equipo · Lakers</figcaption>
+    <div class="phone" tabindex="0" aria-label="Pantalla Equipo">
+      <div class="team-head" data-team="LAL" data-chest="LAL" style="--numeral-live:var(--numeral)">
+        <div class="row">
+          <img data-crest="LAL" alt="">
+          <div><h1>Los Angeles Lakers</h1><small>Oeste · Pacífico · 0-1 en pretemporada</small></div>
+        </div>
+        <div class="record">
+          <div><b>0-1</b><span>Pretemporada</span></div>
+          <div><b>–</b><span>Clasificación</span></div>
+          <div><b>04:00</b><span>Próx. · jue 8, Kings</span></div>
+        </div>
+        <div class="stripe"></div>
+      </div>
+      <div class="tabs2" data-team="LAL" style="background:var(--ground);color:inherit;--numeral-live:#FDB927">
+        <a href="#" aria-current="page">Noticias</a><a href="#">Jugadas</a><a href="#">Calendario</a><a href="#">Plantilla</a>
+      </div>
+      <main>
+        <article class="post">
+          <div class="post-body">
+            <div class="src"><span class="av">G</span><strong>Gigantes del Basket</strong> · ES · hace 3 h</div>
+            <h3>Los Lakers prueban quintetos nuevos en la pretemporada</h3>
+            <p class="sum">Texto de ejemplo en español, con imagen cuando la fuente la trae.</p>
+          </div>
+          <div class="media"><div class="ph" data-team="LAL" style="font-size:96px;color:var(--numeral)">LAL</div></div>
+          <div class="post-foot"><span>Imagen de ejemplo</span><span class="sp"></span><button class="btn ghost">Abrir fuente</button></div>
+        </article>
+        <article class="post">
+          <div class="post-body">
+            <div class="src"><span class="av">E</span><strong>ESPN</strong> · Vídeo · EN</div>
+            <h3>Los Angeles Lakers vs. Golden State Warriors: Game Highlights</h3>
+          </div>
+          <div class="media">
+            <img src="https://espnmedia-cdn.akamaized.net/espn/media/common/wsc/2026/1007/101a8a1d-a214-42a4-a9f0-9166f0fafcc6/101a8a1d-a214-42a4-a9f0-9166f0fafcc6.jpg" alt="" onerror="this.remove()">
+            <div class="play"><span><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z" fill="#fff"/></svg></span></div>
+            <span class="tag">Resumen</span>
+          </div>
+          <div class="post-foot"><span>hace 13 h</span><span class="sp"></span><button class="btn ghost">Abrir fuente</button></div>
+        </article>
+      </main>
+      <nav class="nav" aria-label="Principal">
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>Hoy</a>
+        <a href="#"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Calendario</a>
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Clasificación</a>
+        <a href="#" aria-current="page"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Noticias</a>
+        <a href="#"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5l5 2.5-5 2.5z"/></svg>Jugadas</a>
+      </nav>
+    </div>
+  </figure>
+</div>
+
+<script>
+  const PALETTE = {
+    ATL:["Atlanta Hawks","#C8102E","#FFFFFF","#C4D600","#C4D600"], BOS:["Boston Celtics","#007A33","#FFFFFF","#FFFFFF","#BA9653"],
+    BKN:["Brooklyn Nets","#1A1A1A","#FFFFFF","#FFFFFF","#FFFFFF"], CHA:["Charlotte Hornets","#00788C","#FFFFFF","#FFFFFF","#1D1160"],
+    CHI:["Chicago Bulls","#CE1141","#FFFFFF","#FFFFFF","#111111"], CLE:["Cleveland Cavaliers","#860038","#FFFFFF","#FDBB30","#041E42"],
+    DAL:["Dallas Mavericks","#00538C","#FFFFFF","#B8C4CA","#002B5E"], DEN:["Denver Nuggets","#0E2240","#FFFFFF","#FEC524","#8B2131"],
+    DET:["Detroit Pistons","#1D428A","#FFFFFF","#FFFFFF","#C8102E"], GS:["Golden State Warriors","#1D428A","#FFFFFF","#FFC72C","#FFC72C"],
+    HOU:["Houston Rockets","#BA0C2F","#FFFFFF","#C4CED4","#111111"], IND:["Indiana Pacers","#002D62","#FFFFFF","#FDBB30","#BEC0C2"],
+    LAC:["LA Clippers","#12173F","#FFFFFF","#FFFFFF","#C8102E"], LAL:["Los Angeles Lakers","#552583","#FFFFFF","#FDB927","#FDB927"],
+    MEM:["Memphis Grizzlies","#4A6396","#FFFFFF","#F5B112","#12173F"], MIA:["Miami Heat","#98002E","#FFFFFF","#F9A01B","#111111"],
+    MIL:["Milwaukee Bucks","#00471B","#FFFFFF","#EEE1C6","#0077C0"], MIN:["Minnesota Timberwolves","#0C2340","#FFFFFF","#78BE20","#236192"],
+    NO:["New Orleans Pelicans","#0C2340","#FFFFFF","#B4975A","#C8102E"], NY:["New York Knicks","#1D428A","#FFFFFF","#F58426","#BEC0C2"],
+    OKC:["Oklahoma City Thunder","#007AC1","#FFFFFF","#FFFFFF","#EF3B24"], ORL:["Orlando Magic","#0150B5","#FFFFFF","#C4CED4","#111111"],
+    PHI:["Philadelphia 76ers","#E01445","#FFFFFF","#FFFFFF","#006BB6"], PHX:["Phoenix Suns","#3B1C8C","#FFFFFF","#E56020","#F9AD1B"],
+    POR:["Portland Trail Blazers","#D3202D","#FFFFFF","#111111","#111111"], SAC:["Sacramento Kings","#5A2D81","#FFFFFF","#C4CED4","#63727A"],
+    SA:["San Antonio Spurs","#1A1A1A","#FFFFFF","#C4CED4","#C4CED4"], TOR:["Toronto Raptors","#B8112E","#FFFFFF","#FFFFFF","#A1A1A4"],
+    UTAH:["Utah Jazz","#4E008E","#FFFFFF","#79A3DC","#F9A01B"], WSH:["Washington Wizards","#E31837","#FFFFFF","#FFFFFF","#002B5C"]
+  };
+  const paint = (el, k) => { const p = PALETTE[k]; if (!p) return;
+    el.style.setProperty('--field', p[1]); el.style.setProperty('--ink', p[2]);
+    el.style.setProperty('--numeral', p[3]); el.style.setProperty('--trim', p[4]); };
+  document.querySelectorAll('[data-team]').forEach(el => paint(el, el.dataset.team));
+  document.querySelectorAll('[data-crest]').forEach(img => {
+    img.src = 'https://a.espncdn.com/i/teamlogos/nba/500/' + img.dataset.crest.toLowerCase() + '.png';
+    img.onerror = () => { img.style.visibility = 'hidden'; };
+  });
+  const board = document.getElementById('teams');
+  Object.entries(PALETTE).sort((a, b) => a[1][0].localeCompare(b[1][0])).forEach(([k, p]) => {
+    const d = document.createElement('div'); d.className = 'chip'; d.dataset.team = k;
+    d.innerHTML = '<b>' + k + '</b><span>' + p[0] + '</span>'; board.appendChild(d); paint(d, k);
+  });
+</script>
+</body>
+</html>

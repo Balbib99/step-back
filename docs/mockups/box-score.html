@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>step-back · Mockup · Box score</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground: #0d1218;
+    --panel: #151c25;
+    --rule: #263140;
+    --rule-strong: #3a495c;
+    --text: #e9edf2;
+    --text-2: #9fabba;
+    --text-3: #75828f;
+    --min: #78be20; --lal: #fdb927; --phi: #ed174c;
+    --min-tint: rgba(120,190,32,.14); --lal-tint: rgba(253,185,39,.14); --phi-tint: rgba(237,23,76,.16);
+    --font: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html { color-scheme: dark; }
+  body { background: var(--ground); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.4; padding: 24px 16px 64px; }
+  .page-head { max-width: 900px; margin: 0 auto 28px; }
+  .page-head h1 { font-size: 28px; font-weight: 800; font-stretch: 75%; }
+  .page-head p { color: var(--text-2); max-width: 70ch; margin-top: 6px; }
+  .sample { color: var(--text-3); font-size: 13px; margin-top: 8px; }
+  .phones { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; }
+  figure { width: min(390px, 100%); }
+  figcaption { color: var(--text-2); font-size: 14px; margin-bottom: 10px; font-weight: 600; }
+  .phone { height: 820px; border: 9px solid #1c232d; border-radius: 38px; background: var(--ground); overflow-y: auto; scrollbar-width: none; }
+  .phone::-webkit-scrollbar { display: none; }
+
+  .appbar { position: sticky; top: 0; z-index: 3; background: var(--ground); display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 10px; border-bottom: 1px solid var(--rule); }
+  .brand { font-weight: 800; font-stretch: 62%; font-size: 24px; letter-spacing: .02em; }
+  .fresh { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  main { padding: 0 16px 96px; }
+  .day { display: flex; justify-content: space-between; align-items: baseline; margin: 18px 0 8px; }
+  .day h1 { font-size: 26px; font-weight: 800; font-stretch: 62%; }
+  .day span { font-size: 13px; color: var(--text-3); }
+  h2 { font-size: 13px; font-weight: 700; color: var(--text-2); margin: 20px 0 8px; }
+
+  /* box score card */
+  .bs { background: var(--panel); border-radius: 8px; margin-bottom: 12px; overflow: hidden; border: 1px solid var(--rule); }
+  .bs-head { display: flex; justify-content: space-between; padding: 8px 12px; font-size: 12px; font-weight: 600; color: var(--text-2); border-bottom: 1px solid var(--rule); }
+  .bs-head .live { color: #fff; display: inline-flex; gap: 6px; align-items: center; font-weight: 700; }
+  .bs-head .live::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #ff3b30; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 0; text-align: right; }
+  thead th { font-size: 11px; font-weight: 600; color: var(--text-3); padding: 6px 0 4px; width: 34px; }
+  thead th:first-child { text-align: left; width: auto; padding-left: 12px; }
+  tbody tr { height: 48px; border-top: 1px solid var(--rule); }
+  tbody td { font-size: 17px; font-weight: 500; font-stretch: 85%; color: var(--text-2); width: 34px; }
+  tbody td:first-child { text-align: left; width: auto; padding-left: 0; color: var(--text); font-weight: 700; font-stretch: 80%; font-size: 18px; }
+  tbody td.t { font-weight: 800; color: var(--text); font-size: 24px; font-stretch: 62%; width: 52px; padding-right: 12px; }
+  tbody tr.lost td.t { color: var(--text-3); }
+  .team { display: flex; align-items: center; gap: 10px; height: 48px; border-left: 6px solid transparent; padding-left: 8px; }
+  .team img { width: 24px; height: 24px; object-fit: contain; }
+  .team small { font-weight: 500; color: var(--text-3); font-size: 12px; margin-left: 2px; white-space: nowrap; }
+  tr.min .team { border-left-color: var(--min); } tr.min { background: var(--min-tint); }
+  tr.lal .team { border-left-color: var(--lal); } tr.lal { background: var(--lal-tint); }
+  tr.phi .team { border-left-color: var(--phi); } tr.phi { background: var(--phi-tint); }
+  .bs-foot { padding: 7px 12px; font-size: 12px; color: var(--text-3); border-top: 1px solid var(--rule); display: flex; justify-content: space-between; }
+
+  .sched { display: grid; grid-template-columns: 60px 1fr auto; align-items: center; min-height: 52px; border-top: 1px solid var(--rule); gap: 10px; padding: 6px 4px; font-variant-numeric: tabular-nums; }
+  .sched time { font-weight: 700; font-stretch: 75%; font-size: 18px; }
+  .sched b { font-weight: 600; font-stretch: 85%; font-size: 16px; }
+  .sched small { color: var(--text-3); font-size: 12px; }
+  .news { padding: 12px 0; border-top: 1px solid var(--rule); }
+  .news .src { font-size: 12px; color: var(--text-3); margin-bottom: 4px; }
+  .news h3 { font-size: 18px; font-weight: 700; font-stretch: 80%; line-height: 1.15; }
+
+  .tabs { position: sticky; bottom: 0; z-index: 3; display: grid; grid-template-columns: repeat(5, 1fr); background: #0a0f14; border-top: 1px solid var(--rule); padding: 6px 4px 10px; }
+  .tabs a { display: grid; justify-items: center; gap: 3px; min-height: 52px; align-content: center; color: var(--text-3); font-size: 11px; font-weight: 600; text-decoration: none; }
+  .tabs a[aria-current="page"] { color: var(--text); }
+  .tabs svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  a:focus-visible { outline: 3px solid #8ab4ff; outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <h1>Box score</h1>
+  <p>La hoja del estadístico: cifras tabulares alineadas, línea de puntos por cuartos en cada partido y un único color de acento por equipo favorito. Más densa y sobria que "La camiseta", pensada para consultar muchos partidos de un vistazo.</p>
+  <p class="sample">Mockup estático. Marcadores, horarios y titulares son datos de ejemplo, no reales. Los escudos se cargan de internet.</p>
+</header>
+
+<div class="phones">
+  <figure>
+    <figcaption>Hoy</figcaption>
+    <div class="phone" tabindex="0" aria-label="Pantalla Hoy">
+      <div class="appbar"><span class="brand">step-back</span><span class="fresh">Actualizado 23:41</span></div>
+      <main>
+        <div class="day"><h1>Hoy, mié 7 oct</h1><span>horas de Madrid</span></div>
+
+        <article class="bs">
+          <div class="bs-head"><span>Pretemporada</span><span>FINAL</span></div>
+          <table>
+            <thead><tr><th>Equipo</th><th>1</th><th>2</th><th>3</th><th>4</th><th style="width:52px;padding-right:12px">T</th></tr></thead>
+            <tbody>
+              <tr class="min"><td><div class="team"><img src="https://a.espncdn.com/i/teamlogos/nba/500/min.png" alt="" onerror="this.style.visibility='hidden'">Timberwolves <small>1-0</small></div></td><td>28</td><td>22</td><td>26</td><td>28</td><td class="t">104</td></tr>
+              <tr class="lal lost"><td><div class="team"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="" onerror="this.style.visibility='hidden'">Lakers <small>0-1</small></div></td><td>25</td><td>24</td><td>27</td><td>23</td><td class="t">99</td></tr>
+            </tbody>
+          </table>
+          <div class="bs-foot"><span>Target Center</span><span>Jugadas disponibles</span></div>
+        </article>
+
+        <article class="bs">
+          <div class="bs-head"><span>Pretemporada</span><span class="live">Q3 · 4:12</span></div>
+          <table>
+            <thead><tr><th>Equipo</th><th>1</th><th>2</th><th>3</th><th>4</th><th style="width:52px;padding-right:12px">T</th></tr></thead>
+            <tbody>
+              <tr class="phi"><td><div class="team"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" onerror="this.style.visibility='hidden'">76ers <small>0-0</small></div></td><td>24</td><td>30</td><td>24</td><td>–</td><td class="t">78</td></tr>
+              <tr><td><div class="team"><img src="https://a.espncdn.com/i/teamlogos/nba/500/bos.png" alt="" onerror="this.style.visibility='hidden'">Celtics <small>0-0</small></div></td><td>27</td><td>25</td><td>22</td><td>–</td><td class="t">74</td></tr>
+            </tbody>
+          </table>
+          <div class="bs-foot"><span>Wells Fargo Center</span><span>Actualizado hace 40 s</span></div>
+        </article>
+
+        <h2>Más partidos</h2>
+        <div class="sched"><time>02:00</time><b>Nuggets – Warriors</b><small>Próximo</small></div>
+
+        <h2>Última hora</h2>
+        <div class="news"><div class="src">ESPN · hace 2 h · MIN</div><h3>Los Timberwolves cierran el partido con un parcial de 12-2</h3></div>
+        <div class="news"><div class="src">Gigantes · hace 3 h · LAL</div><h3>Los Lakers prueban quintetos nuevos en la pretemporada</h3></div>
+      </main>
+      <nav class="tabs" aria-label="Principal">
+        <a href="#" aria-current="page"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>Hoy</a>
+        <a href="#"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Calendario</a>
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Clasificación</a>
+        <a href="#"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Noticias</a>
+        <a href="#"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5l5 2.5-5 2.5z"/></svg>Jugadas</a>
+      </nav>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>Calendario</figcaption>
+    <div class="phone" tabindex="0" aria-label="Pantalla Calendario">
+      <div class="appbar"><span class="brand">step-back</span><span class="fresh">Actualizado 23:41</span></div>
+      <main>
+        <div class="day"><h1>Octubre 2026</h1><span>Mis equipos</span></div>
+        <h2>Mar 6 oct</h2>
+        <article class="bs"><table><tbody>
+          <tr class="phi"><td><div class="team"><img src="https://a.espncdn.com/i/teamlogos/nba/500/phi.png" alt="" onerror="this.style.visibility='hidden'">76ers</div></td><td class="t">112</td></tr>
+          <tr class="lost"><td><div class="team"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="" onerror="this.style.visibility='hidden'">Knicks</div></td><td class="t">107</td></tr>
+        </tbody></table></article>
+        <h2>Mié 7 oct · Hoy</h2>
+        <article class="bs"><table><tbody>
+          <tr class="min"><td><div class="team"><img src="https://a.espncdn.com/i/teamlogos/nba/500/min.png" alt="" onerror="this.style.visibility='hidden'">Timberwolves</div></td><td class="t">104</td></tr>
+          <tr class="lal lost"><td><div class="team"><img src="https://a.espncdn.com/i/teamlogos/nba/500/lal.png" alt="" onerror="this.style.visibility='hidden'">Lakers</div></td><td class="t">99</td></tr>
+        </tbody></table></article>
+        <h2>Jue 8 oct</h2>
+        <div class="sched"><time>04:00</time><b>Lakers – Kings</b><small>Pretemp.</small></div>
+        <h2>Sáb 10 oct</h2>
+        <div class="sched"><time>02:00</time><b>Timberwolves – Spurs</b><small>Pretemp.</small></div>
+      </main>
+      <nav class="tabs" aria-label="Principal">
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>Hoy</a>
+        <a href="#" aria-current="page"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Calendario</a>
+        <a href="#"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Clasificación</a>
+        <a href="#"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Noticias</a>
+        <a href="#"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5l5 2.5-5 2.5z"/></svg>Jugadas</a>
+      </nav>
+    </div>
+  </figure>
+</div>
+</body>
+</html>
