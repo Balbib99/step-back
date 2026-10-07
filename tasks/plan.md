@@ -41,12 +41,12 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 
 ### Phase 3: Esqueleto andante en la Pi (`deploy`, parte 1)
 - [x] T12 Dockerfile ARM64, compose y Caddyfile con `basic_auth`
-- [ ] T13 Despliegue real en `step-back.duckdns.org` y prueba de instalación PWA
+- [x] T13 Despliegue real en `step-back.duckdns.org` y prueba de instalación PWA
 
-### Checkpoint C: Desplegado, privado y accesible desde el móvil
+### Checkpoint C: Desplegado, privado y accesible desde el móvil (hecho 2026-10-07)
 
 ### Phase 4: Datos (`standings`, `news`)
-- [ ] T14 Adaptador de clasificación y `/api/standings`
+- [x] T14 Adaptador de clasificación y `/api/standings`
 - [ ] T15 Pantalla Clasificación
 - [ ] T16 Lector RSS/Atom genérico y adaptador ESPN news
 - [ ] T17 Repo de noticias, deduplicación y etiquetado por equipo/jugador

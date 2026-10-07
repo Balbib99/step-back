@@ -112,6 +112,14 @@ describe('GamesRepo', () => {
     expect(repo.games({ limit: 2 })).toHaveLength(2);
   });
 
+  it('knows when a game was last stored as finished, which is when the standings change', () => {
+    expect(repo.lastFinalUpdatedAt()).toBeUndefined();
+    repo.upsertGames(scheduled()); // upcoming games do not count
+    expect(repo.lastFinalUpdatedAt()).toBeUndefined();
+    repo.upsertGames(finals()); // stored at the repo's clock, 1000
+    expect(repo.lastFinalUpdatedAt()).toBe(1_000);
+  });
+
   it('returns undefined for an unknown game', () => {
     expect(repo.game('nope')).toBeUndefined();
   });

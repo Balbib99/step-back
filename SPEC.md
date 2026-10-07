@@ -30,7 +30,7 @@ Una web privada, de solo lectura, que reúne en un solo sitio lo que hoy el usua
 |---|---|---|---|
 | `core` | Servidor, SQLite, programador de tareas, caché, configuración, logs | — | [SPEC-core.md](SPEC-core.md) |
 | `games` | Calendario, resultados y partidos en directo | core | [SPEC-games.md](SPEC-games.md) |
-| `standings` | Clasificación por conferencia | core | [SPEC-standings.md](SPEC-standings.md) |
+| `standings` | Clasificación por conferencia | core, games (ver cuándo termina un partido) | [SPEC-standings.md](SPEC-standings.md) |
 | `news` | Noticias por RSS/ESPN con filtro por equipo y jugador | core | [SPEC-news.md](SPEC-news.md) |
 | `highlights` | Mejores jugadas por partido | core, games | [SPEC-highlights.md](SPEC-highlights.md) |
 | `translation` | Traducir una noticia al español a demanda | core, news | [SPEC-translation.md](SPEC-translation.md) |

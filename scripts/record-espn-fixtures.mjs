@@ -1,5 +1,8 @@
 // Records real ESPN responses as test fixtures (server/test/fixtures/espn).
-//   node scripts/record-espn-fixtures.mjs
+//   node scripts/record-espn-fixtures.mjs [name...]
+// With names, only the fixtures whose file name contains one of them are written (for example
+// `standings`). Running it with no names rewrites everything with today's data, which changes the
+// recorded games: do that only on purpose.
 // Noise the adapter never reads (links, statistics, leaders, ...) is stripped so the files stay small.
 // The only synthetic fixture is the live game: there is rarely a game in progress when this runs, so
 // it is derived from a real scheduled event by `deriveLive` below.
@@ -66,7 +69,10 @@ async function get(path) {
   return response.json();
 }
 
+const only = process.argv.slice(2);
+
 function save(name, data) {
+  if (only.length > 0 && !only.some((fragment) => name.includes(fragment))) return;
   mkdirSync(OUT, { recursive: true });
   writeFileSync(join(OUT, name), `${JSON.stringify(strip(data), null, 1)}\n`);
   console.log('wrote', name);
@@ -125,3 +131,54 @@ save('schedule-min-preseason.json', await get('/teams/16/schedule?season=2027&se
 save('schedule-por-preseason.json', await get('/teams/22/schedule?season=2027&seasontype=1'));
 // The day MIN @ MIL (also in the schedule fixture) was played: the same game seen through both endpoints.
 save('scoreboard-min-mil-day.json', await get('/scoreboard?dates=20261005'));
+
+// ---- standings (a different ESPN base path: /apis/v2, not /apis/site/v2) ----
+// Each team carries ~25 statistics; the adapter reads these types only.
+const STANDINGS_STATS = new Set([
+  'wins',
+  'losses',
+  'winpercent',
+  'gamesbehind',
+  'streak',
+  'playoffseed',
+  'clincher',
+  'total',
+  'home',
+  'road',
+  'vsdiv',
+  'vsconf',
+  'lasttengames',
+  'avgpointsfor',
+  'avgpointsagainst',
+]);
+
+async function getStandings(query = '') {
+  const response = await fetch(
+    `https://site.api.espn.com/apis/v2/sports/basketball/nba/standings${query}`,
+    { headers: { 'user-agent': 'step-back/0.1 (fixture recorder)', accept: 'application/json' } },
+  );
+  if (!response.ok) throw new Error(`standings${query} answered ${response.status}`);
+  const data = await response.json();
+  for (const conference of data.children) {
+    for (const entry of conference.standings.entries) {
+      // Only the fields the adapter reads: ESPN also sends long descriptions for each statistic.
+      entry.stats = entry.stats
+        .filter((stat) => STANDINGS_STATS.has(stat.type))
+        .map(({ type, name, value, displayValue, summary }) => ({
+          type,
+          name,
+          value,
+          displayValue,
+          summary,
+        }));
+      const { id, abbreviation, displayName } = entry.team;
+      entry.team = { id, abbreviation, displayName };
+    }
+  }
+  return data;
+}
+
+// The current standings: in preseason ESPN answers with the preseason record (seasonType 1).
+save('standings-preseason.json', await getStandings());
+// A finished season, with real seeds 1-15 and clinch marks (seasonType 2).
+save('standings-2025-26.json', await getStandings('?season=2026'));

@@ -18,6 +18,8 @@ export interface GamesRepo {
   game(id: string): Game | undefined;
   games(filter: GameFilter): Game[];
   countGames(): number;
+  /** When a game was last stored as finished (epoch ms): standings change when this moves. */
+  lastFinalUpdatedAt(): number | undefined;
 }
 
 type Side = 'home' | 'away';
@@ -100,6 +102,7 @@ export function createGamesRepo(db: Db, now: () => number = Date.now): GamesRepo
   const selectTeams = db.prepare('SELECT * FROM teams ORDER BY name');
   const selectGame = db.prepare('SELECT * FROM games WHERE id = ?');
   const countGames = db.prepare('SELECT COUNT(*) AS n FROM games');
+  const lastFinal = db.prepare("SELECT MAX(updated_at) AS at FROM games WHERE status = 'final'");
 
   const insertTeams = db.transaction((teams: Team[]) => {
     for (const team of teams) upsertTeam.run(team);
@@ -160,5 +163,6 @@ export function createGamesRepo(db: Db, now: () => number = Date.now): GamesRepo
       return (db.prepare(sql).all(...params, limit) as Row[]).map(gameOf);
     },
     countGames: () => (countGames.get() as { n: number }).n,
+    lastFinalUpdatedAt: () => (lastFinal.get() as { at: number | null }).at ?? undefined,
   };
 }

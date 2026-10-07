@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { gamesModule } from '../modules/games/index.js';
+import { standingsModule } from '../modules/standings/index.js';
 import { CORE_MIGRATIONS } from './core-migrations.js';
 import { openDb } from './db.js';
 import { runMigrations, type Migration } from './migrations.js';
@@ -66,7 +67,11 @@ describe('runMigrations', () => {
 });
 
 describe('the migrations of the app', () => {
-  const all = [...CORE_MIGRATIONS, ...(gamesModule.migrations ?? [])];
+  const all = [
+    ...CORE_MIGRATIONS,
+    ...(gamesModule.migrations ?? []),
+    ...(standingsModule.migrations ?? []),
+  ];
 
   it('have unique ids, each module continuing after the previous one', () => {
     const ids = all.map((migration) => migration.id);
@@ -78,7 +83,14 @@ describe('the migrations of the app', () => {
     const db = openDb(':memory:');
     expect(runMigrations(db, all)).toEqual(all.map((migration) => migration.id));
     expect(tables(db)).toEqual(
-      expect.arrayContaining(['kv_cache', 'job_runs', 'teams', 'games', 'schema_migrations']),
+      expect.arrayContaining([
+        'kv_cache',
+        'job_runs',
+        'teams',
+        'games',
+        'standings',
+        'schema_migrations',
+      ]),
     );
   });
 });

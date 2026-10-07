@@ -86,20 +86,20 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: `docker buildx build --platform linux/arm64` termina; el contenedor responde `/api/health` en local.
   - Deps: T11 · Files: `deploy/Dockerfile`, `deploy/compose.yaml`, `deploy/Caddyfile.example`, `server/src/core/static.ts`
 
-- [ ] **T13 — Despliegue real y PWA instalable** (S, con el usuario)
+- [x] **T13 — Despliegue real y PWA instalable** (S, con el usuario)
   - Acceptance: accesible por HTTPS en `step-back.duckdns.org`; sin credenciales devuelve 401; manifest mínimo; la app se instala en Android. **Requiere cambios en el Caddy del usuario (preguntar antes).**
   - Hecho en el repositorio (sin Docker disponible hasta llegar a la Pi): manifest con iconos (192, 512 y maskable), service worker vacío para que Android ofrezca instalar, enlace al manifest con `crossorigin="use-credentials"` por la contraseña, y su test. Pendiente en la Pi: construir la imagen, enlazar con Caddy y probar la instalación.
   - Verify: `curl -I` da 401 sin auth y 200 con auth; instalación en el móvil real.
   - Deps: T12 · Files: `web/public/manifest.webmanifest`, iconos, `docs/deploy.md` (borrador)
 
 ### Checkpoint C: Desplegado y privado
-- [ ] Abierta desde el móvil por HTTPS con contraseña; instalada como PWA; revisión con el usuario.
+- [x] Abierta desde el móvil por HTTPS con contraseña; instalada como PWA; revisión con el usuario.
 
 ---
 
 ## Phase 4: Datos (`standings`, `news`)
 
-- [ ] **T14 — Clasificación (servidor)** (M)
+- [x] **T14 — Clasificación (servidor)** (M)
   - Acceptance: adaptador ESPN standings con fixture; migración `standings`; `/api/standings?conference=`; refresco cada hora y al terminar un partido.
   - Verify: tests con fixture real; contraste manual con ESPN.
   - Deps: T9 · Files: `modules/standings/{adapter,repo,routes,jobs}.ts`, `migrations/0003_standings.sql`, tests
