@@ -54,7 +54,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: tests del adaptador contra fixtures; sin llamadas de red en tests.
   - Deps: T4 · Files: `modules/games/adapter.ts`, `shared/src/games.ts`, `test/fixtures/espn/*`, tests
 
-- [ ] **T9 — Carga de equipos y calendario, rutas** (M)
+- [x] **T9 — Carga de equipos y calendario, rutas** (M)
   - Acceptance: migración `teams` y `games`; carga inicial de toda la temporada 2026-27 sin duplicados; `/api/teams`, `/api/games?date=` y `/api/games?team=&from=&to=`.
   - Verify: tests de integración; contar en la BD real: 30 equipos y calendario de pretemporada + regular.
   - Deps: T5, T8 · Files: `modules/games/{repo,routes,jobs}.ts`, `migrations/0002_games.sql`, tests

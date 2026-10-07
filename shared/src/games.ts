@@ -49,11 +49,16 @@ export const gameSchema = z.object({
   away: gameTeamSchema,
 });
 
+export const teamsResponseSchema = z.object({ teams: z.array(teamSchema) });
+export const gamesResponseSchema = z.object({ games: z.array(gameSchema) });
+
 export type SeasonType = z.infer<typeof seasonTypeSchema>;
 export type GameStatus = z.infer<typeof gameStatusSchema>;
 export type Team = z.infer<typeof teamSchema>;
 export type GameTeam = z.infer<typeof gameTeamSchema>;
 export type Game = z.infer<typeof gameSchema>;
+export type TeamsResponse = z.infer<typeof teamsResponseSchema>;
+export type GamesResponse = z.infer<typeof gamesResponseSchema>;
 
 /** 2027 -> "2026-27". */
 export function seasonLabel(season: number): string {
