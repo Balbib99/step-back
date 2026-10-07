@@ -1,7 +1,9 @@
 import {
   configResponseSchema,
+  gameHighlightsResponseSchema,
   gamesResponseSchema,
   healthResponseSchema,
+  highlightsResponseSchema,
   newsResponseSchema,
   standingsResponseSchema,
   teamsResponseSchema,
@@ -74,6 +76,37 @@ export function useNews(filters: NewsFilters) {
     queryFn: ({ pageParam, signal }) =>
       fetchJson(`/api/news${newsQuery(filters, pageParam)}`, newsResponseSchema, signal),
     getNextPageParam: (last) => last.nextBefore ?? undefined,
+    refetchInterval: 5 * 60_000,
+  });
+}
+
+/** Videos of the official NBA channel, newest first, a page at a time. */
+export function useHighlights(teams: readonly string[]) {
+  return useInfiniteQuery({
+    queryKey: ['highlights', teams],
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam, signal }) => {
+      const params = new URLSearchParams({ limit: '20' });
+      if (teams.length > 0) params.set('team', teams.join(','));
+      if (pageParam) params.set('before', pageParam);
+      return fetchJson(`/api/highlights?${params.toString()}`, highlightsResponseSchema, signal);
+    },
+    getNextPageParam: (last) => last.nextBefore ?? undefined,
+    // A summary comes out a while after the game: look again every few minutes.
+    refetchInterval: 5 * 60_000,
+  });
+}
+
+/** The videos linked to one game; an empty list while there are none yet. */
+export function useGameHighlights(gameId: string) {
+  return useQuery({
+    queryKey: ['game-highlights', gameId],
+    queryFn: ({ signal }) =>
+      fetchJson(
+        `/api/games/${encodeURIComponent(gameId)}/highlights`,
+        gameHighlightsResponseSchema,
+        signal,
+      ),
     refetchInterval: 5 * 60_000,
   });
 }

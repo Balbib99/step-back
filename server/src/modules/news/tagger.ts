@@ -8,7 +8,7 @@ export interface TaggerTeam {
 }
 
 /** Names fans and headlines use besides the team's own. */
-const ALIASES: Record<string, string[]> = {
+export const ALIASES: Record<string, string[]> = {
   PHI: ['Sixers'],
   MIN: ['Wolves'],
   POR: ['Blazers'],
@@ -19,7 +19,7 @@ const ALIASES: Record<string, string[]> = {
 };
 
 /** "Magic Johnson" is not the Orlando team. */
-const NOT_FOLLOWED_BY: Record<string, string> = { ORL: ' Johnson' };
+export const NOT_FOLLOWED_BY: Record<string, string> = { ORL: ' Johnson' };
 
 export interface Tags {
   teams: string[];

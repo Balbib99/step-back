@@ -136,17 +136,17 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
 
 ## Phase 5: Jugadas y traducción
 
-- [ ] **T20 — Adaptador YouTube RSS** (S)
+- [x] **T20 — Adaptador YouTube RSS** (S)
   - Acceptance: verificado el `channel_id` oficial de la NBA; adaptador con fixture; migración `videos`.
   - Verify: tests con fixture real.
   - Deps: T4 · Files: `modules/highlights/{adapter,repo}.ts`, `migrations/0005_videos.sql`, tests
 
-- [ ] **T21 — Emparejador vídeo ↔ partido** (M)
+- [x] **T21 — Emparejador vídeo ↔ partido** (M)
   - Acceptance: título con ambos equipos y publicación a ±36 h del final → `game_id`; resto como jugada suelta etiquetada; manejo de abreviaturas ("76ers", "Sixers").
   - Verify: tests con ≥ 20 títulos reales; ≥ 90 % de partidos terminados enlazados en el entorno real.
   - Deps: T20, T9 · Files: `modules/highlights/matcher.ts`, tests
 
-- [ ] **T22 — Rutas y pantalla Jugadas** (M)
+- [x] **T22 — Rutas y pantalla Jugadas** (M)
   - Acceptance: `/api/highlights` y `/api/games/:id/highlights`; refresco cada 15 min (5 min tras un partido favorito); embed `youtube-nocookie.com`; "aún sin jugadas" sin error.
   - Verify: tests de rutas; reproducción en el móvil.
   - Deps: T21, T7 · Files: `modules/highlights/{routes,jobs}.ts`, `web/src/pages/Highlights.tsx`, tests

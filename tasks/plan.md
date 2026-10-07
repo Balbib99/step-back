@@ -56,9 +56,9 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 ### Checkpoint D: Clasificación y noticias funcionando
 
 ### Phase 5: Jugadas y traducción (`highlights`, `translation`)
-- [ ] T20 Adaptador RSS YouTube y verificación del `channel_id`
-- [ ] T21 Emparejador vídeo↔partido con pruebas
-- [ ] T22 Rutas de jugadas y pantalla Jugadas con embed
+- [x] T20 Adaptador RSS YouTube y verificación del `channel_id`
+- [x] T21 Emparejador vídeo↔partido con pruebas
+- [x] T22 Rutas de jugadas y pantalla Jugadas con embed
 - [ ] T23 Pantalla Partido (detalle) y pantalla Equipo
 - [ ] T24 Traducción DeepL con caché de 7 días y botón en Noticias
 
@@ -100,5 +100,5 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 
 ## Open Questions
 
-- Pendiente de verificar en la implementación: `channel_id` de la NBA en YouTube (T20).
+- `channel_id` de la NBA verificado en T20. Pendiente: medir el enlace vídeo↔partido en temporada regular (el canal no publica resúmenes en pretemporada).
 - Dirección visual: el usuario la decide en T6.

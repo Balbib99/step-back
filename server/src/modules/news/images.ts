@@ -2,7 +2,6 @@ import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node
 import { join } from 'node:path';
 import type { HttpClient } from '../../core/http.js';
 import type { Logger } from '../../core/logger.js';
-import type { NewsRepo } from './repo.js';
 import { isPublicHttpsUrl } from './text.js';
 
 /** The CBS pictures are PNGs of 2-3 MB; anything much larger is not a news picture. */
@@ -23,7 +22,7 @@ export function sniffImageType(bytes: Uint8Array): ImageType | undefined {
 
 export class ImageUnavailableError extends Error {
   constructor(id: number, reason: string, cause?: unknown) {
-    super(`Could not get the picture of news item ${id}: ${reason}`, { cause });
+    super(`Could not get the picture of item ${id}: ${reason}`, { cause });
     this.name = 'ImageUnavailableError';
   }
 }
@@ -47,7 +46,8 @@ export interface ImageStore {
 export function createImageStore(deps: {
   dir: string;
   http: HttpClient;
-  repo: NewsRepo;
+  /** Where the picture of an item lives at its source. */
+  repo: { mediaUrl(id: number): string | undefined };
   logger: Logger;
 }): ImageStore {
   const { dir, http, repo, logger } = deps;

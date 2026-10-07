@@ -1,4 +1,4 @@
-import type { Game, GameTeam, NewsItem, TeamWithCrest } from '@step-back/shared';
+import type { Game, GameTeam, Highlight, NewsItem, TeamWithCrest } from '@step-back/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -167,6 +167,38 @@ export const NEWS: NewsItem[] = [
   newsItem(5, { title: 'Nuggets contra Warriors', teams: ['DEN', 'GS'] }),
 ];
 
+export function highlight(id: number, extra: Partial<Highlight> = {}): Highlight {
+  const ytId = `video${String(id).padStart(6, '0')}`;
+  return {
+    id,
+    ytId,
+    title: `Jugada ${id}`,
+    publishedAt: new Date(Date.parse('2026-10-07T08:00:00Z') - id * 3_600_000).toISOString(),
+    kind: 'clip',
+    gameId: null,
+    thumbnailUrl: `/api/highlights/${id}/thumb`,
+    embedUrl: `https://www.youtube-nocookie.com/embed/${ytId}`,
+    watchUrl: `https://www.youtube.com/watch?v=${ytId}`,
+    isShort: false,
+    teams: [],
+    players: [],
+    ...extra,
+  };
+}
+
+/** A small channel feed: a game summary, two clips and a loose one. */
+export const HIGHLIGHTS: Highlight[] = [
+  highlight(1, {
+    title: 'LAKERS at WARRIORS | FULL GAME HIGHLIGHTS',
+    kind: 'full_highlights',
+    gameId: 'final',
+    teams: ['LAL', 'GS'],
+  }),
+  highlight(2, { title: 'Embiid vuelve a anotar', teams: ['PHI'] }),
+  highlight(3, { title: 'Timberwolves clip', teams: ['MIN'] }),
+  highlight(4, { title: 'Top 5 plays of the night' }),
+];
+
 const entry = (rank: number, abbr: string, name: string, wins: number, losses: number) => ({
   teamId: abbr,
   abbr,
@@ -218,6 +250,10 @@ export function standingsTable(
 /** What the fake server was asked, and what it should answer. Reset by `stubApi`. */
 export const api = {
   requests: [] as string[],
+  /** Videos to answer /api/highlights with, or a status to fail with. */
+  highlights: [] as Highlight[] | number,
+  /** Page size of the fake /api/highlights. */
+  highlightsPageSize: 20,
   /** News to answer /api/news with, or a status to fail with. */
   news: [] as NewsItem[] | number,
   /** Page size of the fake /api/news, to try paging with a small feed. */
@@ -234,6 +270,8 @@ export function stubApi() {
   api.requests = [];
   api.gamesStatus = [];
   api.news = NEWS;
+  api.highlights = HIGHLIGHTS;
+  api.highlightsPageSize = 20;
   api.newsPageSize = 20;
   api.standings = [standingsTable('east', 'regular'), standingsTable('west', 'regular')];
   api.games = GAMES;
@@ -249,6 +287,27 @@ export function stubApi() {
         return json(api.config);
       }
       if (url.includes('/api/teams')) return json({ teams: TEAMS });
+      const gameVideos = /\/api\/games\/([^/]+)\/highlights/.exec(url);
+      if (gameVideos) {
+        const game = GAMES.find((g) => g.id === decodeURIComponent(gameVideos[1]!));
+        if (!game) return json({ error: 'not_found' }, 404);
+        const list = typeof api.highlights === 'number' ? [] : api.highlights;
+        return json({ game, highlights: list.filter((h) => h.gameId === game.id) });
+      }
+      if (url.includes('/api/highlights')) {
+        if (typeof api.highlights === 'number') return json({ error: 'boom' }, api.highlights);
+        const params = new URL(url, 'http://x').searchParams;
+        const wanted = params.get('team')?.split(',');
+        const matching = api.highlights.filter(
+          (h) => !wanted || h.teams.some((t) => wanted.includes(t)),
+        );
+        const start = Number(params.get('before') ?? 0);
+        const size = Math.min(Number(params.get('limit') ?? 20), api.highlightsPageSize);
+        return json({
+          highlights: matching.slice(start, start + size),
+          nextBefore: start + size < matching.length ? String(start + size) : null,
+        });
+      }
       if (url.includes('/api/news')) {
         if (typeof api.news === 'number') return json({ error: 'boom' }, api.news);
         const params = new URL(url, 'http://x').searchParams;

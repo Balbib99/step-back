@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { gamesModule } from '../modules/games/index.js';
+import { highlightsModule } from '../modules/highlights/index.js';
 import { newsModule } from '../modules/news/index.js';
 import { standingsModule } from '../modules/standings/index.js';
 import { CORE_MIGRATIONS } from './core-migrations.js';
@@ -73,6 +74,7 @@ describe('the migrations of the app', () => {
     ...(gamesModule.migrations ?? []),
     ...(standingsModule.migrations ?? []),
     ...(newsModule.migrations ?? []),
+    ...(highlightsModule.migrations ?? []),
   ];
 
   it('have unique ids, each module continuing after the previous one', () => {

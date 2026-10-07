@@ -5,7 +5,8 @@ import { Layout } from './components/Layout';
 import { createQueryClient } from './lib/queries';
 import { Calendar } from './pages/Calendar';
 import { News } from './pages/News';
-import { Highlights, NotFound } from './pages/Placeholders';
+import { Highlights } from './pages/Highlights';
+import { NotFound } from './pages/NotFound';
 import { Standings } from './pages/Standings';
 import { Today } from './pages/Today';
 

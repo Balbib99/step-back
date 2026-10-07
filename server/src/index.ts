@@ -3,6 +3,7 @@ import { APP_NAME } from '@step-back/shared';
 import { buildApp } from './core/app.js';
 import { ConfigError, loadConfig } from './core/config.js';
 import { gamesModule } from './modules/games/index.js';
+import { highlightsModule } from './modules/highlights/index.js';
 import { newsModule } from './modules/news/index.js';
 import { standingsModule } from './modules/standings/index.js';
 
@@ -13,7 +14,7 @@ async function main(): Promise<void> {
   // Feature modules (games, news, ...) are added to this list as they are built.
   const { server, scheduler } = await buildApp({
     config,
-    modules: [gamesModule, standingsModule, newsModule],
+    modules: [gamesModule, standingsModule, newsModule, highlightsModule],
   });
 
   const shutdown = (signal: string) => {
