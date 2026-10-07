@@ -6,3 +6,4 @@ export * from './highlights.js';
 export * from './news.js';
 export * from './standings.js';
 export * from './teams.js';
+export * from './translation.js';

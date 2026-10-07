@@ -1,4 +1,5 @@
 import type { Game, GameTeam, TeamWithCrest } from '@step-back/shared';
+import { Link } from 'react-router-dom';
 import { gameLabel, gameStatusText, phaseLabel } from '../lib/game-text';
 import { teamStyle } from '../lib/team-style';
 import { ScoreNumber } from './ScoreNumber';
@@ -47,20 +48,20 @@ export function GameCard({
   game,
   teams,
   timeZone,
+  linked = true,
 }: {
   game: Game;
   teams: ReadonlyMap<string, TeamWithCrest>;
   timeZone: string;
+  /** Opens the game's own screen when pressed. Off on that screen. */
+  linked?: boolean;
 }) {
   const { main, live } = gameStatusText(game, timeZone);
   const started = game.status === 'live' || game.status === 'final';
   const final = game.status === 'final';
 
-  return (
-    <article
-      aria-label={gameLabel(game, main)}
-      className="mb-3.5 overflow-hidden rounded-card bg-surface"
-    >
+  const card = (
+    <article aria-label={gameLabel(game, main)} className="overflow-hidden rounded-card bg-surface">
       <div className="flex items-center justify-between px-3.5 py-2 text-[13px] font-semibold text-text-2">
         <span>{phaseLabel(game.seasonType, true)}</span>
         <span
@@ -95,5 +96,21 @@ export function GameCard({
       />
       {game.venue && <div className="px-3.5 py-2 text-xs text-text-3">{game.venue}</div>}
     </article>
+  );
+
+  return (
+    <div className="mb-3.5">
+      {linked ? (
+        <Link
+          to={`/partido/${encodeURIComponent(game.id)}`}
+          aria-label={`Ver el partido: ${gameLabel(game, main)}`}
+          className="block text-inherit no-underline"
+        >
+          {card}
+        </Link>
+      ) : (
+        card
+      )}
+    </div>
   );
 }

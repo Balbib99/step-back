@@ -249,3 +249,156 @@ describe('Noticias · empty, error and paging', () => {
     expect(new Set(titles()).size).toBe(5); // no repeats
   });
 });
+
+describe('Noticias · translating', () => {
+  const withTranslation = () => {
+    api.config = { ...(api.config as object), features: { translation: true, push: false } };
+  };
+  const post = (title: string) => posts().find((p) => p.getAttribute('aria-label') === title)!;
+  const open = async () => {
+    withTranslation();
+    renderRoute('/noticias?equipo=todos');
+    await waitFor(() => expect(posts()).toHaveLength(5));
+  };
+  const posted = () => api.requests.filter((url) => url.startsWith('POST '));
+
+  it('has no button when the server has no translation', async () => {
+    renderRoute('/noticias?equipo=todos');
+    await waitFor(() => expect(posts()).toHaveLength(5));
+    expect(screen.queryByRole('button', { name: 'Traducir al español' })).not.toBeInTheDocument();
+  });
+
+  it('has the button on posts in English only, never on one in Spanish', async () => {
+    await open();
+    expect(
+      within(post('Lakers ganan en la prórroga')).queryByRole('button', {
+        name: 'Traducir al español',
+      }),
+    ).toBeNull();
+    expect(
+      within(post('Embiid vuelve a entrenar')).getByRole('button', { name: 'Traducir al español' }),
+    ).toBeInTheDocument();
+  });
+
+  it('translates nothing by itself', async () => {
+    await open();
+    expect(posted()).toEqual([]);
+  });
+
+  it('translates the post when pressed, in place, and says who did it', async () => {
+    const user = userEvent.setup();
+    api.news = [newsItem(7, { title: 'Embiid is back', summary: 'He trained today.' })];
+    withTranslation();
+    renderRoute('/noticias?equipo=todos');
+    const card = await screen.findByRole('article');
+    await user.click(within(card).getByRole('button', { name: 'Traducir al español' }));
+
+    expect(await within(card).findByText('ES: Embiid is back')).toBeInTheDocument();
+    expect(within(card).getByText('ES: He trained today.')).toBeInTheDocument();
+    expect(within(card).getByText('Traducido con DeepL')).toBeInTheDocument();
+    expect(within(card).getByRole('heading')).toHaveAttribute('lang', 'es');
+    expect(posted()).toEqual(['POST /api/news/7/translate']);
+  });
+
+  it('switches between the translation and the original without asking again', async () => {
+    const user = userEvent.setup();
+    api.news = [newsItem(7, { title: 'Embiid is back' })];
+    withTranslation();
+    renderRoute('/noticias?equipo=todos');
+    const card = await screen.findByRole('article');
+    await user.click(within(card).getByRole('button', { name: 'Traducir al español' }));
+    await within(card).findByText('ES: Embiid is back');
+
+    await user.click(within(card).getByRole('button', { name: 'Ver original' }));
+    expect(within(card).getByText('Embiid is back')).toBeInTheDocument();
+    expect(within(card).queryByText('ES: Embiid is back')).toBeNull();
+
+    await user.click(within(card).getByRole('button', { name: 'Ver traducción' }));
+    expect(within(card).getByText('ES: Embiid is back')).toBeInTheDocument();
+    expect(posted()).toHaveLength(1);
+  });
+
+  it('shows what went wrong and keeps the original, ready to try again', async () => {
+    const user = userEvent.setup();
+    api.news = [newsItem(7, { title: 'Embiid is back' })];
+    api.translate = () => ({
+      status: 502,
+      body: {
+        error: 'translation_failed',
+        message: 'DeepL no responde ahora mismo. Inténtalo de nuevo en un rato.',
+      },
+    });
+    withTranslation();
+    renderRoute('/noticias?equipo=todos');
+    const card = await screen.findByRole('article');
+    await user.click(within(card).getByRole('button', { name: 'Traducir al español' }));
+
+    expect(await within(card).findByRole('alert')).toHaveTextContent(
+      'DeepL no responde ahora mismo',
+    );
+    expect(within(card).getByText('Embiid is back')).toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: 'Traducir al español' })).toBeEnabled();
+  });
+
+  it('turns the button off, with the reason, when the credit is spent', async () => {
+    const user = userEvent.setup();
+    api.news = [newsItem(7, { title: 'Embiid is back' })];
+    api.translate = () => ({
+      status: 429,
+      body: {
+        error: 'quota_exceeded',
+        message: 'Se ha agotado el crédito de traducción de DeepL.',
+      },
+    });
+    withTranslation();
+    renderRoute('/noticias?equipo=todos');
+    const card = await screen.findByRole('article');
+    await user.click(within(card).getByRole('button', { name: 'Traducir al español' }));
+
+    expect(await within(card).findByRole('alert')).toHaveTextContent('crédito de traducción');
+    expect(within(card).getByRole('button', { name: 'Traducir al español' })).toBeDisabled();
+  });
+
+  it('knows from the start that the credit is spent', async () => {
+    api.news = [newsItem(7, { title: 'Embiid is back' })];
+    api.translationStatus = {
+      enabled: true,
+      used: 1_000_000,
+      limit: 1_000_000,
+      percent: 100,
+      blocked: true,
+    };
+    withTranslation();
+    renderRoute('/noticias?equipo=todos');
+    const card = await screen.findByRole('article');
+    await waitFor(() =>
+      expect(within(card).getByRole('button', { name: 'Traducir al español' })).toBeDisabled(),
+    );
+    expect(within(card).getByText('Crédito de traducción agotado.')).toBeInTheDocument();
+    expect(posted()).toEqual([]);
+  });
+
+  it('warns from 90 % of the credit', async () => {
+    api.translationStatus = {
+      enabled: true,
+      used: 920_000,
+      limit: 1_000_000,
+      percent: 92,
+      blocked: false,
+    };
+    await open();
+    expect(await screen.findByRole('note')).toHaveTextContent('92 % del crédito de traducción');
+  });
+
+  it('does not warn below 90 %', async () => {
+    api.translationStatus = {
+      enabled: true,
+      used: 500_000,
+      limit: 1_000_000,
+      percent: 50,
+      blocked: false,
+    };
+    await open();
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  });
+});

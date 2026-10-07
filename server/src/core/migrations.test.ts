@@ -3,6 +3,7 @@ import { gamesModule } from '../modules/games/index.js';
 import { highlightsModule } from '../modules/highlights/index.js';
 import { newsModule } from '../modules/news/index.js';
 import { standingsModule } from '../modules/standings/index.js';
+import { translationModule } from '../modules/translation/index.js';
 import { CORE_MIGRATIONS } from './core-migrations.js';
 import { openDb } from './db.js';
 import { runMigrations, type Migration } from './migrations.js';
@@ -75,6 +76,7 @@ describe('the migrations of the app', () => {
     ...(standingsModule.migrations ?? []),
     ...(newsModule.migrations ?? []),
     ...(highlightsModule.migrations ?? []),
+    ...(translationModule.migrations ?? []),
   ];
 
   it('have unique ids, each module continuing after the previous one', () => {

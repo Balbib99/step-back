@@ -7,9 +7,11 @@ import {
   newsResponseSchema,
   standingsResponseSchema,
   teamsResponseSchema,
+  translationResponseSchema,
+  translationStatusSchema,
 } from '@step-back/shared';
-import { QueryClient, useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { fetchJson } from './api';
+import { QueryClient, useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+import { fetchJson, postJson } from './api';
 import { newsQuery, type NewsFilters } from './news';
 
 export function createQueryClient(): QueryClient {
@@ -69,8 +71,9 @@ export function useGamesRange(from: string, to: string) {
 }
 
 /** News, newest first, a page at a time. A new set of filters starts again from the first page. */
-export function useNews(filters: NewsFilters) {
+export function useNews(filters: NewsFilters, enabled = true) {
   return useInfiniteQuery({
+    enabled,
     queryKey: ['news', filters],
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam, signal }) =>
@@ -81,8 +84,9 @@ export function useNews(filters: NewsFilters) {
 }
 
 /** Videos of the official NBA channel, newest first, a page at a time. */
-export function useHighlights(teams: readonly string[]) {
+export function useHighlights(teams: readonly string[], enabled = true) {
   return useInfiniteQuery({
+    enabled,
     queryKey: ['highlights', teams],
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam, signal }) => {
@@ -108,5 +112,33 @@ export function useGameHighlights(gameId: string) {
         signal,
       ),
     refetchInterval: 5 * 60_000,
+  });
+}
+
+/** How much of the translation quota is used. Only asked when the server has translation on. */
+export function useTranslationStatus(enabled: boolean) {
+  return useQuery({
+    queryKey: ['translation-status'],
+    queryFn: ({ signal }) => fetchJson('/api/translation/status', translationStatusSchema, signal),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+/** Translates one news item into Spanish. Only ever called by pressing the button. */
+export function useTranslate(newsId: number) {
+  return useMutation({
+    mutationFn: () => postJson(`/api/news/${newsId}/translate`, translationResponseSchema),
+  });
+}
+
+/** Every game of one team (preseason and season), oldest first. */
+export function useTeamGames(abbr: string) {
+  return useQuery({
+    queryKey: ['team-games', abbr],
+    queryFn: ({ signal }) =>
+      fetchJson(`/api/games?team=${encodeURIComponent(abbr)}`, gamesResponseSchema, signal),
+    refetchInterval: (query) =>
+      query.state.data?.games.some((game) => game.status === 'live') ? 30_000 : 5 * 60_000,
   });
 }

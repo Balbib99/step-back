@@ -21,7 +21,7 @@ Una web privada, de solo lectura, que reúne en un solo sitio lo que hoy el usua
 | Noticias en inglés | ESPN news (misma API) + RSS (Yahoo Sports, CBS Sports, HoopsHype, r/nba) | Titular, resumen y enlace. No se copia el artículo completo. |
 | Noticias en español | RSS de GIGANTESbasket / Gigantes.com (URL exacta por verificar) | Pendiente confirmar que el feed existe. |
 | Mejores jugadas | RSS de YouTube del canal oficial NBA (`youtube.com/feeds/videos.xml?channel_id=...`) + embed | Se vincula cada vídeo a su partido por título y fecha. |
-| Traducción | DeepL API Free (500k caracteres/mes) | A demanda, con caché en SQLite. |
+| Traducción | DeepL API gratuita (crédito único de 1 M de caracteres, según su web actual) | A demanda, con caché en SQLite. |
 | X/Twitter | Fuera de v1 (decisión del usuario, 2026-10-07) | PasionBasketNBA solo existe en X; el usuario decide aplazar `x-source` a una v2. Su cuenta en Bluesky está inactiva desde enero de 2025. El formato post de la interfaz sirve ya para cualquier fuente. |
 
 ## Capability Map

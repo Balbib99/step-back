@@ -5,6 +5,7 @@ import {
   type GameTeam,
   type TeamWithCrest,
 } from '@step-back/shared';
+import { Link } from 'react-router-dom';
 import { gameLabel, gameStatusText } from '../lib/game-text';
 import { ScoreNumber } from './ScoreNumber';
 import { TeamCrest } from './TeamCrest';
@@ -62,34 +63,40 @@ export function MiniGame({
   const bar = top && bottom ? [top, bottom] : [top ?? bottom ?? NEUTRAL_PALETTE.trim];
 
   return (
-    <article
-      aria-label={gameLabel(game, main)}
-      className="grid min-h-16 grid-cols-[6px_1fr_auto] overflow-hidden rounded-card bg-surface"
+    <Link
+      to={`/partido/${encodeURIComponent(game.id)}`}
+      aria-label={`Ver el partido: ${gameLabel(game, main)}`}
+      className="block text-inherit no-underline"
     >
-      <span aria-hidden="true" className="flex flex-col">
-        {bar.map((colour, index) => (
-          <span key={index} className="flex-1" style={{ background: colour }} />
-        ))}
-      </span>
-      <div className="grid content-center gap-1.5 px-3.5 py-2.5">
-        {sides.map((side) => (
-          <Side
-            key={side.teamId + side.abbr}
-            side={side}
-            team={teams.get(side.abbr)}
-            dim={final && side.winner === false}
-            showScore={started}
-          />
-        ))}
-      </div>
-      <div className="grid min-w-[84px] place-items-center border-l border-line px-3.5 py-2.5 text-center">
-        <span>
-          <span className={`voice-name block text-lg tabular-nums ${live ? 'text-live' : ''}`}>
-            {main}
-          </span>
-          <span className="block text-[11px] text-text-3">{sub}</span>
+      <article
+        aria-label={gameLabel(game, main)}
+        className="grid min-h-16 grid-cols-[6px_1fr_auto] overflow-hidden rounded-card bg-surface"
+      >
+        <span aria-hidden="true" className="flex flex-col">
+          {bar.map((colour, index) => (
+            <span key={index} className="flex-1" style={{ background: colour }} />
+          ))}
         </span>
-      </div>
-    </article>
+        <div className="grid content-center gap-1.5 px-3.5 py-2.5">
+          {sides.map((side) => (
+            <Side
+              key={side.teamId + side.abbr}
+              side={side}
+              team={teams.get(side.abbr)}
+              dim={final && side.winner === false}
+              showScore={started}
+            />
+          ))}
+        </div>
+        <div className="grid min-w-[84px] place-items-center border-l border-line px-3.5 py-2.5 text-center">
+          <span>
+            <span className={`voice-name block text-lg tabular-nums ${live ? 'text-live' : ''}`}>
+              {main}
+            </span>
+            <span className="block text-[11px] text-text-3">{sub}</span>
+          </span>
+        </div>
+      </article>
+    </Link>
   );
 }

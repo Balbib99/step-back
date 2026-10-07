@@ -1,5 +1,5 @@
 import { onDarkColor, type StandingEntry, type TeamWithCrest } from '@step-back/shared';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ChipGroup, type ChipOption } from '../components/Chips';
 import { EmptyState, PageHeader } from '../components/PageHeader';
 import { TeamCrest } from '../components/TeamCrest';
@@ -83,14 +83,18 @@ function Row({
       className={`grid ${COLUMNS} min-h-[52px] items-center gap-x-2 rounded-card border-l-[4px] py-1.5 pr-3 pl-2.5`}
     >
       <span className="voice-number text-base text-text-2 tabular-nums">{entry.rank}</span>
-      <span className="flex min-w-0 items-center gap-2">
+      <Link
+        to={`/equipo/${entry.abbr}`}
+        aria-label={`Ver ${team?.name ?? entry.name}`}
+        className="flex min-w-0 items-center gap-2 text-inherit no-underline"
+      >
         <TeamCrest abbr={entry.abbr} src={team?.crestUrl} size={26} />
         <span
           className={`voice-name min-w-0 truncate text-[15px] ${favourite ? 'font-bold' : 'font-semibold'}`}
         >
           {team?.shortName ?? entry.name}
         </span>
-      </span>
+      </Link>
       <Stacked
         top={record}
         bottom={entry.winPct.toFixed(3).replace(/^0/, '')}

@@ -59,8 +59,8 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 - [x] T20 Adaptador RSS YouTube y verificación del `channel_id`
 - [x] T21 Emparejador vídeo↔partido con pruebas
 - [x] T22 Rutas de jugadas y pantalla Jugadas con embed
-- [ ] T23 Pantalla Partido (detalle) y pantalla Equipo
-- [ ] T24 Traducción DeepL con caché de 7 días y botón en Noticias
+- [x] T23 Pantalla Partido (detalle) y pantalla Equipo
+- [x] T24 Traducción DeepL con caché de 7 días y botón en Noticias
 
 ### Checkpoint E: Todo el contenido disponible
 

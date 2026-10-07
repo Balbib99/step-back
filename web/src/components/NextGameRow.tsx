@@ -1,4 +1,5 @@
 import type { Game } from '@step-back/shared';
+import { Link } from 'react-router-dom';
 import { dayLabel, localDay } from '../lib/dates';
 import { formatClock } from '../lib/format';
 import { TeamBadge } from './TeamBadge';
@@ -31,13 +32,18 @@ export function NextGameRow({
 
   return (
     <div className="flex items-center gap-3 rounded-card bg-surface px-3.5 py-3">
-      <TeamBadge abbr={abbr} />
-      <span className="min-w-0 text-sm">
+      <Link to={`/equipo/${abbr}`} aria-label={`Ver ${abbr}`} className="text-inherit no-underline">
+        <TeamBadge abbr={abbr} />
+      </Link>
+      <Link
+        to={`/partido/${encodeURIComponent(game.id)}`}
+        className="min-w-0 text-sm text-inherit no-underline"
+      >
         <span className="voice-name block text-base">{when}</span>
         <span className="block truncate text-text-2">
           {home ? 'vs' : 'en'} {opponent.name}
         </span>
-      </span>
+      </Link>
     </div>
   );
 }

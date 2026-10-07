@@ -195,3 +195,52 @@ describe('getBytes', () => {
     });
   });
 });
+
+describe('createHttpClient · postJson', () => {
+  it('sends the body as JSON with a POST and reads the JSON answer', async () => {
+    const { client, fetchMock } = setup([reply(200, '{"ok":true}')]);
+    await expect(client.postJson('https://example.com/x', { a: [1, 2] })).resolves.toEqual({
+      ok: true,
+    });
+
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe('https://example.com/x');
+    expect(init?.method).toBe('POST');
+    expect(init?.body).toBe('{"a":[1,2]}');
+    const headers = init?.headers as Record<string, string>;
+    expect(headers['content-type']).toBe('application/json');
+    expect(headers['user-agent']).toBe('step-back-test');
+  });
+
+  it('lets the caller add headers, such as an authorization', async () => {
+    const { client, fetchMock } = setup([reply(200, '{}')]);
+    await client.postJson('https://example.com/x', {}, { headers: { authorization: 'Key abc' } });
+    expect((fetchMock.mock.calls[0]![1]?.headers as Record<string, string>).authorization).toBe(
+      'Key abc',
+    );
+  });
+
+  it('retries a 429 like a GET, but not a client error', async () => {
+    const retried = setup([reply(429, '{}'), reply(200, '{"ok":1}')]);
+    await expect(retried.client.postJson('https://example.com/x', {})).resolves.toEqual({ ok: 1 });
+    expect(retried.fetchMock).toHaveBeenCalledTimes(2);
+
+    const refused = setup([reply(456, '{}')]);
+    await expect(refused.client.postJson('https://example.com/x', {})).rejects.toMatchObject({
+      status: 456,
+    });
+    expect(refused.fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('fails with an HttpError when the answer is not JSON', async () => {
+    const { client } = setup([reply(200, '<html>')]);
+    await expect(client.postJson('https://example.com/x', {})).rejects.toBeInstanceOf(HttpError);
+  });
+
+  it('sends GET requests as GET with no body', async () => {
+    const { client, fetchMock } = setup([reply(200, 'hi')]);
+    await client.get('https://example.com/x');
+    expect(fetchMock.mock.calls[0]![1]?.method).toBe('GET');
+    expect(fetchMock.mock.calls[0]![1]?.body).toBeUndefined();
+  });
+});

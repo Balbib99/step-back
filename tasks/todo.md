@@ -151,12 +151,12 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: tests de rutas; reproducción en el móvil.
   - Deps: T21, T7 · Files: `modules/highlights/{routes,jobs}.ts`, `web/src/pages/Highlights.tsx`, tests
 
-- [ ] **T23 — Pantallas Partido y Equipo** (M)
+- [x] **T23 — Pantallas Partido y Equipo** (M)
   - Acceptance: Partido: marcador, estado, jugadas y noticias relacionadas. Equipo: calendario, noticias y jugadas.
   - Verify: tests de componente; navegación desde tarjetas.
   - Deps: T10, T19, T22 · Files: `web/src/pages/{Game,Team}.tsx`, tests
 
-- [ ] **T24 — Traducción DeepL** (M)
+- [x] **T24 — Traducción DeepL** (M)
   - Acceptance: `POST /api/news/:id/translate`; caché de 7 días en `translations`, borrada con la noticia; contador mensual con aviso al 90 % y bloqueo al 100 %; botón "Traducir" por noticia; no se traduce lo que ya está en español.
   - Verify: tests con cliente DeepL simulado (2.ª petición sin consumo, 429 al límite); prueba manual con la clave real.
   - Deps: T17, T19 · Files: `modules/translation/{client,repo,routes}.ts`, `migrations/0006_translations.sql`, `web/src/components/TranslateButton.tsx`, tests

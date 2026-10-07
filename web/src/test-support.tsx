@@ -250,6 +250,23 @@ export function standingsTable(
 /** What the fake server was asked, and what it should answer. Reset by `stubApi`. */
 export const api = {
   requests: [] as string[],
+  /** What /api/translation/status says. */
+  translationStatus: {
+    enabled: true,
+    used: 0,
+    limit: 1_000_000,
+    percent: 0,
+    blocked: false,
+  } as object,
+  /** How to answer a translation request; by default the title and summary prefixed with "ES: ". */
+  translate: ((item: NewsItem) => ({
+    status: 200,
+    body: {
+      title: `ES: ${item.title}`,
+      summary: item.summary ? `ES: ${item.summary}` : null,
+      cached: false,
+    },
+  })) as (item: NewsItem) => { status: number; body: object },
   /** Videos to answer /api/highlights with, or a status to fail with. */
   highlights: [] as Highlight[] | number,
   /** Page size of the fake /api/highlights. */
@@ -271,6 +288,15 @@ export function stubApi() {
   api.gamesStatus = [];
   api.news = NEWS;
   api.highlights = HIGHLIGHTS;
+  api.translationStatus = { enabled: true, used: 0, limit: 1_000_000, percent: 0, blocked: false };
+  api.translate = (item) => ({
+    status: 200,
+    body: {
+      title: `ES: ${item.title}`,
+      summary: item.summary ? `ES: ${item.summary}` : null,
+      cached: false,
+    },
+  });
   api.highlightsPageSize = 20;
   api.newsPageSize = 20;
   api.standings = [standingsTable('east', 'regular'), standingsTable('west', 'regular')];
@@ -278,7 +304,7 @@ export function stubApi() {
   api.config = CONFIG;
   vi.stubGlobal(
     'fetch',
-    vi.fn(async (url: string) => {
+    vi.fn(async (url: string, init?: RequestInit) => {
       api.requests.push(url);
       const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
       if (url.includes('/api/health')) return json(HEALTH);
@@ -287,9 +313,20 @@ export function stubApi() {
         return json(api.config);
       }
       if (url.includes('/api/teams')) return json({ teams: TEAMS });
+      if (init?.method === 'POST') api.requests.push(`POST ${url}`);
+      const translating = /\/api\/news\/(\d+)\/translate/.exec(url);
+      if (translating) {
+        const item = (typeof api.news === 'number' ? [] : api.news).find(
+          (n) => n.id === Number(translating[1]),
+        );
+        if (!item) return json({ error: 'not_found', message: 'Esa noticia no existe.' }, 404);
+        const answer = api.translate(item);
+        return json(answer.body, answer.status);
+      }
+      if (url.includes('/api/translation/status')) return json(api.translationStatus);
       const gameVideos = /\/api\/games\/([^/]+)\/highlights/.exec(url);
       if (gameVideos) {
-        const game = GAMES.find((g) => g.id === decodeURIComponent(gameVideos[1]!));
+        const game = api.games.find((g) => g.id === decodeURIComponent(gameVideos[1]!));
         if (!game) return json({ error: 'not_found' }, 404);
         const list = typeof api.highlights === 'number' ? [] : api.highlights;
         return json({ game, highlights: list.filter((h) => h.gameId === game.id) });
@@ -336,6 +373,11 @@ export function stubApi() {
         const forced = api.gamesStatus.shift();
         if (forced && forced !== 200) return json({ error: 'boom' }, forced);
         const params = new URL(url, 'http://x').searchParams;
+        const team = params.get('team');
+        if (team) {
+          const ofTeam = api.games.filter((g) => g.home.abbr === team || g.away.abbr === team);
+          return json({ games: [...ofTeam].sort((a, b) => a.startUtc.localeCompare(b.startUtc)) });
+        }
         const [from, to] = [params.get('from')!, params.get('to')!];
         const inRange = api.games.filter((g) => {
           const day = localDay(g.startUtc, 'Europe/Madrid');

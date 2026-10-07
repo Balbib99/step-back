@@ -17,6 +17,9 @@ export interface HttpResponse<Body = string> {
 }
 
 export interface RequestOptions {
+  /** `GET` unless a body is sent with `postJson`. */
+  method?: 'GET' | 'POST';
+  body?: string;
   params?: Record<string, string | number | undefined>;
   headers?: Record<string, string>;
   timeoutMs?: number;
@@ -29,6 +32,8 @@ export interface HttpClient {
   /** Like `get`, for binary content such as images. */
   getBytes(url: string, options?: RequestOptions): Promise<HttpResponse<Uint8Array>>;
   getJson<T = unknown>(url: string, options?: RequestOptions): Promise<T>;
+  /** Sends `body` as JSON and reads the JSON answer. Retries 429 and 5xx like `get`. */
+  postJson<T = unknown>(url: string, body: unknown, options?: RequestOptions): Promise<T>;
 }
 
 export interface HttpClientOptions {
@@ -109,6 +114,8 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
       let serverDelay: number | undefined;
       try {
         const response = await fetchImpl(url, {
+          method: request.method ?? 'GET',
+          ...(request.body !== undefined && { body: request.body }),
           headers: { 'user-agent': userAgent, accept: '*/*', ...request.headers },
           signal: AbortSignal.timeout(timeoutMs),
         });
@@ -141,6 +148,27 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
 
   return {
     get,
+    async postJson<T>(url: string, body: unknown, request?: RequestOptions) {
+      const response = await send(
+        url,
+        {
+          ...request,
+          method: 'POST',
+          body: JSON.stringify(body),
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            ...request?.headers,
+          },
+        },
+        (reply) => reply.text(),
+      );
+      try {
+        return JSON.parse(response.body) as T;
+      } catch (error) {
+        throw new HttpError(`Invalid JSON from ${url}`, url, response.status, { cause: error });
+      }
+    },
     getBytes: (rawUrl, request = {}) =>
       send(rawUrl, request, async (response) => new Uint8Array(await response.arrayBuffer())),
     async getJson<T>(url: string, request?: RequestOptions) {

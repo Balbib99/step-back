@@ -5,9 +5,11 @@ import { Layout } from './components/Layout';
 import { createQueryClient } from './lib/queries';
 import { Calendar } from './pages/Calendar';
 import { News } from './pages/News';
+import { Game } from './pages/Game';
 import { Highlights } from './pages/Highlights';
 import { NotFound } from './pages/NotFound';
 import { Standings } from './pages/Standings';
+import { Team } from './pages/Team';
 import { Today } from './pages/Today';
 
 export function AppRoutes() {
@@ -19,6 +21,8 @@ export function AppRoutes() {
         <Route path="clasificacion" element={<Standings />} />
         <Route path="noticias" element={<News />} />
         <Route path="jugadas" element={<Highlights />} />
+        <Route path="partido/:id" element={<Game />} />
+        <Route path="equipo/:abbr" element={<Team />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

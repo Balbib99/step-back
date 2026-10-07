@@ -6,6 +6,7 @@ import { gamesModule } from './modules/games/index.js';
 import { highlightsModule } from './modules/highlights/index.js';
 import { newsModule } from './modules/news/index.js';
 import { standingsModule } from './modules/standings/index.js';
+import { translationModule } from './modules/translation/index.js';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 
@@ -14,7 +15,7 @@ async function main(): Promise<void> {
   // Feature modules (games, news, ...) are added to this list as they are built.
   const { server, scheduler } = await buildApp({
     config,
-    modules: [gamesModule, standingsModule, newsModule, highlightsModule],
+    modules: [gamesModule, standingsModule, newsModule, highlightsModule, translationModule],
   });
 
   const shutdown = (signal: string) => {

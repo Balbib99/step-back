@@ -1,4 +1,5 @@
 import type { TeamWithCrest } from '@step-back/shared';
+import { Link } from 'react-router-dom';
 import { bandTeam } from '../lib/news';
 import { teamStyle } from '../lib/team-style';
 import { TeamCrest } from './TeamCrest';
@@ -23,10 +24,12 @@ export function TeamBand({
   }
   const team = byAbbr.get(band.main);
   return (
-    <div
+    <Link
+      to={`/equipo/${band.main}`}
+      aria-label={`Ver ${team?.name ?? band.main}`}
       data-team={band.main}
       style={teamStyle(band.main)}
-      className="team-field flex min-h-9 items-center gap-2 px-3 py-1"
+      className="team-field flex min-h-9 items-center gap-2 px-3 py-1 no-underline"
     >
       <TeamCrest abbr={band.main} src={team?.crestUrl} size={24} />
       <span className="voice-number team-numeral text-lg">{band.main}</span>
@@ -38,6 +41,6 @@ export function TeamBand({
           {band.others.map((abbr) => (abbr === band.main ? '' : abbr)).join(' · ')}
         </span>
       )}
-    </div>
+    </Link>
   );
 }

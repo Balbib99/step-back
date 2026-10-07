@@ -1,7 +1,9 @@
 import type { NewsItem, TeamWithCrest } from '@step-back/shared';
 import { useState } from 'react';
+import { useTranslate } from '../lib/queries';
 import { kindLabel, timeAgo } from '../lib/news';
 import { TeamBand } from './TeamBand';
+import { TranslateButton } from './TranslateButton';
 
 const MAX_PLAYERS_SHOWN = 3;
 
@@ -51,6 +53,7 @@ export function NewsCard({
   timeZone,
   now,
   onPlayer,
+  translation,
 }: {
   item: NewsItem;
   favorites: readonly string[];
@@ -58,8 +61,16 @@ export function NewsCard({
   timeZone: string;
   now: Date;
   onPlayer: (name: string) => void;
+  /** Whether posts in English can be translated, and whether the quota is spent. */
+  translation?: { available: boolean; blocked: boolean };
 }) {
   const kind = kindLabel(item);
+  const translate = useTranslate(item.id);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const spanish = translate.data && !showOriginal ? translate.data : undefined;
+  const title = spanish?.title ?? item.title;
+  const summary = spanish ? spanish.summary : item.summary;
+  const canTranslate = translation?.available === true && item.lang === 'en';
   return (
     <article aria-label={item.title} className="overflow-hidden rounded-card bg-surface">
       <TeamBand teams={item.teams} favorites={favorites} byAbbr={teams} />
@@ -79,9 +90,19 @@ export function NewsCard({
           </time>
         </p>
 
-        <h2 className="voice-name mt-2 text-[21px] [overflow-wrap:anywhere]">{item.title}</h2>
-        {item.summary && (
-          <p className="mt-1.5 line-clamp-2 text-[14px] text-text-2">{item.summary}</p>
+        <h2
+          lang={spanish ? 'es' : undefined}
+          className="voice-name mt-2 text-[21px] [overflow-wrap:anywhere]"
+        >
+          {title}
+        </h2>
+        {summary && (
+          <p
+            lang={spanish ? 'es' : undefined}
+            className="mt-1.5 line-clamp-2 text-[14px] text-text-2"
+          >
+            {summary}
+          </p>
         )}
 
         <Media item={item} />
@@ -98,6 +119,17 @@ export function NewsCard({
               {name}
             </button>
           ))}
+          {canTranslate && (
+            <TranslateButton
+              translated={translate.data !== undefined}
+              showOriginal={showOriginal}
+              pending={translate.isPending}
+              error={translate.error}
+              blocked={translation.blocked}
+              onTranslate={() => translate.mutate()}
+              onToggle={() => setShowOriginal((value) => !value)}
+            />
+          )}
           <a
             href={item.url}
             target="_blank"

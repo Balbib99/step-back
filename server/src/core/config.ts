@@ -51,6 +51,9 @@ const envSchema = z
     TZ_DISPLAY: timeZone.default('Europe/Madrid'),
     FAVORITE_TEAMS: teamList.default('MIN,LAL,PHI'),
     DEEPL_API_KEY: optionalText,
+    // Only to override the address DeepL is called at. By default a key ending in ":fx" (the old
+    // free plan) uses api-free.deepl.com and any other key api.deepl.com.
+    DEEPL_API_URL: optionalText.pipe(z.string().url().optional()),
     VAPID_PUBLIC_KEY: optionalText,
     VAPID_PRIVATE_KEY: optionalText,
     VAPID_SUBJECT: optionalText,
@@ -82,6 +85,7 @@ export interface Config {
   timeZone: string;
   favoriteTeams: string[];
   deeplApiKey: string | undefined;
+  deeplApiUrl: string | undefined;
   vapid: { publicKey: string; privateKey: string; subject: string } | undefined;
 }
 
@@ -121,6 +125,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     timeZone: data.TZ_DISPLAY,
     favoriteTeams: data.FAVORITE_TEAMS,
     deeplApiKey: data.DEEPL_API_KEY,
+    deeplApiUrl: data.DEEPL_API_URL,
     vapid: publicKey && privateKey && subject ? { publicKey, privateKey, subject } : undefined,
   };
 }

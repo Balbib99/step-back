@@ -6,6 +6,7 @@ import { EmptyState, PageHeader } from '../components/PageHeader';
 import { DEFAULT_TIME_ZONE } from '../lib/format';
 import type { NewsFilters } from '../lib/news';
 import { useConfig, useNews, useTeams } from '../lib/queries';
+import { useTranslationAvailability } from '../lib/translation';
 
 // The address keeps the view (/noticias?equipo=LAL&tipo=videos&idioma=es&jugador=LeBron%20James),
 // so going back or reloading returns to the same place. Defaults are left out of it.
@@ -74,6 +75,10 @@ export function News() {
   };
   const news = useNews(filters);
 
+  // The translate button exists only when the server has a DeepL key, and goes off with the quota.
+  const translation = useTranslationAvailability();
+  const nearlySpent = !translation.blocked && (translation.percent ?? 0) >= 90;
+
   const teamsByAbbr = new Map((teams.data?.teams ?? []).map((t) => [t.abbr, t]));
   const items = news.data?.pages.flatMap((page) => page.news) ?? [];
   const now = new Date();
@@ -130,6 +135,15 @@ export function News() {
         </p>
       )}
 
+      {nearlySpent && (
+        <p
+          role="note"
+          className="mt-3 rounded-card border border-warn/40 bg-surface p-3 text-[13px] text-text-2"
+        >
+          Llevas usado el {translation.percent} % del crédito de traducción.
+        </p>
+      )}
+
       <div className="mt-4">
         {loading ? (
           <Skeleton />
@@ -165,6 +179,7 @@ export function News() {
                     timeZone={timeZone}
                     now={now}
                     onPlayer={(name) => update({ jugador: name })}
+                    translation={translation}
                   />
                 </li>
               ))}
