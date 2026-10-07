@@ -10,7 +10,7 @@ ESPN: `site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=YYY
 
 ## Modelo (SQLite)
 `teams(id, abbr, name, city, color, logo_url)` · `games(id, season, season_type, start_utc, status, home_id, away_id, home_score, away_score, period, clock, venue, updated_at)`.
-`status`: `scheduled | live | final | postponed`. `season_type`: `preseason | regular | playoffs`.
+`status`: `scheduled | live | final | postponed | canceled`. Un partido puede ser contra un equipo que no es de la NBA (pretemporada, p. ej. London Lions), así que `home_id`/`away_id` no llevan clave foránea a `teams` y el nombre del rival se guarda en el propio partido. `season_type`: `preseason | regular | playoffs`.
 
 ## API
 - `GET /api/games?date=YYYY-MM-DD` — partidos de un día.

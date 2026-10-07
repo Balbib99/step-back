@@ -49,7 +49,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: `npm run dev -w web` carga; test de componente del layout; V pasa.
   - Deps: T1, T6 · Files: `web/src/{main,App}.tsx`, `styles`, `components/Layout.tsx`, `web/vite.config.ts`
 
-- [ ] **T8 — Adaptador ESPN de equipos y partidos** (M)
+- [x] **T8 — Adaptador ESPN de equipos y partidos** (M)
   - Acceptance: esquemas zod para scoreboard y schedule; mapeo a `Game` y `Team`; fixtures reales grabadas (programado, en juego, final, aplazado).
   - Verify: tests del adaptador contra fixtures; sin llamadas de red en tests.
   - Deps: T4 · Files: `modules/games/adapter.ts`, `shared/src/games.ts`, `test/fixtures/espn/*`, tests
