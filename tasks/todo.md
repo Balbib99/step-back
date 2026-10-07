@@ -22,7 +22,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: tests con BD en memoria; dos arranques seguidos no duplican nada.
   - Deps: T2 · Files: `server/src/core/db.ts`, `migrations/0001_core.sql`, tests
 
-- [ ] **T4 — Cliente HTTP y scheduler** (M)
+- [x] **T4 — Cliente HTTP y scheduler** (M)
   - Acceptance: cliente con `User-Agent`, timeout, reintento y límite de tasa por host; scheduler con backoff que registra éxito/error y nunca tumba el proceso.
   - Verify: tests con reloj falso y servidor HTTP simulado; una tarea que lanza error se reintenta y el resto sigue.
   - Deps: T3 · Files: `core/http.ts`, `core/scheduler.ts`, tests
