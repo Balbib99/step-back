@@ -25,7 +25,7 @@ Todo lo que debe sobrevivir a una actualización (base de datos, escudos) vive e
 ## Requisitos en la Pi
 
 - Docker con Compose v2.24 o superior (`docker compose version`). Lo pide la opción `env_file ... required: false`.
-- Tu Caddy en Docker. Necesito saber el **nombre de la red de Docker** que usa (`docker network ls`). Por defecto el compose usa `caddy`; si el tuyo se llama de otra forma, arranca con `CADDY_NETWORK=nombre`.
+- Tu Caddy en Docker. Necesito saber el **nombre de la red de Docker** que usa (`docker network ls`). Por defecto el compose usa `edge` (la red que ya comparten tu Caddy y tus otras webs); si algún día cambia, arranca con `CADDY_NETWORK=nombre`.
 - Los puertos 80 y 443 de tu router apuntando a la Pi, y `step-back.duckdns.org` apuntando a tu IP pública, para que Caddy consiga el certificado.
 
 ## Probarlo primero en un ordenador
