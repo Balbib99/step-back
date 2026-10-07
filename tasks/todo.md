@@ -17,7 +17,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: tests de config válida e inválida.
   - Deps: T1 · Files: `server/src/core/config.ts`, `logger.ts`, `.env.example`, tests
 
-- [ ] **T3 — SQLite, migraciones, `kv_cache`, `job_runs`** (M)
+- [x] **T3 — SQLite, migraciones, `kv_cache`, `job_runs`** (M)
   - Acceptance: migraciones numeradas e idempotentes al arrancar; tablas `kv_cache` y `job_runs`.
   - Verify: tests con BD en memoria; dos arranques seguidos no duplican nada.
   - Deps: T2 · Files: `server/src/core/db.ts`, `migrations/0001_core.sql`, tests

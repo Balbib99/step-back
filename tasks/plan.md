@@ -22,7 +22,7 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 ### Phase 1: Foundation (`core`)
 - [x] T1 Esqueleto del monorepo, lint, typecheck y Vitest
 - [x] T2 Configuración validada y logger
-- [ ] T3 SQLite, migraciones, `kv_cache` y `job_runs`
+- [x] T3 SQLite, migraciones, `kv_cache` y `job_runs`
 - [ ] T4 Cliente HTTP con límite de tasa y scheduler con reintentos
 - [ ] T5 Registro de módulos, `/api/health` y `/api/config`
 
