@@ -6,11 +6,8 @@ import { readEspnFixture } from '../../../test/fixtures/espn/read.js';
 import { openDb } from '../../core/db.js';
 import { HttpError, type HttpClient } from '../../core/http.js';
 import { createLogger } from '../../core/logger.js';
-import {
-  CORE_MIGRATIONS_DIR,
-  loadMigrationsFromDir,
-  runMigrations,
-} from '../../core/migrations.js';
+import { CORE_MIGRATIONS } from '../../core/core-migrations.js';
+import { runMigrations } from '../../core/migrations.js';
 import { parseTeams } from './adapter.js';
 import {
   CrestUnavailableError,
@@ -60,10 +57,7 @@ describe('CrestStore', () => {
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'step-back-crests-'));
     const db = openDb(':memory:');
-    runMigrations(db, [
-      ...loadMigrationsFromDir(CORE_MIGRATIONS_DIR),
-      ...(gamesModule.migrations ?? []),
-    ]);
+    runMigrations(db, [...CORE_MIGRATIONS, ...(gamesModule.migrations ?? [])]);
     repo = createGamesRepo(db);
     repo.upsertTeams(parseTeams(readEspnFixture('teams.json')));
   });

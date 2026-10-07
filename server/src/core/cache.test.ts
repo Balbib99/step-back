@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createKvCache, type KvCache } from './cache.js';
 import { openDb } from './db.js';
-import { CORE_MIGRATIONS_DIR, loadMigrationsFromDir, runMigrations } from './migrations.js';
+import { CORE_MIGRATIONS } from './core-migrations.js';
+import { runMigrations } from './migrations.js';
 
 describe('KvCache', () => {
   let clock = 1_000_000;
@@ -10,7 +11,7 @@ describe('KvCache', () => {
   beforeEach(() => {
     clock = 1_000_000;
     const db = openDb(':memory:');
-    runMigrations(db, loadMigrationsFromDir(CORE_MIGRATIONS_DIR));
+    runMigrations(db, CORE_MIGRATIONS);
     cache = createKvCache(db, () => clock);
   });
 

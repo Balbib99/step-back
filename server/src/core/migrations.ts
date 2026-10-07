@@ -1,29 +1,15 @@
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { Db } from './db.js';
 
-export const CORE_MIGRATIONS_DIR = fileURLToPath(new URL('./migrations', import.meta.url));
-
+/**
+ * A schema change. Ids are global across modules (core 1, games 2, ...), so two modules cannot
+ * pick the same one. Migrations are TypeScript constants rather than .sql files so that a
+ * bundled build needs no files next to it.
+ */
 export interface Migration {
   id: number;
   name: string;
   sql: string;
-}
-
-const FILE_PATTERN = /^(\d{4})_([a-z0-9_-]+)\.sql$/;
-
-/** Reads `0001_name.sql`-style files. Ids are global across modules, so they must not collide. */
-export function loadMigrationsFromDir(dir: string): Migration[] {
-  return readdirSync(dir)
-    .filter((file) => file.endsWith('.sql'))
-    .map((file) => {
-      const match = FILE_PATTERN.exec(file);
-      if (!match) throw new Error(`Invalid migration file name: ${file} (expected 0001_name.sql)`);
-      return { id: Number(match[1]), name: match[2]!, sql: readFileSync(join(dir, file), 'utf8') };
-    })
-    .sort((a, b) => a.id - b.id);
 }
 
 function checksum(sql: string): string {

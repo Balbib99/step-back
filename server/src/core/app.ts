@@ -5,10 +5,12 @@ import { openDb, type Db } from './db.js';
 import { createHttpClient } from './http.js';
 import { createJobRuns } from './job-runs.js';
 import { createLogger, type Logger } from './logger.js';
-import { CORE_MIGRATIONS_DIR, loadMigrationsFromDir, runMigrations } from './migrations.js';
+import { CORE_MIGRATIONS } from './core-migrations.js';
+import { runMigrations } from './migrations.js';
 import type { AppModule, ModuleContext } from './modules.js';
 import { registerCoreRoutes } from './routes.js';
 import { createScheduler, type Scheduler } from './scheduler.js';
+import { registerWeb, sendSinglePage, wantsSinglePage } from './web.js';
 
 export interface BuildAppOptions {
   config: Config;
@@ -39,7 +41,7 @@ export async function buildApp(options: BuildAppOptions): Promise<App> {
 
   try {
     runMigrations(db, [
-      ...loadMigrationsFromDir(CORE_MIGRATIONS_DIR),
+      ...CORE_MIGRATIONS,
       ...modules.flatMap((module) => module.migrations ?? []),
     ]);
   } catch (error) {
@@ -65,8 +67,10 @@ export async function buildApp(options: BuildAppOptions): Promise<App> {
     loggerInstance: logger.child({ component: 'http' }) as FastifyBaseLogger,
   });
 
-  server.setNotFoundHandler((_request, reply) => {
-    void reply.code(404).send({ error: 'not_found' });
+  const servesWeb = config.webDir !== undefined;
+  server.setNotFoundHandler((request, reply) => {
+    if (servesWeb && wantsSinglePage(request)) return sendSinglePage(reply);
+    return reply.code(404).send({ error: 'not_found' });
   });
   server.setErrorHandler((error: FastifyError, request, reply) => {
     const status = error.statusCode ?? 500;
@@ -94,6 +98,15 @@ export async function buildApp(options: BuildAppOptions): Promise<App> {
       });
     }
     for (const job of jobs?.(context) ?? []) scheduler.add(job);
+  }
+
+  if (config.webDir) {
+    try {
+      await registerWeb(server, config.webDir);
+    } catch (error) {
+      db.close();
+      throw error;
+    }
   }
 
   server.addHook('onClose', async () => {

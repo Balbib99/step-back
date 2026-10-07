@@ -5,3 +5,6 @@ data/
 .env
 *.log
 .DS_Store
+
+# Secrets for the production container
+deploy/production.env

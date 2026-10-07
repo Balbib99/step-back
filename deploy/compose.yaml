@@ -1,0 +1,58 @@
+# step-back on the Raspberry Pi, behind the Caddy that already runs there.
+#
+#   docker compose -f deploy/compose.yaml up -d --build
+#
+# The container publishes no port on the host: Caddy reaches it as http://step-back:3000 over a
+# Docker network both share (CADDY_NETWORK, "caddy" by default). Caddy is also what asks for the
+# password, so the app must never be reachable any other way.
+
+name: step-back
+
+services:
+  step-back:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: step-back:latest
+    container_name: step-back
+    restart: unless-stopped
+
+    # Secrets and personal settings (DeepL key, VAPID keys, favourite teams...). Optional.
+    # Copy deploy/production.env.example to deploy/production.env.
+    env_file:
+      - path: production.env
+        required: false
+    # Fixed by the image layout; they win over anything in the file above.
+    environment:
+      HOST: 0.0.0.0
+      PORT: '3000'
+      DB_PATH: /data/step-back.db
+      WEB_DIR: /app/web
+      # Stay well inside mem_limit instead of being killed by it.
+      NODE_OPTIONS: --max-old-space-size=192
+
+    volumes:
+      - data:/data
+    networks:
+      - caddy
+    expose:
+      - '3000'
+
+    mem_limit: 400m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+
+volumes:
+  data:
+
+networks:
+  caddy:
+    name: ${CADDY_NETWORK:-caddy}
+    external: true

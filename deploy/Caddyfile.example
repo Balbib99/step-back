@@ -1,0 +1,15 @@
+# Add this block to the Caddyfile that already runs on the Raspberry Pi.
+# Caddy and the step-back container must share a Docker network (see CADDY_NETWORK in compose.yaml).
+
+step-back.duckdns.org {
+	# The only protection the app has: nobody gets past this without the password.
+	# Make the hash with:   docker run --rm caddy:2 caddy hash-password
+	# and paste it after the user name. Never write the password itself here.
+	basic_auth {
+		CHANGE_ME_USER CHANGE_ME_PASSWORD_HASH
+	}
+
+	encode zstd gzip
+
+	reverse_proxy step-back:3000
+}

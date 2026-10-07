@@ -1,0 +1,16 @@
+# Keep the build context small and never send secrets or local data into an image.
+.git
+.claude
+node_modules
+**/node_modules
+**/dist
+**/coverage
+data
+**/data
+.env
+.env.*
+deploy/production.env
+docs
+tasks
+SPEC*.md
+*.log

@@ -40,7 +40,7 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 ### Checkpoint B: Primer corte funcionando en local
 
 ### Phase 3: Esqueleto andante en la Pi (`deploy`, parte 1)
-- [ ] T12 Dockerfile ARM64, compose y Caddyfile con `basic_auth`
+- [x] T12 Dockerfile ARM64, compose y Caddyfile con `basic_auth`
 - [ ] T13 Despliegue real en `step-back.duckdns.org` y prueba de instalación PWA
 
 ### Checkpoint C: Desplegado, privado y accesible desde el móvil

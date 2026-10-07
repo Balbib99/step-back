@@ -43,6 +43,9 @@ const envSchema = z
     DB_PATH: z.string().min(1).default('./data/step-back.db'),
     // Where downloaded team crests are kept. Defaults to a `crests` folder next to the database.
     CRESTS_DIR: z.string().min(1).optional(),
+    // Folder with the built web app (web/dist). When set, the server also serves the app, so one
+    // container is the whole product. In development the Vite server does that instead.
+    WEB_DIR: z.string().min(1).optional(),
     TZ_DISPLAY: timeZone.default('Europe/Madrid'),
     FAVORITE_TEAMS: teamList.default('MIN,LAL,PHI'),
     DEEPL_API_KEY: optionalText,
@@ -72,6 +75,7 @@ export interface Config {
   logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
   dbPath: string;
   crestsDir: string;
+  webDir: string | undefined;
   timeZone: string;
   favoriteTeams: string[];
   deeplApiKey: string | undefined;
@@ -107,6 +111,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     crestsDir:
       data.CRESTS_DIR ??
       join(data.DB_PATH === ':memory:' ? './data' : dirname(data.DB_PATH), 'crests'),
+    webDir: data.WEB_DIR,
     timeZone: data.TZ_DISPLAY,
     favoriteTeams: data.FAVORITE_TEAMS,
     deeplApiKey: data.DEEPL_API_KEY,

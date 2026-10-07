@@ -1,4 +1,12 @@
--- Module `games`: teams and games, as served by ESPN.
+import type { Migration } from '../../core/migrations.js';
+
+/** Teams and games, as served by ESPN. */
+export const GAMES_MIGRATIONS: Migration[] = [
+  {
+    id: 2,
+    name: 'games',
+    sql: `
+-- Module games: teams and games, as served by ESPN.
 
 CREATE TABLE teams (
   id         TEXT PRIMARY KEY,
@@ -45,3 +53,6 @@ CREATE TABLE games (
 CREATE INDEX games_start ON games (start_utc);
 CREATE INDEX games_home ON games (home_abbr, start_utc);
 CREATE INDEX games_away ON games (away_abbr, start_utc);
+`,
+  },
+];

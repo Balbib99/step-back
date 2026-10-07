@@ -1,3 +1,11 @@
+import type { Migration } from './migrations.js';
+
+/** Tables every module relies on. Migrations are TypeScript so a bundled build needs no extra files. */
+export const CORE_MIGRATIONS: Migration[] = [
+  {
+    id: 1,
+    name: 'core',
+    sql: `
 -- Core tables shared by every module.
 
 -- Cache of external responses (and anything else with a time-to-live).
@@ -20,3 +28,6 @@ CREATE TABLE job_runs (
 );
 
 CREATE INDEX job_runs_job_started ON job_runs (job_id, started_at DESC);
+`,
+  },
+];

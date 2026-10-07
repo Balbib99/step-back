@@ -4,11 +4,8 @@ import { readEspnFixture } from '../../../test/fixtures/espn/read.js';
 import { openDb } from '../../core/db.js';
 import { HttpError, type HttpClient } from '../../core/http.js';
 import { createLogger } from '../../core/logger.js';
-import {
-  CORE_MIGRATIONS_DIR,
-  loadMigrationsFromDir,
-  runMigrations,
-} from '../../core/migrations.js';
+import { CORE_MIGRATIONS } from '../../core/core-migrations.js';
+import { runMigrations } from '../../core/migrations.js';
 import { gamesModule } from './index.js';
 import {
   espnDaysToFetch,
@@ -129,10 +126,7 @@ describe('refreshScoreboards', () => {
 
   beforeEach(() => {
     const db = openDb(':memory:');
-    runMigrations(db, [
-      ...loadMigrationsFromDir(CORE_MIGRATIONS_DIR),
-      ...(gamesModule.migrations ?? []),
-    ]);
+    runMigrations(db, [...CORE_MIGRATIONS, ...(gamesModule.migrations ?? [])]);
     repo = createGamesRepo(db);
   });
 
@@ -194,10 +188,7 @@ describe('refreshScoreboards', () => {
 describe('refreshDelayFromStore', () => {
   it('reads the pace from what is stored', () => {
     const db = openDb(':memory:');
-    runMigrations(db, [
-      ...loadMigrationsFromDir(CORE_MIGRATIONS_DIR),
-      ...(gamesModule.migrations ?? []),
-    ]);
+    runMigrations(db, [...CORE_MIGRATIONS, ...(gamesModule.migrations ?? [])]);
     const repo = createGamesRepo(db);
 
     expect(refreshDelayFromStore(repo, NOW)).toBe(REFRESH.idle);

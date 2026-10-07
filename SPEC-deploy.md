@@ -6,8 +6,8 @@ Depende de: todos · Índice: [SPEC.md](SPEC.md)
 Desplegar en la Raspberry Pi 5 (Linux, ARM64, con Docker y Caddy ya en uso), de forma privada y recuperable.
 
 ## Entregables
-- `deploy/Dockerfile` multi-etapa (build de web y servidor → imagen Node 22 slim, usuario no root, sin dependencias de desarrollo), para `linux/arm64`.
-- `deploy/compose.yaml`: un servicio `step-back`, volumen `./data` para SQLite, `restart: unless-stopped`, *healthcheck* sobre `/api/health`, límite de memoria.
+- `deploy/Dockerfile` multi-etapa (compilar web y empaquetar el servidor con esbuild en un solo archivo → dependencias de producción → imagen Node 22 slim sin compiladores, usuario no root), para `linux/arm64`. El servidor sirve también la web (`WEB_DIR`).
+- `deploy/compose.yaml`: un servicio `step-back`, volumen con nombre `data` en `/data` (así Docker le da los permisos del usuario `node`) para SQLite y escudos, `restart: unless-stopped`, *healthcheck* sobre `/api/health`, límite de memoria.
 - `deploy/Caddyfile.example`: el sitio con HTTPS y **`basic_auth`** (contraseña hasheada con `caddy hash-password`) delante del contenedor. El contenedor no publica puertos en el host, solo en la red de Caddy.
 - `deploy/backup.sh`: copia diaria de la BD (`sqlite3 .backup`) con rotación de 14 días.
 - `docs/deploy.md`: instalación, actualización y recuperación paso a paso.

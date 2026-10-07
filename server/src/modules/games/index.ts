@@ -1,10 +1,9 @@
-import { fileURLToPath } from 'node:url';
-import { loadMigrationsFromDir } from '../../core/migrations.js';
 import type { AppModule } from '../../core/modules.js';
 import type { ModuleContext } from '../../core/modules.js';
 import { loadCalendar } from './calendar.js';
 import { createCrestStore, type CrestStore } from './crests.js';
 import { seasonForDate } from './dates.js';
+import { GAMES_MIGRATIONS } from './games-migrations.js';
 import { refreshDelayFromStore, refreshScoreboards } from './refresh.js';
 import { createGamesRepo } from './repo.js';
 import { registerGamesRoutes } from './routes.js';
@@ -35,7 +34,7 @@ function crestStoreFor(context: ModuleContext): CrestStore {
 export const gamesModule: AppModule = {
   id: 'games',
 
-  migrations: loadMigrationsFromDir(fileURLToPath(new URL('./migrations', import.meta.url))),
+  migrations: GAMES_MIGRATIONS,
 
   routes: (app, context) => {
     registerGamesRoutes(app, createGamesRepo(context.db), context.config, crestStoreFor(context));

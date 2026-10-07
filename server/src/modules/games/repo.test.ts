@@ -2,8 +2,8 @@ import type { Game } from '@step-back/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { readEspnFixture } from '../../../test/fixtures/espn/read.js';
 import { openDb } from '../../core/db.js';
+import { CORE_MIGRATIONS } from '../../core/core-migrations.js';
 import { runMigrations } from '../../core/migrations.js';
-import { loadMigrationsFromDir, CORE_MIGRATIONS_DIR } from '../../core/migrations.js';
 import { parseSchedule, parseScoreboard, parseTeams } from './adapter.js';
 import { gamesModule } from './index.js';
 import { createGamesRepo, type GamesRepo } from './repo.js';
@@ -16,10 +16,7 @@ describe('GamesRepo', () => {
 
   beforeEach(() => {
     const db = openDb(':memory:');
-    runMigrations(db, [
-      ...loadMigrationsFromDir(CORE_MIGRATIONS_DIR),
-      ...(gamesModule.migrations ?? []),
-    ]);
+    runMigrations(db, [...CORE_MIGRATIONS, ...(gamesModule.migrations ?? [])]);
     repo = createGamesRepo(db, () => 1_000);
   });
 

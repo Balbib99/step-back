@@ -1,11 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { gamesModule } from '../modules/games/index.js';
+import { CORE_MIGRATIONS } from './core-migrations.js';
 import { openDb } from './db.js';
-import {
-  CORE_MIGRATIONS_DIR,
-  loadMigrationsFromDir,
-  runMigrations,
-  type Migration,
-} from './migrations.js';
+import { runMigrations, type Migration } from './migrations.js';
 
 const create = (id: number, table: string): Migration => ({
   id,
@@ -23,7 +20,7 @@ const tables = (db: ReturnType<typeof openDb>) =>
 describe('runMigrations', () => {
   it('applies the real core migrations and creates kv_cache and job_runs', () => {
     const db = openDb(':memory:');
-    const applied = runMigrations(db, loadMigrationsFromDir(CORE_MIGRATIONS_DIR));
+    const applied = runMigrations(db, CORE_MIGRATIONS);
     expect(applied).toEqual([1]);
     expect(tables(db)).toEqual(expect.arrayContaining(['kv_cache', 'job_runs']));
   });
@@ -68,10 +65,20 @@ describe('runMigrations', () => {
   });
 });
 
-describe('loadMigrationsFromDir', () => {
-  it('loads core migrations sorted by id', () => {
-    const migrations = loadMigrationsFromDir(CORE_MIGRATIONS_DIR);
-    expect(migrations.map((m) => m.id)).toEqual([1]);
-    expect(migrations[0]?.name).toBe('core');
+describe('the migrations of the app', () => {
+  const all = [...CORE_MIGRATIONS, ...(gamesModule.migrations ?? [])];
+
+  it('have unique ids, each module continuing after the previous one', () => {
+    const ids = all.map((migration) => migration.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toEqual([...ids].sort((a, b) => a - b));
+  });
+
+  it('apply together on an empty database and leave every table in place', () => {
+    const db = openDb(':memory:');
+    expect(runMigrations(db, all)).toEqual(all.map((migration) => migration.id));
+    expect(tables(db)).toEqual(
+      expect.arrayContaining(['kv_cache', 'job_runs', 'teams', 'games', 'schema_migrations']),
+    );
   });
 });

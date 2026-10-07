@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { openDb } from './db.js';
 import { createJobRuns, type JobRuns } from './job-runs.js';
-import { CORE_MIGRATIONS_DIR, loadMigrationsFromDir, runMigrations } from './migrations.js';
+import { CORE_MIGRATIONS } from './core-migrations.js';
+import { runMigrations } from './migrations.js';
 
 describe('JobRuns', () => {
   let runs: JobRuns;
 
   beforeEach(() => {
     const db = openDb(':memory:');
-    runMigrations(db, loadMigrationsFromDir(CORE_MIGRATIONS_DIR));
+    runMigrations(db, CORE_MIGRATIONS);
     runs = createJobRuns(db);
   });
 

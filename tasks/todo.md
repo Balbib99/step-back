@@ -81,7 +81,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
 
 ## Phase 3: Esqueleto andante en la Pi (`deploy`, parte 1)
 
-- [ ] **T12 — Docker ARM64, compose y Caddyfile** (M)
+- [x] **T12 — Docker ARM64, compose y Caddyfile** (M)
   - Acceptance: Dockerfile multi-etapa (usuario no root, solo producción), `compose.yaml` con volumen de datos, healthcheck y límite de memoria; `Caddyfile.example` con `basic_auth` para `step-back.duckdns.org`; el servidor sirve los estáticos de `web`.
   - Verify: `docker buildx build --platform linux/arm64` termina; el contenedor responde `/api/health` en local.
   - Deps: T11 · Files: `deploy/Dockerfile`, `deploy/compose.yaml`, `deploy/Caddyfile.example`, `server/src/core/static.ts`

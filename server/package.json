@@ -7,9 +7,11 @@
     "dev": "tsx watch src/index.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "build": "tsc -p tsconfig.json --noEmit"
+    "build": "tsc -p tsconfig.json --noEmit && node scripts/bundle.mjs",
+    "bundle": "node scripts/bundle.mjs"
   },
   "dependencies": {
+    "@fastify/static": "^10.1.5",
     "@step-back/shared": "*",
     "better-sqlite3": "^12.11.1",
     "fastify": "^5.12.5",
@@ -19,6 +21,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^22",
+    "esbuild": "^0.28.2",
     "tsx": "^4"
   }
 }
