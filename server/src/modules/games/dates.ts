@@ -55,3 +55,14 @@ export function localDaysRangeUtc(fromDate: string, toDate: string, timeZone: st
 export function seasonForDate(now: Date): number {
   return now.getUTCMonth() >= 7 ? now.getUTCFullYear() + 1 : now.getUTCFullYear();
 }
+
+/** The local day (YYYY-MM-DD) of an instant in `timeZone`. */
+export function localDay(instant: Date, timeZone: string): string {
+  // The en-CA locale writes dates as YYYY-MM-DD.
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(instant);
+}

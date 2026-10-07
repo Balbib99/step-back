@@ -1,6 +1,6 @@
 import type { Game, GameTeam } from '@step-back/shared';
 import { describe, expect, it } from 'vitest';
-import { gameStatusText } from './MiniGame';
+import { gameLabel, gameStatusText, phaseLabel } from './game-text';
 
 const side = (abbr: string): GameTeam => ({
   teamId: abbr,
@@ -58,5 +58,30 @@ describe('gameStatusText', () => {
     expect(text({ status: 'final' }).main).toBe('Final');
     expect(text({ status: 'postponed' }).main).toBe('Aplazado');
     expect(text({ status: 'canceled' }).main).toBe('Cancelado');
+  });
+});
+
+describe('phaseLabel', () => {
+  it('writes the phase short for a row and long for a card', () => {
+    expect(phaseLabel('preseason')).toBe('Pretemp.');
+    expect(phaseLabel('preseason', true)).toBe('Pretemporada');
+    expect(phaseLabel('regular', true)).toBe('Temporada');
+    expect(phaseLabel('playoffs')).toBe('Playoffs');
+  });
+});
+
+describe('gameLabel', () => {
+  it('names the teams and the time before a game', () => {
+    expect(gameLabel(base, '01:00')).toBe('MIN en IND, 01:00');
+  });
+
+  it('names the teams with their scores once it has started', () => {
+    const live: Game = {
+      ...base,
+      status: 'live',
+      away: { ...base.away, score: 74 },
+      home: { ...base.home, score: 78 },
+    };
+    expect(gameLabel(live, 'Q3 4:12')).toBe('MIN 74, IND 78, Q3 4:12');
   });
 });

@@ -69,7 +69,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: test del endpoint con ESPN simulado (primera petición descarga, segunda sirve de caché); tamaño de cada escudo < 15 KB.
   - Deps: T9 · Files: `server/src/modules/games/crests.ts`, `web/src/components/TeamCrest.tsx`, tests
 
-- [ ] **T11 — Refresco adaptativo y pantalla Hoy** (M)
+- [x] **T11 — Refresco adaptativo y pantalla Hoy** (M)
   - Acceptance: refresco cada 10 min hoy/mañana, 30-60 s durante partidos en juego, 1 h sin partidos; portada con partidos de hoy y favoritos primero; la web se actualiza sola.
   - Verify: tests del scheduler adaptativo con reloj falso; test de ordenación de favoritos.
   - Deps: T9, T10 · Files: `modules/games/jobs.ts`, `web/src/pages/Today.tsx`, tests

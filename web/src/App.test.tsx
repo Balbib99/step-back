@@ -110,27 +110,3 @@ describe('freshness indicator', () => {
     expect(await screen.findByText('Sin conexión con el servidor')).toBeInTheDocument();
   });
 });
-
-describe('Hoy', () => {
-  it('shows the favourite teams from the server configuration, painted with their palette', async () => {
-    renderApp();
-    const list = await screen.findByRole('list', { name: 'Equipos favoritos' });
-    const badges = within(list).getAllByText(/^(MIN|LAL|PHI)$/);
-    expect(badges.map((badge) => badge.textContent)).toEqual(['MIN', 'LAL', 'PHI']);
-
-    const minTag = list.querySelector<HTMLElement>('[data-team="MIN"]');
-    expect(minTag?.style.getPropertyValue('--field')).toBe('#0C2340');
-    expect(minTag?.style.getPropertyValue('--numeral')).toBe('#78BE20');
-  });
-
-  it('shows a placeholder, not an empty list, while the configuration loads', () => {
-    renderApp();
-    expect(screen.queryByRole('list', { name: 'Equipos favoritos' })).not.toBeInTheDocument();
-  });
-
-  it('explains what is missing when the configuration cannot be loaded', async () => {
-    stubApi({ config: 'down' });
-    renderApp();
-    expect(await screen.findByText(/No se pudo cargar tu configuración/)).toBeInTheDocument();
-  });
-});

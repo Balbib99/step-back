@@ -1,6 +1,13 @@
 import type { Game, GameTeam } from '@step-back/shared';
 import { describe, expect, it } from 'vitest';
-import { favouritesPlaying, filterGames, groupByDay, involves } from './calendar';
+import {
+  favouritesPlaying,
+  filterGames,
+  groupByDay,
+  involves,
+  nextGameOf,
+  orderForToday,
+} from './calendar';
 
 const side = (abbr: string): GameTeam => ({
   teamId: abbr,
@@ -99,5 +106,61 @@ describe('favouritesPlaying', () => {
   it('knows when a team is involved', () => {
     expect(involves(games[0]!, ['LAL'])).toBe(true);
     expect(involves(games[0]!, ['GS'])).toBe(false);
+  });
+});
+
+describe('nextGameOf', () => {
+  const now = '2026-10-07T12:00:00.000Z';
+  const sorted = [
+    game('past', 'MIN', 'LAL', '2026-10-07T01:30:00Z'),
+    { ...game('live', 'MIN', 'IND', '2026-10-07T11:00:00Z'), status: 'live' as const },
+    game('next', 'BOS', 'PHI', '2026-10-07T16:00:00Z'),
+    game('later', 'PHI', 'NY', '2026-10-09T01:00:00Z'),
+  ];
+
+  it('finds the first game of the team that has not started', () => {
+    expect(nextGameOf(sorted, 'PHI', now)?.id).toBe('next');
+    expect(nextGameOf(sorted, 'NY', now)?.id).toBe('later');
+  });
+
+  it('ignores games that are over or on, even if they involve the team', () => {
+    expect(nextGameOf(sorted, 'MIN', now)).toBeUndefined();
+  });
+
+  it('knows when there is none', () => {
+    expect(nextGameOf(sorted, 'GS', now)).toBeUndefined();
+    expect(nextGameOf([], 'PHI', now)).toBeUndefined();
+  });
+});
+
+describe('orderForToday', () => {
+  const status = (g: Game, s: Game['status']): Game => ({ ...g, status: s });
+
+  it('puts live games first, then upcoming, then finished, each by start time', () => {
+    const list = [
+      status(game('final-b', 'A', 'B', '2026-10-07T03:00:00Z'), 'final'),
+      game('soon', 'C', 'D', '2026-10-07T17:00:00Z'),
+      status(game('live', 'E', 'F', '2026-10-07T16:00:00Z'), 'live'),
+      status(game('final-a', 'G', 'H', '2026-10-07T01:00:00Z'), 'final'),
+      game('later', 'I', 'J', '2026-10-07T20:00:00Z'),
+      status(game('postponed', 'K', 'L', '2026-10-07T00:00:00Z'), 'postponed'),
+    ];
+    expect(orderForToday(list).map((g) => g.id)).toEqual([
+      'live',
+      'soon',
+      'later',
+      'final-a',
+      'final-b',
+      'postponed',
+    ]);
+  });
+
+  it('does not change the list it is given', () => {
+    const list = [
+      game('b', 'A', 'B', '2026-10-07T05:00:00Z'),
+      game('a', 'C', 'D', '2026-10-07T04:00:00Z'),
+    ];
+    orderForToday(list);
+    expect(list.map((g) => g.id)).toEqual(['b', 'a']);
   });
 });

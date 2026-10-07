@@ -5,43 +5,9 @@ import {
   type GameTeam,
   type TeamWithCrest,
 } from '@step-back/shared';
-import { formatClock } from '../lib/format';
+import { gameLabel, gameStatusText } from '../lib/game-text';
+import { ScoreNumber } from './ScoreNumber';
 import { TeamCrest } from './TeamCrest';
-
-const PHASE_LABEL: Record<Game['seasonType'], string> = {
-  preseason: 'Pretemp.',
-  regular: 'Temporada',
-  playoffs: 'Playoffs',
-};
-
-function periodLabel(period: number): string {
-  return period <= 4 ? `Q${period}` : `PR${period - 4}`;
-}
-
-/** What the right-hand column says about a game, in Spanish. */
-export function gameStatusText(
-  game: Game,
-  timeZone: string,
-): { main: string; sub: string; live: boolean } {
-  const phase = PHASE_LABEL[game.seasonType];
-  switch (game.status) {
-    case 'live': {
-      const halftime = /half/i.test(game.statusDetail);
-      const main = halftime
-        ? 'Descanso'
-        : [game.period ? periodLabel(game.period) : '', game.clock ?? ''].filter(Boolean).join(' ');
-      return { main: main || 'En juego', sub: 'En juego', live: true };
-    }
-    case 'final':
-      return { main: 'Final', sub: phase, live: false };
-    case 'postponed':
-      return { main: 'Aplazado', sub: phase, live: false };
-    case 'canceled':
-      return { main: 'Cancelado', sub: phase, live: false };
-    default:
-      return { main: formatClock(game.startUtc, timeZone), sub: phase, live: false };
-  }
-}
 
 function Side({
   side,
@@ -61,12 +27,10 @@ function Side({
         {team?.shortName ?? side.name}
       </span>
       {showScore && (
-        <span
+        <ScoreNumber
+          value={side.score}
           className={`voice-number text-[22px] ${dim ? 'opacity-75' : ''}`}
-          aria-label={`${side.score ?? 0} puntos`}
-        >
-          {side.score}
-        </span>
+        />
       )}
     </span>
   );
@@ -96,13 +60,10 @@ export function MiniGame({
   );
   const [top, bottom] = barColours;
   const bar = top && bottom ? [top, bottom] : [top ?? bottom ?? NEUTRAL_PALETTE.trim];
-  const label = started
-    ? `${game.away.name} ${game.away.score}, ${game.home.name} ${game.home.score}, ${main}`
-    : `${game.away.name} en ${game.home.name}, ${main}`;
 
   return (
     <article
-      aria-label={label}
+      aria-label={gameLabel(game, main)}
       className="grid min-h-16 grid-cols-[6px_1fr_auto] overflow-hidden rounded-card bg-surface"
     >
       <span aria-hidden="true" className="flex flex-col">

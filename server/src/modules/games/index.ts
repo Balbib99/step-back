@@ -5,6 +5,7 @@ import type { ModuleContext } from '../../core/modules.js';
 import { loadCalendar } from './calendar.js';
 import { createCrestStore, type CrestStore } from './crests.js';
 import { seasonForDate } from './dates.js';
+import { refreshDelayFromStore, refreshScoreboards } from './refresh.js';
 import { createGamesRepo } from './repo.js';
 import { registerGamesRoutes } from './routes.js';
 
@@ -13,6 +14,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const RELOAD_AFTER_MS = 6 * DAY_MS;
 
 export const CALENDAR_JOB_ID = 'games:calendar';
+export const REFRESH_JOB_ID = 'games:refresh';
 
 // Routes and jobs share one crest store (and so one in-flight download per crest).
 const crestStores = new WeakMap<ModuleContext, CrestStore>();
@@ -71,6 +73,24 @@ export const gamesModule: AppModule = {
           if (calendar && calendar.failures.length > 0) {
             throw new Error(
               `${calendar.failures.length} schedule requests failed (first: ${calendar.failures[0]})`,
+            );
+          }
+        },
+      },
+      {
+        // Scores and statuses of today's games. The wait between runs adapts to what is going on.
+        id: REFRESH_JOB_ID,
+        every: () => refreshDelayFromStore(repo),
+        run: async ({ logger }) => {
+          const { failures } = await refreshScoreboards({
+            http: context.http,
+            repo,
+            logger,
+            now: new Date(),
+          });
+          if (failures.length > 0) {
+            throw new Error(
+              `${failures.length} scoreboard requests failed (first: ${failures[0]})`,
             );
           }
         },

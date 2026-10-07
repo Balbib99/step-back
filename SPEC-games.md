@@ -29,7 +29,8 @@ Los días (`date`, `from`, `to`) son **días locales de la zona configurada** (E
 
 ## Tareas programadas
 - Carga inicial: toda la temporada, recorriendo calendarios por equipo (una vez al desplegar y semanalmente).
-- Hoy y mañana: cada 10 min. Mientras haya partidos en juego: cada 30 s a 1 min. Sin partidos hoy: cada hora.
+- Ritmo adaptativo (tarea `games:refresh`, calculado tras cada ejecución): 30 s con algún partido en juego; 60 s si uno empieza en menos de 20 min o debería haber empezado hace menos de 3 h y sigue "programado"; 10 min con partidos en las próximas 48 h o terminados hace menos de 6 h; 1 h si no hay nada cerca. Con partidos activos solo se piden los días de ESPN (hora del Este de EE. UU.) de esos partidos; si no, ayer, hoy y mañana.
+- (Antes de esto) Hoy y mañana: cada 10 min. Mientras haya partidos en juego: cada 30 s a 1 min. Sin partidos hoy: cada hora.
 
 ## Acceptance
 - Tras la carga inicial hay el calendario completo de pretemporada y regular, sin duplicados por reintento.
