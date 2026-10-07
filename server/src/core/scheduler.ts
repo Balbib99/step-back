@@ -20,6 +20,8 @@ export interface JobDefinition {
 
 export interface Scheduler {
   add(job: JobDefinition): void;
+  /** Ids of every registered job, in registration order. */
+  jobIds(): string[];
   start(): void;
   /** Runs a job now (outside its schedule) and resolves when it finishes. Never rejects. */
   runNow(id: string): Promise<void>;
@@ -151,6 +153,9 @@ export function createScheduler(options: SchedulerOptions): Scheduler {
       };
       states.set(job.id, state);
       if (started) begin(state);
+    },
+    jobIds() {
+      return [...states.keys()];
     },
     start() {
       if (started) return;

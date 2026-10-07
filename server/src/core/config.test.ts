@@ -1,5 +1,16 @@
+import { readFileSync } from 'node:fs';
+import { parseEnv } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { ConfigError, loadConfig } from './config.js';
+
+describe('.env.example', () => {
+  it('is a valid configuration when copied as-is', () => {
+    const example = parseEnv(
+      readFileSync(new URL('../../../.env.example', import.meta.url), 'utf8'),
+    );
+    expect(() => loadConfig(example)).not.toThrow();
+  });
+});
 
 function problemsFor(env: Record<string, string>): string[] {
   try {

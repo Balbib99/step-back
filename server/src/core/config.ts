@@ -35,6 +35,8 @@ const optionalText = z
 const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+    // Loopback by default so a dev server is never exposed by accident; Docker sets 0.0.0.0.
+    HOST: z.string().min(1).default('127.0.0.1'),
     PORT: z.coerce.number().int().min(1).max(65535).default(3000),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
     DB_PATH: z.string().min(1).default('./data/step-back.db'),
@@ -62,6 +64,7 @@ const envSchema = z
 
 export interface Config {
   env: 'development' | 'production' | 'test';
+  host: string;
   port: number;
   logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
   dbPath: string;
@@ -93,6 +96,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   } = data;
   return {
     env: data.NODE_ENV,
+    host: data.HOST,
     port: data.PORT,
     logLevel: data.LOG_LEVEL,
     dbPath: data.DB_PATH,

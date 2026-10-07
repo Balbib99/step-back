@@ -1,25 +1,32 @@
 import { existsSync } from 'node:fs';
 import { APP_NAME } from '@step-back/shared';
+import { buildApp } from './core/app.js';
 import { ConfigError, loadConfig } from './core/config.js';
-import { openDb } from './core/db.js';
-import { createLogger } from './core/logger.js';
-import { CORE_MIGRATIONS_DIR, loadMigrationsFromDir, runMigrations } from './core/migrations.js';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 
-try {
+async function main(): Promise<void> {
   const config = loadConfig();
-  const logger = createLogger(config);
-  const db = openDb(config.dbPath);
-  const applied = runMigrations(db, loadMigrationsFromDir(CORE_MIGRATIONS_DIR));
-  logger.info(
-    { port: config.port, favorites: config.favoriteTeams, migrations: applied },
-    `${APP_NAME} starting`,
-  );
-} catch (error) {
-  if (error instanceof ConfigError) {
-    console.error(error.message);
-    process.exit(1);
-  }
-  throw error;
+  // Feature modules (games, news, ...) are added to this list as they are built.
+  const { server, scheduler } = await buildApp({ config, modules: [] });
+
+  const shutdown = (signal: string) => {
+    server.log.info({ signal }, 'shutting down');
+    server.close().then(
+      () => process.exit(0),
+      () => process.exit(1),
+    );
+  };
+  process.once('SIGINT', () => shutdown('SIGINT'));
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
+
+  await server.listen({ host: config.host, port: config.port });
+  scheduler.start();
+  server.log.info({ favorites: config.favoriteTeams }, `${APP_NAME} ready`);
 }
+
+main().catch((error: unknown) => {
+  if (error instanceof ConfigError) console.error(error.message);
+  else console.error(error);
+  process.exit(1);
+});

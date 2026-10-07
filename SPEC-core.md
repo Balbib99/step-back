@@ -6,7 +6,7 @@ Depende de: — · Lo usan: todos los módulos · Índice: [SPEC.md](SPEC.md)
 Base común del backend: arranque del servidor, configuración, SQLite, programador de tareas con reintentos, caché HTTP/BD y logs. Define cómo se registra un módulo.
 
 ## Contrato
-- `registerModule({ id, routes, jobs, migrations })`: cada módulo aporta rutas `/api/<id>`, tareas programadas y migraciones SQL.
+- `AppModule { id, routes, jobs, migrations }`: cada módulo aporta rutas (montadas bajo `/api`, con paths propios como `/games` o `/teams`), tareas programadas y migraciones SQL (ids globales).
 - `scheduler.add({ id, every | cron, run, timeoutMs })`: una tarea que falla se reintenta con *backoff* y nunca tumba el proceso. Registra último éxito/error en la tabla `job_runs`.
 - `http.get(url, params)`: cliente con `User-Agent` identificable, timeout, reintento y límite de tasa por host.
 - `cache`: tabla `kv_cache(key, value, fetched_at, ttl_s)` para respuestas externas y traducciones.

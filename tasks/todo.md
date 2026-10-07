@@ -27,7 +27,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: tests con reloj falso y servidor HTTP simulado; una tarea que lanza error se reintenta y el resto sigue.
   - Deps: T3 · Files: `core/http.ts`, `core/scheduler.ts`, tests
 
-- [ ] **T5 — Registro de módulos, `/api/health`, `/api/config`** (M)
+- [x] **T5 — Registro de módulos, `/api/health`, `/api/config`** (M)
   - Acceptance: `registerModule` monta rutas, tareas y migraciones; `/api/health` lista última ejecución por tarea; `/api/config` devuelve zona horaria y favoritos `MIN,LAL,PHI`.
   - Verify: tests de integración; el servidor arranca y responde `/api/health` en < 2 s.
   - Deps: T3, T4 · Files: `core/modules.ts`, `core/routes.ts`, `server/src/index.ts`, `shared/src/config.ts`, tests
