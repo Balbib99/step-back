@@ -4,7 +4,8 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { createQueryClient } from './lib/queries';
 import { Calendar } from './pages/Calendar';
-import { Highlights, News, NotFound, Standings } from './pages/Placeholders';
+import { Highlights, News, NotFound } from './pages/Placeholders';
+import { Standings } from './pages/Standings';
 import { Today } from './pages/Today';
 
 export function AppRoutes() {

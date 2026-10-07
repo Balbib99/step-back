@@ -118,9 +118,59 @@ export const HEALTH = {
   jobs: [],
 };
 
+const entry = (rank: number, abbr: string, name: string, wins: number, losses: number) => ({
+  teamId: abbr,
+  abbr,
+  name,
+  rank,
+  wins,
+  losses,
+  winPct: wins / (wins + losses),
+  gamesBehind: rank - 1,
+  streak: wins > losses ? 'W2' : 'L1',
+  home: '2-1',
+  road: '1-1',
+  last10: `${wins}-${losses}`,
+  conferenceRecord: '2-1',
+  divisionRecord: '1-0',
+  clincher: null,
+  pointsFor: 110,
+  pointsAgainst: 105,
+});
+
+/** A short table per conference (the real one has 15 teams), ranked 1 to N. */
+export function standingsTable(
+  conference: 'east' | 'west',
+  seasonType: 'preseason' | 'regular',
+  ranks?: number[],
+) {
+  const teams: [string, string][] =
+    conference === 'west'
+      ? [
+          ['DEN', 'Denver Nuggets'],
+          ['MIN', MIN],
+          ['LAL', LAL],
+          ['POR', 'Portland Trail Blazers'],
+        ]
+      : [
+          ['BOS', 'Boston Celtics'],
+          ['PHI', 'Philadelphia 76ers'],
+          ['IND', 'Indiana Pacers'],
+        ];
+  return {
+    conference,
+    season: 2027,
+    seasonType,
+    updatedAt: '2026-10-07T09:50:00.000Z',
+    entries: teams.map(([abbr, name], i) => entry(ranks?.[i] ?? i + 1, abbr, name, 4 - i, i)),
+  };
+}
+
 /** What the fake server was asked, and what it should answer. Reset by `stubApi`. */
 export const api = {
   requests: [] as string[],
+  /** Tables to answer /api/standings with, or a status to fail with. */
+  standings: [] as ReturnType<typeof standingsTable>[] | number,
   /** Statuses to answer /api/games with, one per request; 200 once exhausted. */
   gamesStatus: [] as number[],
   games: GAMES,
@@ -130,6 +180,7 @@ export const api = {
 export function stubApi() {
   api.requests = [];
   api.gamesStatus = [];
+  api.standings = [standingsTable('east', 'regular'), standingsTable('west', 'regular')];
   api.games = GAMES;
   api.config = CONFIG;
   vi.stubGlobal(
@@ -143,6 +194,10 @@ export function stubApi() {
         return json(api.config);
       }
       if (url.includes('/api/teams')) return json({ teams: TEAMS });
+      if (url.includes('/api/standings')) {
+        if (typeof api.standings === 'number') return json({ error: 'boom' }, api.standings);
+        return json({ standings: api.standings });
+      }
       if (url.includes('/api/games')) {
         const forced = api.gamesStatus.shift();
         if (forced && forced !== 200) return json({ error: 'boom' }, forced);

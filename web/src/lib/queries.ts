@@ -2,6 +2,7 @@ import {
   configResponseSchema,
   gamesResponseSchema,
   healthResponseSchema,
+  standingsResponseSchema,
   teamsResponseSchema,
 } from '@step-back/shared';
 import { QueryClient, useQuery } from '@tanstack/react-query';
@@ -36,6 +37,15 @@ export function useTeams() {
     queryKey: ['teams'],
     queryFn: ({ signal }) => fetchJson('/api/teams', teamsResponseSchema, signal),
     staleTime: 60 * 60_000,
+  });
+}
+
+/** Both conference tables. The server refreshes them every few minutes at most. */
+export function useStandings() {
+  return useQuery({
+    queryKey: ['standings'],
+    queryFn: ({ signal }) => fetchJson('/api/standings', standingsResponseSchema, signal),
+    refetchInterval: 5 * 60_000,
   });
 }
 

@@ -1,15 +1,6 @@
 import { EmptyState, PageHeader } from '../components/PageHeader';
 
-// Each screen below is replaced by its real version in its own task (T15, T19, T22).
-
-export function Standings() {
-  return (
-    <>
-      <PageHeader title="Clasificación" />
-      <EmptyState>Aquí aparecerá la clasificación del Este y del Oeste.</EmptyState>
-    </>
-  );
-}
+// Each screen below is replaced by its real version in its own task (T19, T22).
 
 export function News() {
   return (

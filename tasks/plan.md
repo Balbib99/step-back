@@ -47,7 +47,7 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 
 ### Phase 4: Datos (`standings`, `news`)
 - [x] T14 Adaptador de clasificación y `/api/standings`
-- [ ] T15 Pantalla Clasificación
+- [x] T15 Pantalla Clasificación
 - [ ] T16 Lector RSS/Atom genérico y adaptador ESPN news
 - [ ] T17 Repo de noticias, deduplicación y etiquetado por equipo/jugador
 - [ ] T18 Verificar y añadir feed de Gigantes; fuentes en `sources.json`

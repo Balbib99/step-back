@@ -104,7 +104,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: tests con fixture real; contraste manual con ESPN.
   - Deps: T9 · Files: `modules/standings/{adapter,repo,routes,jobs}.ts`, `migrations/0003_standings.sql`, tests
 
-- [ ] **T15 — Pantalla Clasificación** (S)
+- [x] **T15 — Pantalla Clasificación** (S)
   - Acceptance: pestañas Este/Oeste, 15 equipos con V-D, %, local/visitante, últimos 10 y racha; zonas de play-off y play-in; favoritos resaltados; estado vacío claro en pretemporada.
   - Verify: tests de componente y revisión visual.
   - Deps: T14, T7 · Files: `web/src/pages/Standings.tsx`, tests
