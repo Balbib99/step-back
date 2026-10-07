@@ -88,6 +88,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
 
 - [ ] **T13 — Despliegue real y PWA instalable** (S, con el usuario)
   - Acceptance: accesible por HTTPS en `step-back.duckdns.org`; sin credenciales devuelve 401; manifest mínimo; la app se instala en Android. **Requiere cambios en el Caddy del usuario (preguntar antes).**
+  - Hecho en el repositorio (sin Docker disponible hasta llegar a la Pi): manifest con iconos (192, 512 y maskable), service worker vacío para que Android ofrezca instalar, enlace al manifest con `crossorigin="use-credentials"` por la contraseña, y su test. Pendiente en la Pi: construir la imagen, enlazar con Caddy y probar la instalación.
   - Verify: `curl -I` da 401 sin auth y 200 con auth; instalación en el móvil real.
   - Deps: T12 · Files: `web/public/manifest.webmanifest`, iconos, `docs/deploy.md` (borrador)
 

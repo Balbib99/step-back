@@ -17,6 +17,7 @@ beforeEach(() => {
   );
   writeFileSync(join(webDir, 'assets', 'app.3f9a1c.js'), 'console.log("app")');
   writeFileSync(join(webDir, 'manifest.webmanifest'), '{"name":"step-back"}');
+  writeFileSync(join(webDir, 'sw.js'), 'self.addEventListener("fetch", () => {});');
 });
 
 afterEach(async () => {
@@ -53,6 +54,20 @@ describe('serving the web app', () => {
     const server = await start();
     const response = await server.inject('/manifest.webmanifest');
     expect(response.statusCode).toBe(200);
+    expect(response.headers['cache-control']).toBe('no-cache');
+  });
+
+  it('serves the manifest with the type browsers expect for installing the app', async () => {
+    const server = await start();
+    const response = await server.inject('/manifest.webmanifest');
+    expect(response.headers['content-type']).toContain('application/manifest+json');
+  });
+
+  it('never lets the service worker be cached, or an update could not reach the phone', async () => {
+    const server = await start();
+    const response = await server.inject('/sw.js');
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toMatch(/javascript/);
     expect(response.headers['cache-control']).toBe('no-cache');
   });
 

@@ -69,3 +69,11 @@ curl -s -u usuario https://step-back.duckdns.org/api/health     # status: ok
 - **Memoria**: el contenedor tiene un límite de 400 MB y Node trabaja con un máximo de 192 MB de heap.
 - **Registros**: Docker guarda como máximo 3 archivos de 10 MB, para no llenar la tarjeta SD.
 - **El contenedor sigue sin tener el sistema de archivos en solo lectura**; eso se añade en T28 junto con las cabeceras de seguridad y las copias de seguridad.
+
+## Instalar la app en el móvil (Android)
+
+1. Abre `https://step-back.duckdns.org` en Chrome y escribe usuario y contraseña.
+2. Menú de Chrome (⋮) → **Instalar aplicación** (o "Añadir a la pantalla de inicio").
+3. Abre el icono nuevo: debe arrancar sin barra del navegador y con el fondo oscuro de la app.
+
+Si "Instalar aplicación" no aparece, abre `chrome://inspect` desde un ordenador con el móvil conectado, o dime qué ves, y se revisa el manifiesto y el service worker (T13 los deja listos; el service worker actual no guarda nada, eso es T25).
