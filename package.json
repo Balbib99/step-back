@@ -12,7 +12,7 @@
     "web"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces --if-present",
+    "dev": "node scripts/dev.mjs",
     "build": "npm run build --workspaces --if-present",
     "test": "npm test --workspaces --if-present",
     "lint": "eslint .",
@@ -23,6 +23,7 @@
   "devDependencies": {
     "@eslint/js": "^9",
     "eslint": "^9",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^16",
     "prettier": "^3",
     "typescript": "^5",

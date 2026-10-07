@@ -30,7 +30,7 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 
 ### Phase 2: Primer corte vertical y diseño (`games` + `app-shell`)
 - [x] T6 Dirección visual y `docs/design.md` (aprobación del usuario)
-- [ ] T7 Esqueleto de la web: Vite, router, TanStack Query, tema, layout y navegación
+- [x] T7 Esqueleto de la web: Vite, router, TanStack Query, tema, layout y navegación
 - [ ] T8 Adaptador ESPN de equipos y partidos con fixtures
 - [ ] T9 Carga de equipos y calendario completo, `/api/teams` y `/api/games`
 - [ ] T10 Pantalla Calendario

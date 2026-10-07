@@ -16,7 +16,7 @@ La interfaz completa de la app: instalable en Android, pensada primero para móv
 8. **Ajustes**: notificaciones por equipo, zona horaria, tema.
 
 ## Diseño
-- Dirección visual aprobada (2026-10-07): **La camiseta**, en [docs/design.md](docs/design.md) con paleta propia de los 30 equipos en [docs/design/team-palettes.json](docs/design/team-palettes.json). Antes: fase de dirección visual previa (se usarán las skills de diseño frontend): paleta, tipografía, componentes y movimiento definidos en `docs/design.md` antes de programar pantallas, y aprobados por el usuario.
+- Dirección visual aprobada (2026-10-07): **La camiseta**, en [docs/design.md](docs/design.md) con paleta propia de los 30 equipos en [shared/src/team-palettes.json](shared/src/team-palettes.json). Antes: fase de dirección visual previa (se usarán las skills de diseño frontend): paleta, tipografía, componentes y movimiento definidos en `docs/design.md` antes de programar pantallas, y aprobados por el usuario.
 - Móvil primero (≥ 360 px), responsive hasta escritorio. Modo oscuro por defecto; claro opcional.
 - Los equipos favoritos usan un indicador visual constante. Textos en español.
 - Accesibilidad: contraste AA, objetivos táctiles ≥ 44 px, `prefers-reduced-motion` respetado.

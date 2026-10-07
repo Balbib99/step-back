@@ -7,7 +7,7 @@ Estado: aprobada por el usuario el 2026-10-07 (maquetas: [camiseta.html](mockups
 Cada equipo es un campo de color con la rotulación en el pecho y su número en grande, como una camiseta. Al abrir la app, el color te dice de qué equipo hablas antes de leer una palabra. Todo lo demás es neutro para que ese color mande.
 
 Lo que la hace propia y no una app deportiva genérica:
-- Los 30 equipos tienen su paleta (`docs/design/team-palettes.json`). Los tres favoritos (MIN, LAL, PHI) no tienen más color que el resto: **van siempre primero**.
+- Los 30 equipos tienen su paleta (`shared/src/team-palettes.json`). Los tres favoritos (MIN, LAL, PHI) no tienen más color que el resto: **van siempre primero**.
 - La abreviatura del equipo, enorme y recortada, se repite como rotulación de camiseta dentro de cada carril.
 - Las noticias son posts con el vídeo o la imagen como protagonista.
 

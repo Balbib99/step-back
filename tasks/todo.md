@@ -44,7 +44,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: el usuario revisa y aprueba (visión previa en el navegador).
   - Deps: — (puede ir en paralelo a T1-T5) · Files: `docs/design.md`, `docs/mockups/*`
 
-- [ ] **T7 — Esqueleto de la web** (M)
+- [x] **T7 — Esqueleto de la web** (M)
   - Acceptance: Vite + React + Router + TanStack Query + Tailwind; tema oscuro/claro; layout móvil con navegación inferior (Hoy, Calendario, Clasificación, Noticias, Jugadas); proxy a `/api` en dev.
   - Verify: `npm run dev -w web` carga; test de componente del layout; V pasa.
   - Deps: T1, T6 · Files: `web/src/{main,App}.tsx`, `styles`, `components/Layout.tsx`, `web/vite.config.ts`

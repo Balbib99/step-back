@@ -1,0 +1,77 @@
+@import '@fontsource-variable/archivo/wdth.css';
+@import 'tailwindcss';
+
+/* Tokens from docs/design.md. Team colours are not here: they come from
+   shared/src/team-palettes.json and are applied per element (see lib/team-style.ts). */
+@theme {
+  --color-ground: #0e1015;
+  --color-surface: #1a1d25;
+  --color-surface-2: #232733;
+  --color-line: #2f3442;
+  --color-text: #eef0f3;
+  --color-text-2: #a7adba;
+  --color-text-3: #7d8493;
+  --color-live: #ff3b30;
+  --color-ok: #5dd39e;
+  --color-warn: #f5b942;
+
+  --font-sans: 'Archivo Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius-card: 10px;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-ground);
+  }
+  body {
+    margin: 0;
+    background: var(--color-ground);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.4;
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus-visible {
+    outline: 3px solid #8ab4ff;
+    outline-offset: 2px;
+  }
+}
+
+/* The three voices of Archivo (docs/design.md). */
+@utility voice-number {
+  font-stretch: 62%;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.9;
+}
+@utility voice-name {
+  font-stretch: 80%;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+/* A team's jersey: apply with data-team + the inline custom properties from teamStyle(). */
+@layer components {
+  .team-field {
+    background: var(--field);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+  }
+  .team-numeral {
+    color: var(--numeral);
+  }
+  .team-trim {
+    background: var(--trim);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
