@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { createQueryClient } from './lib/queries';
-import { Calendar, Highlights, News, NotFound, Standings } from './pages/Placeholders';
+import { Calendar } from './pages/Calendar';
+import { Highlights, News, NotFound, Standings } from './pages/Placeholders';
 import { Today } from './pages/Today';
 
 export function AppRoutes() {

@@ -33,7 +33,8 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 - [x] T7 Esqueleto de la web: Vite, router, TanStack Query, tema, layout y navegación
 - [x] T8 Adaptador ESPN de equipos y partidos con fixtures
 - [x] T9 Carga de equipos y calendario completo, `/api/teams` y `/api/games`
-- [ ] T10 Pantalla Calendario
+- [x] T10 Pantalla Calendario
+- [ ] T10b Escudos servidos por el servidor (reducidos y cacheados)
 - [ ] T11 Refresco adaptativo (hoy y directo) y pantalla Hoy con favoritos
 
 ### Checkpoint B: Primer corte funcionando en local

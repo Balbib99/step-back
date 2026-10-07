@@ -59,10 +59,15 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: tests de integración; contar en la BD real: 30 equipos y calendario de pretemporada + regular.
   - Deps: T5, T8 · Files: `modules/games/{repo,routes,jobs}.ts`, `migrations/0002_games.sql`, tests
 
-- [ ] **T10 — Pantalla Calendario** (M)
+- [x] **T10 — Pantalla Calendario** (M)
   - Acceptance: selector de fecha, filtro por equipo y tipo de temporada; tarjeta de partido con escudos; hora en `Europe/Madrid`; estados de carga, vacío y error.
   - Verify: tests de componente; revisión visual en el móvil emulado.
   - Deps: T7, T9 · Files: `web/src/pages/Calendar.tsx`, `components/GameCard.tsx`, `lib/api.ts`, tests
+
+- [ ] **T10b — Escudos servidos por el servidor** (S)
+  - Acceptance: `GET /api/crests/:abbr.png` devuelve el escudo reducido (~96 px) y cacheado en disco; se descarga de ESPN una sola vez; la web usa esa ruta en vez de la URL de ESPN, así que no se ve ningún disco en blanco al cargar y los escudos funcionan sin conexión. Hasta entonces la web usa `logoUrl` de ESPN (PNG de 500 px, hasta 95 KB cada uno).
+  - Verify: test del endpoint con ESPN simulado (primera petición descarga, segunda sirve de caché); tamaño de cada escudo < 15 KB.
+  - Deps: T9 · Files: `server/src/modules/games/crests.ts`, `web/src/components/TeamCrest.tsx`, tests
 
 - [ ] **T11 — Refresco adaptativo y pantalla Hoy** (M)
   - Acceptance: refresco cada 10 min hoy/mañana, 30-60 s durante partidos en juego, 1 h sin partidos; portada con partidos de hoy y favoritos primero; la web se actualiza sola.

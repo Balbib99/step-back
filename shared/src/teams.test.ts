@@ -1,18 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { isTeamAbbr, NEUTRAL_PALETTE, TEAM_ABBRS, TEAM_PALETTES } from './teams.js';
-
-function luminance(hex: string): number {
-  const [r, g, b] = [1, 3, 5].map((i) => {
-    const channel = parseInt(hex.slice(i, i + 2), 16) / 255;
-    return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-  }) as [number, number, number];
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function contrast(a: string, b: string): number {
-  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
-  return (light + 0.05) / (dark + 0.05);
-}
+import {
+  contrastRatio as contrast,
+  isTeamAbbr,
+  NEUTRAL_PALETTE,
+  onDarkColor,
+  TEAM_ABBRS,
+  TEAM_PALETTES,
+} from './teams.js';
 
 describe('team palettes', () => {
   it('covers the 30 NBA teams, including the three favourites', () => {
@@ -43,5 +37,25 @@ describe('team palettes', () => {
     expect(isTeamAbbr('MIN')).toBe(true);
     expect(isTeamAbbr('XXX')).toBe(false);
     expect(isTeamAbbr('_comment')).toBe(false);
+  });
+
+  it('has a colour for small marks on the dark background for every team', () => {
+    for (const abbr of TEAM_ABBRS) expect(onDarkColor(abbr)).toMatch(/^#[0-9A-Fa-f]{6}$/);
+  });
+
+  it('picks the colour that shows up on dark, not the one that vanishes into it', () => {
+    expect(onDarkColor('MIN')).toBe('#78BE20'); // field is midnight blue, the green is the visible one
+    expect(onDarkColor('LAL')).toBe('#FDB927');
+    expect(onDarkColor('PHI')).toBe('#E01445'); // numeral is white (no hue), the red field shows
+  });
+
+  it('falls back to the numeral for black-and-white teams and to neutral for unknown ones', () => {
+    expect(onDarkColor('BKN')).toBe(TEAM_PALETTES.BKN.numeral);
+    expect(onDarkColor('LON')).toBe(NEUTRAL_PALETTE.numeral);
+  });
+
+  it('measures contrast on the WCAG scale', () => {
+    expect(contrast('#000000', '#FFFFFF')).toBeCloseTo(21, 0);
+    expect(contrast('#777777', '#777777')).toBe(1);
   });
 });

@@ -1,15 +1,6 @@
 import { EmptyState, PageHeader } from '../components/PageHeader';
 
-// Each screen below is replaced by its real version in its own task (T10, T15, T19, T22).
-
-export function Calendar() {
-  return (
-    <>
-      <PageHeader title="Calendario" />
-      <EmptyState>Aquí aparecerán los partidos de pretemporada y temporada, día a día.</EmptyState>
-    </>
-  );
-}
+// Each screen below is replaced by its real version in its own task (T15, T19, T22).
 
 export function Standings() {
   return (

@@ -26,7 +26,11 @@ function stubApi(overrides: { health?: object | 'down'; config?: object | 'down'
     vi.fn(async (url: string) => {
       const body = url.includes('/api/health')
         ? (overrides.health ?? health)
-        : (overrides.config ?? config);
+        : url.includes('/api/teams')
+          ? { teams: [] }
+          : url.includes('/api/games')
+            ? { games: [] }
+            : (overrides.config ?? config);
       if (body === 'down') throw new TypeError('network down');
       return new Response(JSON.stringify(body), { status: 200 });
     }),

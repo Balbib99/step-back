@@ -1,4 +1,9 @@
-import { configResponseSchema, healthResponseSchema } from '@step-back/shared';
+import {
+  configResponseSchema,
+  gamesResponseSchema,
+  healthResponseSchema,
+  teamsResponseSchema,
+} from '@step-back/shared';
 import { QueryClient, useQuery } from '@tanstack/react-query';
 import { fetchJson } from './api';
 
@@ -22,5 +27,29 @@ export function useConfig() {
     queryKey: ['config'],
     queryFn: ({ signal }) => fetchJson('/api/config', configResponseSchema, signal),
     staleTime: 5 * 60_000,
+  });
+}
+
+/** The 30 teams: names and crests. Practically static. */
+export function useTeams() {
+  return useQuery({
+    queryKey: ['teams'],
+    queryFn: ({ signal }) => fetchJson('/api/teams', teamsResponseSchema, signal),
+    staleTime: 60 * 60_000,
+  });
+}
+
+/** Every game between two local days, both included. Refreshes faster while a game is live. */
+export function useGamesRange(from: string, to: string) {
+  return useQuery({
+    queryKey: ['games', from, to],
+    queryFn: ({ signal }) =>
+      fetchJson(
+        `/api/games?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+        gamesResponseSchema,
+        signal,
+      ),
+    refetchInterval: (query) =>
+      query.state.data?.games.some((game) => game.status === 'live') ? 30_000 : 5 * 60_000,
   });
 }
