@@ -1,10 +1,11 @@
 import type { Game, GameTeam, Highlight, NewsItem, TeamWithCrest } from '@step-back/shared';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { vi } from 'vitest';
 import { AppRoutes } from './App';
 import { localDay } from './lib/dates';
+import { createQueryClient } from './lib/queries';
 
 // Shared by the page tests: a small league, a fake server, and a way to render the app on a route.
 
@@ -399,7 +400,12 @@ export const where = () => screen.getByTestId('where').textContent;
 
 /** The whole app on a route, against the fake server. */
 export function renderRoute(path: string) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  // The real defaults of the app (such as networkMode), without retries so failures show at once.
+  const client = createQueryClient();
+  client.setDefaultOptions({
+    ...client.getDefaultOptions(),
+    queries: { ...client.getDefaultOptions().queries, retry: false },
+  });
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[path]}>

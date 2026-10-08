@@ -96,12 +96,20 @@ describe('index.html', () => {
 });
 
 describe('service worker', () => {
-  it('exists and has a fetch handler, which Android requires to offer the install', () => {
-    const worker = read('sw.js');
-    expect(worker).toContain("addEventListener('fetch'");
+  // The worker is built from web/sw/sw.js (vite-plugin-sw.ts fills in its file list), so there is
+  // no sw.js in web/public. Its behaviour is tested in sw.test.ts.
+  const template = readFileSync(new URL('../sw/sw.js', import.meta.url), 'utf8');
+
+  it('has a fetch handler, which Android requires to offer the install', () => {
+    expect(template).toContain("addEventListener('fetch'");
   });
 
-  it('caches nothing for now: that is T25', () => {
-    expect(read('sw.js')).not.toMatch(/caches\./);
+  it('keeps the two placeholders the build fills in, or it would store nothing', () => {
+    expect(template).toContain("'__BUILD__'");
+    expect(template).toContain('/*__PRECACHE__*/ []');
+  });
+
+  it('is not also in public/, where it would be served without its file list', () => {
+    expect(existsSync(publicFile('sw.js'))).toBe(false);
   });
 });

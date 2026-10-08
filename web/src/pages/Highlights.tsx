@@ -42,7 +42,7 @@ export function Highlights() {
   // Without configured favourites there is nothing for "Mis equipos" to show.
   const scope = wanted === 'mis' && favorites.length === 0 ? 'todos' : wanted;
   const selected = scope === 'mis' ? favorites : scope === 'todos' ? [] : [scope];
-  const highlights = useHighlights(selected);
+  const highlights = useHighlights(selected, !config.isPending); // see News: wait for the favourites
 
   const select = (value: string | undefined) => {
     setParams(

@@ -77,3 +77,13 @@ curl -s -u usuario https://step-back.duckdns.org/api/health     # status: ok
 3. Abre el icono nuevo: debe arrancar sin barra del navegador y con el fondo oscuro de la app.
 
 Si "Instalar aplicación" no aparece, abre `chrome://inspect` desde un ordenador con el móvil conectado, o dime qué ves, y se revisa el manifiesto y el service worker (T13 los deja listos; el service worker actual no guarda nada, eso es T25).
+
+## Si la app se queda con una versión vieja o rara (service worker)
+
+La app guarda una copia de sí misma en el móvil para abrir sin conexión (T25). Normalmente se actualiza sola en cuanto abres la app con conexión. Si alguna vez algo no cuadra, en Chrome de Android: abre `https://step-back.duckdns.org`, menú ⋮ → **Información de la página** (el candado) → **Configuración del sitio** → **Borrar datos y restablecer permisos**. La próxima vez que abras la app se descarga entera otra vez.
+
+Para comprobar desde el servidor que se sirve la versión nueva del worker (cambia el `BUILD` cuando se despliega código nuevo):
+
+```bash
+docker compose -f deploy/compose.yaml exec step-back node -e "fetch('http://127.0.0.1:3000/sw.js').then(r=>r.text()).then(t=>console.log(t.match(/const BUILD = .*/)[0]))"
+```

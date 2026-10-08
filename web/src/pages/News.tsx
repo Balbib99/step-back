@@ -73,7 +73,9 @@ export function News() {
     lang: spanish ? 'es' : undefined,
     video,
   };
-  const news = useNews(filters);
+  // Not before the configuration is known: until then "Mis equipos" has no teams, and the app
+  // would ask for every team's news first and then ask again.
+  const news = useNews(filters, !config.isPending);
 
   // The translate button exists only when the server has a DeepL key, and goes off with the quota.
   const translation = useTranslationAvailability();

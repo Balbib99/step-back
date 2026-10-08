@@ -1,3 +1,5 @@
+import { noteResponse } from './offline';
+
 /** Anything with a zod-style `parse`; keeps zod out of the web package's own dependencies. */
 export interface Parser<T> {
   parse(data: unknown): T;
@@ -22,6 +24,7 @@ export async function fetchJson<T>(
   signal: AbortSignal,
 ): Promise<T> {
   const response = await fetch(path, { signal, headers: { accept: 'application/json' } });
+  noteResponse(response.headers); // a copy kept by the service worker is not live: say so
   if (!response.ok) throw new ApiError(response.status, path);
   return schema.parse(await response.json());
 }

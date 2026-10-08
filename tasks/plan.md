@@ -65,7 +65,7 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 ### Checkpoint E: Todo el contenido disponible
 
 ### Phase 6: PWA completa y notificaciones (`app-shell`, `push`)
-- [ ] T25 Service worker, offline y manifest definitivo
+- [x] T25 Service worker, offline y manifest definitivo
 - [ ] T26 Ajustes y suscripción push
 - [ ] T27 Detector de eventos y envío push idempotente
 

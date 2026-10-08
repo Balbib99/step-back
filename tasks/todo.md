@@ -168,7 +168,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
 
 ## Phase 6: PWA completa y notificaciones
 
-- [ ] **T25 — Service worker y offline** (M)
+- [x] **T25 — Service worker y offline** (M)
   - Acceptance: shell precacheada; `/api` con stale-while-revalidate; indicador "sin conexión · actualizado hace X"; manifest con iconos maskable.
   - Verify: prueba en modo avión en el móvil; Lighthouse PWA instalable.
   - Deps: T23 · Files: `web/vite.config.ts` (plugin PWA), `web/src/lib/offline.ts`, manifest, tests

@@ -8,6 +8,9 @@ Un botón por noticia que muestra titular y resumen en español cuando la fuente
 ## Proveedor
 DeepL API, plan gratuito. **Ojo:** yo había supuesto el antiguo plan Free de 500.000 caracteres *al mes*. La página de DeepL que el usuario ve el 2026-10-08 ofrece un **crédito único de 1 millón de caracteres** (que no se renueva). Por eso la cuota no se cuenta con un contador mensual propio: se consulta a DeepL (`GET /v2/usage` devuelve `character_count` y `character_limit`), que vale igual para un crédito único que para un plan mensual. La clave se guarda en `DEEPL_API_KEY` en el `.env` del servidor y nunca llega al navegador.
 
+## Verificado en la Pi (2026-10-08)
+Con la clave real del usuario (plan Developer) el servidor traduce, lee la cuota (`/v2/usage`) y la pantalla la refleja: una noticia de los Lakers gastó 209 caracteres (de 1.000.000), unas 4.800 noticias de crédito.
+
 ## API
 - `POST /api/news/:id/translate` → `{ title, summary, cached: boolean }`. Errores, siempre `{ error, message }` con el mensaje en español: 404 `not_found`, 400 `already_spanish`, 429 `quota_exceeded` (crédito agotado; no se llama a DeepL), 502 `translation_failed` (DeepL caído o clave rechazada), 503 `translation_disabled` (sin `DEEPL_API_KEY`). Una traducción ya hecha se sirve aunque el crédito esté agotado.
 - `GET /api/translation/status` → `{ enabled, used, limit, percent, blocked }`, leído de DeepL y guardado 5 minutos (y sumando lo gastado). La pantalla lo usa para desactivar el botón y avisar desde el 90 %.

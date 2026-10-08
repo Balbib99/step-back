@@ -16,7 +16,12 @@ import { newsQuery, type NewsFilters } from './news';
 
 export function createQueryClient(): QueryClient {
   return new QueryClient({
-    defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
+    defaultOptions: {
+      // "always": ask even with no connection. The service worker answers from its stored copy;
+      // the default would pause every query offline and leave the screen loading for ever.
+      queries: { retry: 1, staleTime: 30_000, networkMode: 'always' },
+      mutations: { networkMode: 'always' },
+    },
   });
 }
 
