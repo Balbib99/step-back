@@ -43,3 +43,8 @@ export const HighlightsIcon = () => (
     <path d="M10 9.5l5 2.5-5 2.5z" />
   </Icon>
 );
+export const BellIcon = () => (
+  <Icon>
+    <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0" />
+  </Icon>
+);

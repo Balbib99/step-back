@@ -173,12 +173,12 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: prueba en modo avión en el móvil; Lighthouse PWA instalable.
   - Deps: T23 · Files: `web/vite.config.ts` (plugin PWA), `web/src/lib/offline.ts`, manifest, tests
 
-- [ ] **T26 — Ajustes y suscripción push** (M)
+- [x] **T26 — Ajustes y suscripción push** (M)
   - Acceptance: claves VAPID; `/api/push/subscribe` (POST/DELETE) y `/api/push/settings`; pantalla Ajustes con permiso solicitado solo tras pulsar; configuración por equipo.
   - Verify: tests de rutas; suscripción real desde el móvil.
   - Deps: T25, T5 · Files: `modules/push/{routes,repo}.ts`, `migrations/0007_push.sql`, `web/src/pages/Settings.tsx`, tests
 
-- [ ] **T27 — Detector de eventos y envío** (M)
+- [x] **T27 — Detector de eventos y envío** (M)
   - Acceptance: aviso al inicio y final de partidos favoritos (y recordatorio opcional); idempotente con `push_log`; limpia suscripciones caducadas; abrir la notificación lleva al detalle del partido.
   - Verify: tests con proveedor push simulado y reloj falso; prueba real con un partido.
   - Deps: T26, T11 · Files: `modules/push/{detector,sender}.ts`, service worker, tests

@@ -12,5 +12,5 @@ await build({
   format: 'esm',
   sourcemap: true,
   logLevel: 'info',
-  external: ['better-sqlite3', 'fastify', '@fastify/static', 'pino', 'zod'],
+  external: ['better-sqlite3', 'fastify', '@fastify/static', 'pino', 'web-push', 'zod'],
 });

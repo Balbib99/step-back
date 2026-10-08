@@ -54,6 +54,12 @@ class FakeCaches {
   }
 }
 
+interface FakeClient {
+  url: string;
+  focus: ReturnType<typeof vi.fn>;
+  navigate?: ReturnType<typeof vi.fn>;
+}
+
 type Handler = (request: { url: string; method: string }) => Response | Promise<Response>;
 
 function load(options: { precache?: string[]; build?: string } = {}) {
@@ -68,7 +74,12 @@ function load(options: { precache?: string[]; build?: string } = {}) {
     addEventListener: (type: string, listener: (event: never) => void) =>
       listeners.set(type, listener),
     skipWaiting: vi.fn(async () => undefined),
-    clients: { claim: vi.fn(async () => undefined) },
+    clients: {
+      claim: vi.fn(async () => undefined),
+      matchAll: vi.fn(async (): Promise<FakeClient[]> => []),
+      openWindow: vi.fn(async () => undefined),
+    },
+    registration: { showNotification: vi.fn(async () => undefined) },
   };
   const fetchFake = async (request: { url: string; method: string }) => {
     network.requests.push(request.url);
@@ -114,7 +125,17 @@ function load(options: { precache?: string[]; build?: string } = {}) {
     await Promise.all(waits);
   };
 
-  return { self, caches, network, request, lifecycle };
+  /** Delivers an event to the worker and waits for what it asked to wait for. */
+  const dispatch = async (type: string, event: object) => {
+    const waits: Promise<unknown>[] = [];
+    listeners.get(type)!({
+      ...event,
+      waitUntil: (promise: Promise<unknown>) => waits.push(promise),
+    } as never);
+    await Promise.all(waits);
+  };
+
+  return { self, caches, network, request, lifecycle, dispatch };
 }
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
@@ -464,5 +485,96 @@ describe('pictures', () => {
     const urls = [...pictures(worker).entries.keys()];
     expect(urls).toHaveLength(100);
     expect(urls[0]).toBe(`${ORIGIN}/api/news/6/image`);
+  });
+});
+
+describe('notifications', () => {
+  const pushOf = (data: unknown) => ({
+    data: { json: () => (typeof data === 'string' ? JSON.parse(data) : data) },
+  });
+  const shown = (worker: ReturnType<typeof load>) =>
+    worker.self.registration.showNotification.mock.calls[0] as unknown as [
+      string,
+      NotificationOptions,
+    ];
+
+  it('shows the message the server sent, and keeps where it leads', async () => {
+    const worker = load();
+    await worker.dispatch(
+      'push',
+      pushOf({
+        title: 'Final: MIN 104 – 99 LAL',
+        body: 'Gana Minnesota.',
+        url: '/partido/42',
+        tag: 'end:42',
+      }),
+    );
+    const [title, options] = shown(worker);
+    expect(title).toBe('Final: MIN 104 – 99 LAL');
+    expect(options).toMatchObject({
+      body: 'Gana Minnesota.',
+      tag: 'end:42',
+      data: { url: '/partido/42' },
+    });
+  });
+
+  it('still shows something when the message cannot be read', async () => {
+    const worker = load();
+    await worker.dispatch('push', { data: { json: () => JSON.parse('not json') } });
+    expect(shown(worker)[0]).toBe('step-back');
+    await worker.dispatch('push', {}); // a push with no data at all
+    expect(worker.self.registration.showNotification).toHaveBeenCalledTimes(2);
+  });
+
+  it('never leads out of the app, whatever the message says', async () => {
+    for (const url of ['https://evil.example/', '//evil.example/', 'javascript:alert(1)', 42]) {
+      const worker = load();
+      await worker.dispatch('push', pushOf({ title: 'x', url }));
+      expect(shown(worker)[1]).toMatchObject({ data: { url: '/' } });
+    }
+  });
+
+  const click = (worker: ReturnType<typeof load>, url: string) =>
+    worker.dispatch('notificationclick', { notification: { close: vi.fn(), data: { url } } });
+
+  it('opens the game in the window that is already open', async () => {
+    const worker = load();
+    const client: FakeClient = {
+      url: `${ORIGIN}/calendario`,
+      focus: vi.fn(async () => undefined),
+      navigate: vi.fn(async () => undefined),
+    };
+    worker.self.clients.matchAll.mockResolvedValue([client]);
+    await click(worker, '/partido/42');
+    expect(client.focus).toHaveBeenCalled();
+    expect(client.navigate).toHaveBeenCalledWith('/partido/42');
+    expect(worker.self.clients.openWindow).not.toHaveBeenCalled();
+  });
+
+  it('opens a window on the game when the app is closed', async () => {
+    const worker = load();
+    await click(worker, '/partido/42');
+    expect(worker.self.clients.openWindow).toHaveBeenCalledWith('/partido/42');
+  });
+
+  it('opens a window when the open one cannot be taken to the game', async () => {
+    const worker = load();
+    const client: FakeClient = {
+      url: `${ORIGIN}/`,
+      focus: vi.fn(async () => undefined),
+      navigate: vi.fn(async () => {
+        throw new Error('refused');
+      }),
+    };
+    worker.self.clients.matchAll.mockResolvedValue([client]);
+    await click(worker, '/partido/42');
+    expect(worker.self.clients.openWindow).toHaveBeenCalledWith('/partido/42');
+  });
+
+  it('closes the notification it was tapped on', async () => {
+    const worker = load();
+    const close = vi.fn();
+    await worker.dispatch('notificationclick', { notification: { close, data: { url: '/' } } });
+    expect(close).toHaveBeenCalled();
   });
 });

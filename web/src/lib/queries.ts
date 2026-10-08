@@ -5,13 +5,21 @@ import {
   healthResponseSchema,
   highlightsResponseSchema,
   newsResponseSchema,
+  pushSettingsSchema,
   standingsResponseSchema,
   teamsResponseSchema,
   translationResponseSchema,
   translationStatusSchema,
 } from '@step-back/shared';
-import { QueryClient, useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
-import { fetchJson, postJson } from './api';
+import type { PushSettings, TeamPushSettings } from '@step-back/shared';
+import {
+  QueryClient,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { fetchJson, postJson, sendJson } from './api';
 import { newsQuery, type NewsFilters } from './news';
 
 export function createQueryClient(): QueryClient {
@@ -145,5 +153,40 @@ export function useTeamGames(abbr: string) {
       fetchJson(`/api/games?team=${encodeURIComponent(abbr)}`, gamesResponseSchema, signal),
     refetchInterval: (query) =>
       query.state.data?.games.some((game) => game.status === 'live') ? 30_000 : 5 * 60_000,
+  });
+}
+
+const PUSH_SETTINGS_KEY = ['push-settings'];
+
+/** What to be notified about, per favourite team. Only asked when the server has push on. */
+export function usePushSettings(enabled: boolean) {
+  return useQuery({
+    queryKey: PUSH_SETTINGS_KEY,
+    queryFn: ({ signal }) => fetchJson('/api/push/settings', pushSettingsSchema, signal),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+/** Saves the settings of one team. The screen shows the change at once and goes back if it fails. */
+export function useSavePushSettings() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (team: TeamPushSettings) =>
+      sendJson('PUT', '/api/push/settings', { teams: [team] }, pushSettingsSchema),
+    onMutate: async (team) => {
+      await client.cancelQueries({ queryKey: PUSH_SETTINGS_KEY });
+      const before = client.getQueryData<PushSettings>(PUSH_SETTINGS_KEY);
+      if (before) {
+        client.setQueryData<PushSettings>(PUSH_SETTINGS_KEY, {
+          teams: before.teams.map((t) => (t.team === team.team ? team : t)),
+        });
+      }
+      return { before };
+    },
+    onError: (_error, _team, context) => {
+      if (context?.before) client.setQueryData(PUSH_SETTINGS_KEY, context.before);
+    },
+    onSuccess: (saved) => client.setQueryData(PUSH_SETTINGS_KEY, saved),
   });
 }

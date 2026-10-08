@@ -5,6 +5,7 @@ import { ConfigError, loadConfig } from './core/config.js';
 import { gamesModule } from './modules/games/index.js';
 import { highlightsModule } from './modules/highlights/index.js';
 import { newsModule } from './modules/news/index.js';
+import { pushModule } from './modules/push/index.js';
 import { standingsModule } from './modules/standings/index.js';
 import { translationModule } from './modules/translation/index.js';
 
@@ -15,7 +16,14 @@ async function main(): Promise<void> {
   // Feature modules (games, news, ...) are added to this list as they are built.
   const { server, scheduler } = await buildApp({
     config,
-    modules: [gamesModule, standingsModule, newsModule, highlightsModule, translationModule],
+    modules: [
+      gamesModule,
+      standingsModule,
+      newsModule,
+      highlightsModule,
+      translationModule,
+      pushModule,
+    ],
   });
 
   const shutdown = (signal: string) => {

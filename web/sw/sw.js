@@ -191,3 +191,55 @@ self.addEventListener('fetch', (event) => {
   const answer = route(event);
   if (answer) event.respondWith(answer);
 });
+
+// Notifications (module push). The server sends { title, body, url, tag }; every push must show
+// something (the browser withdraws the permission from a worker that stays silent), so a message
+// that cannot be read still shows a generic one.
+self.addEventListener('push', (event) => {
+  let message = {};
+  try {
+    message = event.data ? event.data.json() : {};
+  } catch {
+    // Not JSON: the generic notification below.
+  }
+  const title = typeof message.title === 'string' && message.title ? message.title : 'step-back';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: typeof message.body === 'string' ? message.body : '',
+      // A newer notification about the same event replaces the old one instead of piling up.
+      tag: typeof message.tag === 'string' ? message.tag : undefined,
+      icon: '/icons/icon-192.png',
+      data: { url: safeTarget(message.url) },
+    }),
+  );
+});
+
+/** Only a path of this app is opened, whatever the message says. */
+function safeTarget(url) {
+  return typeof url === 'string' && /^\/(?!\/)/.test(url) ? url : '/';
+}
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = safeTarget(event.notification.data && event.notification.data.url);
+  event.waitUntil(
+    (async () => {
+      const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      // The app is already open: bring it to the game rather than opening a second one.
+      for (const client of open) {
+        if (new URL(client.url).origin !== self.location.origin) continue;
+        await client.focus();
+        if ('navigate' in client) {
+          try {
+            await client.navigate(target);
+            return;
+          } catch {
+            // Some browsers refuse; open a window below.
+          }
+        }
+        break;
+      }
+      await self.clients.openWindow(target);
+    })(),
+  );
+});

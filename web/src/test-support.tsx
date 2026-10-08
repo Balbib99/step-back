@@ -1,4 +1,11 @@
-import type { Game, GameTeam, Highlight, NewsItem, TeamWithCrest } from '@step-back/shared';
+import type {
+  Game,
+  GameTeam,
+  Highlight,
+  NewsItem,
+  TeamPushSettings,
+  TeamWithCrest,
+} from '@step-back/shared';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -110,6 +117,21 @@ export const CONFIG = {
   vapidPublicKey: null,
   modules: [],
 };
+
+/** The server with notifications on (a real VAPID public key is 65 bytes in base64url). */
+export const PUSH_CONFIG = {
+  ...CONFIG,
+  features: { translation: false, push: true },
+  vapidPublicKey:
+    'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
+};
+
+export const PUSH_DEFAULTS: TeamPushSettings[] = ['MIN', 'LAL', 'PHI'].map((team) => ({
+  team,
+  start: true,
+  end: true,
+  reminderMinutes: 30,
+}));
 
 export const HEALTH = {
   status: 'ok',
@@ -282,6 +304,12 @@ export const api = {
   gamesStatus: [] as number[],
   games: GAMES,
   config: CONFIG as object | 'down',
+  /** What /api/push/settings holds. */
+  pushSettings: PUSH_DEFAULTS as TeamPushSettings[],
+  /** Status to answer a push settings change with; 200 saves it. */
+  pushSaveStatus: 200,
+  /** Bodies of the subscribe and unsubscribe requests, as `METHOD {json}`. */
+  pushSubscriptions: [] as string[],
 };
 
 export function stubApi() {
@@ -303,6 +331,9 @@ export function stubApi() {
   api.standings = [standingsTable('east', 'regular'), standingsTable('west', 'regular')];
   api.games = GAMES;
   api.config = CONFIG;
+  api.pushSettings = PUSH_DEFAULTS.map((team) => ({ ...team }));
+  api.pushSaveStatus = 200;
+  api.pushSubscriptions = [];
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
@@ -314,6 +345,18 @@ export function stubApi() {
         return json(api.config);
       }
       if (url.includes('/api/teams')) return json({ teams: TEAMS });
+      if (url.includes('/api/push/settings')) {
+        if (init?.method === 'PUT') {
+          if (api.pushSaveStatus !== 200) return json({ error: 'boom' }, api.pushSaveStatus);
+          const { teams } = JSON.parse(String(init.body)) as { teams: TeamPushSettings[] };
+          api.pushSettings = api.pushSettings.map((t) => teams.find((n) => n.team === t.team) ?? t);
+        }
+        return json({ teams: api.pushSettings });
+      }
+      if (url.includes('/api/push/subscribe')) {
+        api.pushSubscriptions.push(`${init?.method} ${String(init?.body)}`);
+        return json({ subscribed: init?.method !== 'DELETE' }, init?.method === 'POST' ? 201 : 200);
+      }
       if (init?.method === 'POST') api.requests.push(`POST ${url}`);
       const translating = /\/api\/news\/(\d+)\/translate/.exec(url);
       if (translating) {

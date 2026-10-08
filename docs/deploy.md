@@ -78,6 +78,17 @@ curl -s -u usuario https://step-back.duckdns.org/api/health     # status: ok
 
 Si "Instalar aplicación" no aparece, abre `chrome://inspect` desde un ordenador con el móvil conectado, o dime qué ves, y se revisa el manifiesto y el service worker (T13 los deja listos; el service worker actual no guarda nada, eso es T25).
 
+## Activar las notificaciones (Web Push)
+
+1. En tu ordenador, desde la raíz del repo: `npx web-push generate-vapid-keys`. Da una clave pública y una privada.
+2. En `deploy/production.env` en la Pi pon las tres juntas (con una sola, el servidor no arranca):
+   `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT` (por ejemplo `mailto:tu@correo.com`).
+3. Reinicia el contenedor (`docker compose -f deploy/compose.yaml up -d`).
+4. En el móvil, con la app instalada: icono de campana de la barra superior → **Activar notificaciones** y acepta el permiso.
+5. **No cambies las claves después**: las suscripciones ya hechas dejan de recibir y hay que volver a activar las notificaciones en cada dispositivo.
+
+La Pi necesita salir a internet por HTTPS hacia los servicios push de Google y Mozilla; nada entra desde fuera. Las suscripciones y los ajustes viven en la base de datos: forman parte de la copia de seguridad (T28).
+
 ## Si la app se queda con una versión vieja o rara (service worker)
 
 La app guarda una copia de sí misma en el móvil para abrir sin conexión (T25). Normalmente se actualiza sola en cuanto abres la app con conexión. Si alguna vez algo no cuadra, en Chrome de Android: abre `https://step-back.duckdns.org`, menú ⋮ → **Información de la página** (el candado) → **Configuración del sitio** → **Borrar datos y restablecer permisos**. La próxima vez que abras la app se descarga entera otra vez.

@@ -8,6 +8,7 @@ import { News } from './pages/News';
 import { Game } from './pages/Game';
 import { Highlights } from './pages/Highlights';
 import { NotFound } from './pages/NotFound';
+import { Settings } from './pages/Settings';
 import { Standings } from './pages/Standings';
 import { Team } from './pages/Team';
 import { Today } from './pages/Today';
@@ -21,6 +22,7 @@ export function AppRoutes() {
         <Route path="clasificacion" element={<Standings />} />
         <Route path="noticias" element={<News />} />
         <Route path="jugadas" element={<Highlights />} />
+        <Route path="ajustes" element={<Settings />} />
         <Route path="partido/:id" element={<Game />} />
         <Route path="equipo/:abbr" element={<Team />} />
         <Route path="*" element={<NotFound />} />

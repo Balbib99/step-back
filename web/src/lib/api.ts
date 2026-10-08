@@ -43,3 +43,27 @@ export async function postJson<T>(path: string, schema: Parser<T>): Promise<T> {
   }
   return schema.parse(await response.json());
 }
+
+/** A change the user asked for, with a JSON body (push settings, subscriptions). */
+export async function sendJson<T>(
+  method: 'POST' | 'PUT' | 'DELETE',
+  path: string,
+  body: unknown,
+  schema: Parser<T>,
+): Promise<T> {
+  const response = await fetch(path, {
+    method,
+    headers: { accept: 'application/json', 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const failure = (await response.json().catch(() => undefined)) as
+      { message?: unknown } | undefined;
+    throw new ApiError(
+      response.status,
+      path,
+      typeof failure?.message === 'string' ? failure.message : undefined,
+    );
+  }
+  return schema.parse(await response.json());
+}
