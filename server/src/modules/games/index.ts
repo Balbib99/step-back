@@ -1,5 +1,6 @@
 import type { AppModule } from '../../core/modules.js';
 import type { ModuleContext } from '../../core/modules.js';
+import { createBoxscoreService, type BoxscoreService } from './boxscore-service.js';
 import { loadCalendar } from './calendar.js';
 import { createCrestStore, type CrestStore } from './crests.js';
 import { seasonForDate } from './dates.js';
@@ -31,13 +32,34 @@ function crestStoreFor(context: ModuleContext): CrestStore {
   return store;
 }
 
+const boxscoreServices = new WeakMap<ModuleContext, BoxscoreService>();
+function boxscoreServiceFor(context: ModuleContext): BoxscoreService {
+  let service = boxscoreServices.get(context);
+  if (!service) {
+    service = createBoxscoreService({
+      http: context.http,
+      cache: context.cache,
+      repo: createGamesRepo(context.db),
+      logger: context.logger,
+    });
+    boxscoreServices.set(context, service);
+  }
+  return service;
+}
+
 export const gamesModule: AppModule = {
   id: 'games',
 
   migrations: GAMES_MIGRATIONS,
 
   routes: (app, context) => {
-    registerGamesRoutes(app, createGamesRepo(context.db), context.config, crestStoreFor(context));
+    registerGamesRoutes(
+      app,
+      createGamesRepo(context.db),
+      context.config,
+      crestStoreFor(context),
+      boxscoreServiceFor(context),
+    );
   },
 
   jobs: (context) => {

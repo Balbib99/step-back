@@ -1,6 +1,7 @@
 import type { Game as GameType } from '@step-back/shared';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BackLink } from '../components/BackLink';
+import { Boxscore } from '../components/Boxscore';
 import { GameCard } from '../components/GameCard';
 import { HighlightCard } from '../components/HighlightCard';
 import { NewsCard } from '../components/NewsCard';
@@ -139,12 +140,17 @@ export function Game() {
   return (
     <>
       <BackLink />
-      <PageHeader title="Partido" subtitle={`${phaseLabel(match.seasonType, true)} · ${when}`} />
+      <PageHeader
+        title="Partido"
+        subtitle={`${phaseLabel(match.seasonType, true)} · ${when}`}
+        sources={['games']}
+      />
 
       <div className="mt-4">
         <GameCard game={match} teams={teamsByAbbr} timeZone={timeZone} linked={false} />
       </div>
       <LineScore game={match} />
+      <Boxscore game={match} favorites={favorites} />
 
       <section aria-labelledby="game-videos">
         <h2 id="game-videos" className={SECTION_TITLE}>

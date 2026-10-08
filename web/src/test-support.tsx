@@ -1,5 +1,7 @@
 import type {
+  BoxscoreResponse,
   Game,
+  PlayerLine,
   GameTeam,
   Highlight,
   NewsItem,
@@ -109,6 +111,92 @@ export const TEAMS: TeamWithCrest[] = [
   logoUrl: null,
   crestUrl: `/api/crests/${abbr}.png`,
 }));
+
+const NO_STATS = {
+  minutes: null,
+  points: null,
+  rebounds: null,
+  assists: null,
+  steals: null,
+  blocks: null,
+  turnovers: null,
+  fouls: null,
+  fieldGoals: null,
+  threePointers: null,
+  freeThrows: null,
+  plusMinus: null,
+};
+
+/** A player line. By default he started and played 30 minutes. */
+export function player(
+  id: string,
+  shortName: string,
+  points: number,
+  extra: Partial<PlayerLine> = {},
+) {
+  return {
+    ...NO_STATS,
+    id,
+    name: shortName,
+    shortName,
+    jersey: '1',
+    position: 'G',
+    starter: true,
+    played: true,
+    reason: null,
+    minutes: 30,
+    points,
+    rebounds: 5,
+    assists: 4,
+    steals: 1,
+    blocks: 0,
+    turnovers: 2,
+    fouls: 3,
+    fieldGoals: '8-15',
+    threePointers: '2-5',
+    freeThrows: '4-4',
+    plusMinus: 7,
+    ...extra,
+  };
+}
+
+/** A small box score for the final of MIN-LAL: each team with two starters, a bench player and one who did not play. */
+export function boxscoreOf(gameId: string, away = 'MIN', home = 'LAL'): BoxscoreResponse {
+  const team = (abbr: string, names: [string, string, string, string], scores: number[]) => ({
+    teamId: abbr,
+    abbr,
+    players: [
+      player(`${abbr}1`, names[0], scores[0]!),
+      player(`${abbr}2`, names[1], scores[1]!, { position: 'F', plusMinus: -3 }),
+      player(`${abbr}3`, names[2], scores[2]!, { starter: false, minutes: 12 }),
+      player(`${abbr}4`, names[3], 0, {
+        ...NO_STATS,
+        starter: false,
+        played: false,
+        reason: "COACH'S DECISION",
+      }),
+    ],
+    totals: {
+      ...NO_STATS,
+      points: scores.reduce((a, b) => a + b, 0),
+      rebounds: 30,
+      assists: 20,
+      steals: 6,
+      blocks: 2,
+      turnovers: 11,
+      fouls: 15,
+      fieldGoals: '30-70',
+      threePointers: '8-25',
+      freeThrows: '12-15',
+    },
+  });
+  return {
+    gameId,
+    away: team(away, ['A. Edwards', 'R. Gobert', 'N. Reid', 'J. McLaughlin'], [28, 12, 9]),
+    home: team(home, ['L. Doncic', 'A. Reaves', 'J. Hayes', 'D. Finney-Smith'], [30, 18, 6]),
+    updatedAt: '2026-10-07T10:00:00.000Z',
+  };
+}
 
 export const CONFIG = {
   timeZone: 'Europe/Madrid',
@@ -312,6 +400,10 @@ export const api = {
   gamesStatus: [] as number[],
   games: GAMES,
   config: CONFIG as object | 'down',
+  /** What /api/health says; set `jobs` to make a source fail. */
+  health: HEALTH as object,
+  /** The box score to answer with, or a status to fail with; by default one for any game. */
+  boxscore: 'default' as BoxscoreResponse | number | 'default',
   /** What /api/push/settings holds. */
   pushSettings: PUSH_DEFAULTS as TeamPushSettings[],
   /** Status to answer a push settings change with; 200 saves it. */
@@ -341,6 +433,8 @@ export function stubApi() {
   api.standings = [standingsTable('east', 'regular'), standingsTable('west', 'regular')];
   api.games = GAMES;
   api.config = CONFIG;
+  api.boxscore = 'default';
+  api.health = HEALTH;
   api.pushSettings = PUSH_DEFAULTS.map((team) => ({ ...team }));
   api.pushSaveStatus = 200;
   api.pushTestStatus = 200;
@@ -350,7 +444,7 @@ export function stubApi() {
     vi.fn(async (url: string, init?: RequestInit) => {
       api.requests.push(url);
       const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
-      if (url.includes('/api/health')) return json(HEALTH);
+      if (url.includes('/api/health')) return json(api.health);
       if (url.includes('/api/config')) {
         if (api.config === 'down') throw new TypeError('network down');
         return json(api.config);
@@ -389,6 +483,15 @@ export function stubApi() {
         return json(answer.body, answer.status);
       }
       if (url.includes('/api/translation/status')) return json(api.translationStatus);
+      const gameBoxscore = /\/api\/games\/([^/]+)\/boxscore/.exec(url);
+      if (gameBoxscore) {
+        if (typeof api.boxscore === 'number') return json({ error: 'boom' }, api.boxscore);
+        const id = decodeURIComponent(gameBoxscore[1]!);
+        const found = api.games.find((g) => g.id === id);
+        if (!found) return json({ error: 'not_found' }, 404);
+        if (api.boxscore !== 'default') return json(api.boxscore);
+        return json(boxscoreOf(id, found.away.abbr, found.home.abbr));
+      }
       const gameVideos = /\/api\/games\/([^/]+)\/highlights/.exec(url);
       if (gameVideos) {
         const game = api.games.find((g) => g.id === decodeURIComponent(gameVideos[1]!));

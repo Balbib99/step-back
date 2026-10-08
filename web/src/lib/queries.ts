@@ -1,4 +1,5 @@
 import {
+  boxscoreResponseSchema,
   configResponseSchema,
   gameHighlightsResponseSchema,
   gamesResponseSchema,
@@ -188,5 +189,20 @@ export function useSavePushSettings() {
       if (context?.before) client.setQueryData(PUSH_SETTINGS_KEY, context.before);
     },
     onSuccess: (saved) => client.setQueryData(PUSH_SETTINGS_KEY, saved),
+  });
+}
+
+/** The numbers of each player of a game that has started; looked at again every half minute while it is on. */
+export function useBoxscore(gameId: string, enabled: boolean, live = false) {
+  return useQuery({
+    queryKey: ['boxscore', gameId],
+    queryFn: ({ signal }) =>
+      fetchJson(
+        `/api/games/${encodeURIComponent(gameId)}/boxscore`,
+        boxscoreResponseSchema,
+        signal,
+      ),
+    enabled,
+    refetchInterval: live ? 30_000 : false,
   });
 }

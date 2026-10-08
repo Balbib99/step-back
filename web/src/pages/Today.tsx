@@ -58,7 +58,7 @@ export function Today() {
   if (config.isError) {
     return (
       <>
-        <PageHeader title="Hoy" subtitle={subtitle} />
+        <PageHeader title="Hoy" subtitle={subtitle} sources={['games']} />
         <EmptyState>
           No se pudo cargar tu configuración. Comprueba que el servidor está en marcha.
         </EmptyState>
@@ -68,7 +68,7 @@ export function Today() {
   if (config.isPending || range.isPending) {
     return (
       <>
-        <PageHeader title="Hoy" subtitle={subtitle} />
+        <PageHeader title="Hoy" subtitle={subtitle} sources={['games']} />
         <Skeleton />
       </>
     );
@@ -76,7 +76,7 @@ export function Today() {
   if (range.isError) {
     return (
       <>
-        <PageHeader title="Hoy" subtitle={subtitle} />
+        <PageHeader title="Hoy" subtitle={subtitle} sources={['games']} />
         <EmptyState>
           No se pudieron cargar los partidos. Comprueba que el servidor está en marcha.
           <br />
@@ -94,7 +94,7 @@ export function Today() {
 
   return (
     <>
-      <PageHeader title="Hoy" subtitle={subtitle} />
+      <PageHeader title="Hoy" subtitle={subtitle} sources={['games']} />
 
       {favouriteGames.length > 0 && (
         <>

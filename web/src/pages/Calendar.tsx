@@ -112,7 +112,7 @@ export function Calendar() {
 
   return (
     <>
-      <PageHeader title="Calendario" subtitle={monthLabel(selected)} />
+      <PageHeader title="Calendario" subtitle={monthLabel(selected)} sources={['games']} />
 
       <div className="mt-3 mb-2 flex items-center justify-between">
         <button

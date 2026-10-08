@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 // The five things the app is for, in a real browser, against the built app. The data is the
 // recorded one plus three made-up games placed around now (e2e/server/e2e-server.ts):
 //   - DEN at MIN, live, 58-61 (a favourite is playing)
-//   - BOS at PHI, final, yesterday
+//   - GS at POR, final, yesterday, with its recorded player numbers
 //   - LAL at SAC, in three days
 
 const LIVE_GAME = /Denver Nuggets 58, Minnesota Timberwolves 61/;
@@ -32,6 +32,22 @@ test('calendario: today shows the game, and opening it gives the match page', as
   await expect(page).toHaveURL(/\/partido\/e2e-live$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Partido' })).toBeVisible();
   await expect(page.getByText('Target Center')).toBeVisible();
+});
+
+test('partido: a finished game gives the numbers of each player', async ({ page }) => {
+  await page.goto('/partido/e2e-final');
+
+  const grid = page.getByRole('table', { name: 'Estadísticas de Golden State Warriors' });
+  await expect(grid).toBeVisible();
+  const terry = grid.getByRole('row').filter({ hasText: 'D. Terry' });
+  // Minutes 43, points 23, rebounds 8, assists 9: the recorded line.
+  await expect(terry.getByRole('cell').nth(1)).toHaveText('23');
+  await expect(terry.getByRole('cell').nth(3)).toHaveText('9');
+
+  await page.getByRole('button', { name: 'POR', exact: true }).click();
+  await expect(
+    page.getByRole('table', { name: 'Estadísticas de Portland Trail Blazers' }),
+  ).toBeVisible();
 });
 
 test('clasificación: opens on the conference of your first team and switches', async ({ page }) => {

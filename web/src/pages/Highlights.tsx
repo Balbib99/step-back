@@ -69,7 +69,7 @@ export function Highlights() {
 
   return (
     <>
-      <PageHeader title="Jugadas" />
+      <PageHeader title="Jugadas" sources={['highlights']} />
 
       <div className="mt-3">
         <ChipRow>

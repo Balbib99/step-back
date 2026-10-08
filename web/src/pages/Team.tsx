@@ -111,7 +111,7 @@ export function Team() {
   return (
     <>
       <BackLink />
-      <PageHeader title={team?.shortName ?? abbr} />
+      <PageHeader title={team?.shortName ?? abbr} sources={['games', 'news']} />
 
       <section
         data-team={abbr}

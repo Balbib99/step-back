@@ -1,7 +1,18 @@
 import { useEffect, type ReactNode } from 'react';
+import type { Section } from '../lib/sources';
+import { SourceNotice } from './SourceNotice';
 
 /** Page title plus the document title, so the installed app and the browser tab both say where you are. */
-export function PageHeader({ title, subtitle }: { title: string; subtitle?: ReactNode }) {
+export function PageHeader({
+  title,
+  subtitle,
+  sources,
+}: {
+  title: string;
+  subtitle?: ReactNode;
+  /** The outside sources this screen lives off: if one is failing, the screen says so under the title. */
+  sources?: readonly Section[];
+}) {
   useEffect(() => {
     document.title = title === 'Hoy' ? 'step-back' : `${title} · step-back`;
   }, [title]);
@@ -10,6 +21,7 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle?: Reac
     <div className="pt-1">
       <h1 className="voice-number text-[30px]">{title}</h1>
       {subtitle && <p className="mt-1 text-[13px] text-text-2">{subtitle}</p>}
+      {sources && <SourceNotice sections={sources} />}
     </div>
   );
 }

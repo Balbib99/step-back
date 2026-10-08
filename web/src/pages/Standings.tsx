@@ -164,6 +164,7 @@ export function Standings() {
     <>
       <PageHeader
         title="Clasificación"
+        sources={['standings']}
         subtitle={table ? `Temporada ${seasonLabel(table.season)}` : undefined}
       />
 

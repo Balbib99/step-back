@@ -96,7 +96,7 @@ export function News() {
 
   return (
     <>
-      <PageHeader title="Noticias" />
+      <PageHeader title="Noticias" sources={['news']} />
 
       <div className="mt-3">
         <ChipRow>

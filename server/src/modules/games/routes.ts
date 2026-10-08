@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { Config } from '../../core/config.js';
 import { addDays, isRealDate, localDaysRangeUtc } from './dates.js';
 import { CrestUnavailableError, type CrestStore } from './crests.js';
+import { BoxscoreUnavailableError, type BoxscoreService } from './boxscore-service.js';
 import type { GamesRepo } from './repo.js';
 
 const MAX_RANGE_DAYS = 400;
@@ -42,6 +43,7 @@ export function registerGamesRoutes(
   repo: GamesRepo,
   config: Config,
   crests: CrestStore,
+  boxscores: BoxscoreService,
 ): void {
   app.get('/teams', async () => ({
     teams: repo.teams().map((team) => ({ ...team, crestUrl: crestPath(team.abbr) })),
@@ -98,5 +100,22 @@ export function registerGamesRoutes(
     const game = repo.game(request.params.id);
     if (!game) return reply.code(404).send({ error: 'not_found' });
     return game;
+  });
+
+  // The numbers of each player. Asked of ESPN only when someone looks, and kept for a short time.
+  app.get<{ Params: { id: string } }>('/games/:id/boxscore', async (request, reply) => {
+    try {
+      const boxscore = await boxscores.get(request.params.id);
+      if (!boxscore) return reply.code(404).send({ error: 'not_found' });
+      return boxscore;
+    } catch (error) {
+      if (error instanceof BoxscoreUnavailableError) {
+        return reply.code(502).send({
+          error: 'boxscore_unavailable',
+          message: 'No se pudieron obtener las estadísticas. Inténtalo más tarde.',
+        });
+      }
+      throw error;
+    }
   });
 }

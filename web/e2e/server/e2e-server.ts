@@ -44,6 +44,10 @@ const upstream = (async (input: string | URL | Request, init?: RequestInit) => {
 
   if (host === 'site.api.espn.com') {
     if (pathname.endsWith('/teams')) return text(fixture('espn/teams.json'), 'application/json');
+    // The player numbers of the made-up final (the recorded box score of GS at POR).
+    if (pathname.endsWith('/summary')) {
+      return text(fixture('espn/summary-final.boxscore.json'), 'application/json');
+    }
     if (pathname.endsWith('/schedule') || pathname.endsWith('/scoreboard')) {
       return json({ events: [] });
     }
@@ -143,8 +147,8 @@ const seeded: Game[] = [
     startUtc: new Date(now - 26 * HOUR).toISOString(),
     status: 'final',
     statusDetail: 'Final',
-    away: side('BOS', 99, false),
-    home: side('PHI', 104, true),
+    away: side('GS', 118, false),
+    home: side('POR', 123, true),
   },
   {
     ...base,

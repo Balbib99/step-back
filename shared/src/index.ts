@@ -1,6 +1,7 @@
 export const APP_NAME = 'step-back';
 
 export * from './api.js';
+export * from './boxscore.js';
 export * from './games.js';
 export * from './highlights.js';
 export * from './news.js';
