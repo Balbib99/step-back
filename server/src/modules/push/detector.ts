@@ -1,4 +1,4 @@
-import type { Game, TeamPushSettings } from '@step-back/shared';
+import type { Game, NewsItem, TeamPushSettings } from '@step-back/shared';
 
 export type PushKind = 'reminder' | 'start' | 'end';
 
@@ -56,4 +56,41 @@ export function detectEvents(
     }
   }
   return events;
+}
+
+/** A news item is only news for a while: older ones are not sent, whenever they were stored. */
+export const NEWS_FRESH_FOR_MS = 2 * HOUR;
+/** Featured news is rare by design: past this many in a day, the rest are left out. */
+export const MAX_NEWS_PER_DAY = 5;
+
+export interface NewsEvent {
+  key: string;
+  item: NewsItem;
+  /** The favourite teams it is about that asked for news. */
+  teams: string[];
+}
+
+/**
+ * Featured news that is due: from a priority source, recent, and about a favourite team that has
+ * news turned on. Oldest first, so a burst keeps its order.
+ */
+export function detectNews(
+  items: readonly NewsItem[],
+  settings: readonly TeamPushSettings[],
+  favorites: readonly string[],
+  prioritySources: ReadonlySet<string>,
+  now: number,
+): NewsEvent[] {
+  const wanted = new Set(
+    settings.filter((s) => s.news && favorites.includes(s.team)).map((s) => s.team),
+  );
+  const events: NewsEvent[] = [];
+  for (const item of items) {
+    if (!prioritySources.has(item.sourceId)) continue;
+    const age = now - Date.parse(item.publishedAt);
+    if (age > NEWS_FRESH_FOR_MS) continue;
+    const teams = item.teams.filter((team) => wanted.has(team));
+    if (teams.length > 0) events.push({ key: `news:${item.id}`, item, teams });
+  }
+  return events.sort((a, b) => a.item.publishedAt.localeCompare(b.item.publishedAt));
 }

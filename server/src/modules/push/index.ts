@@ -1,6 +1,8 @@
 import type { Config } from '../../core/config.js';
 import type { AppModule } from '../../core/modules.js';
 import { createGamesRepo } from '../games/repo.js';
+import { createNewsRepo } from '../news/repo.js';
+import { SOURCES, type NewsSource } from '../news/sources.js';
 import { PUSH_MIGRATIONS } from './push-migrations.js';
 import { createPushRepo } from './repo.js';
 import { registerPushRoutes } from './routes.js';
@@ -16,10 +18,13 @@ export const PUSH_JOB_ID = 'push:dispatch';
 
 /**
  * Web Push for the favourite teams: the start and the end of their games, and an optional
- * reminder before. It needs the `games` module (its table). Without VAPID keys it is off:
+ * reminder before. It needs the `games` and `news` modules (their tables). Without VAPID keys it is off:
  * its routes answer 503 and it schedules nothing. `provider` is only for tests.
  */
-export function createPushModule(options: { provider?: PushProvider } = {}): AppModule {
+export function createPushModule(
+  options: { provider?: PushProvider; sources?: readonly NewsSource[] } = {},
+): AppModule {
+  const sources = options.sources ?? SOURCES;
   const providerFor = (config: Config) =>
     options.provider ?? (config.vapid ? createWebPushProvider(config.vapid) : undefined);
 
@@ -30,7 +35,7 @@ export function createPushModule(options: { provider?: PushProvider } = {}): App
 
     routes: (app, context) => {
       registerPushRoutes(app, {
-        repo: createPushRepo(context.db),
+        repo: createPushRepo(context.db, context.config.favoriteTeams),
         favorites: context.config.favoriteTeams,
         enabled: context.config.vapid !== undefined,
         provider: providerFor(context.config),
@@ -42,20 +47,20 @@ export function createPushModule(options: { provider?: PushProvider } = {}): App
       const provider = providerFor(config);
       if (!provider) return [];
 
-      const repo = createPushRepo(context.db);
+      const repo = createPushRepo(context.db, config.favoriteTeams);
+      const news = createNewsRepo(
+        context.db,
+        new Map(sources.map((source) => [source.id, source.name])),
+      );
       const games = createGamesRepo(context.db);
       const dispatcher = createDispatcher({
         repo,
-        games: (teams, fromUtc, toUtc) => {
-          const seen = new Map(
-            teams.flatMap((teamAbbr) =>
-              games.games({ fromUtc, toUtc, teamAbbr }).map((game) => [game.id, game] as const),
-            ),
-          );
-          return [...seen.values()];
-        },
+        games: (fromUtc, toUtc) => games.games({ fromUtc, toUtc }),
+        news: (teams) => news.list({ teams, limit: 30 }).news,
+        prioritySources: new Set(sources.filter((s) => s.priority).map((s) => s.id)),
+        sourceName: (id) => sources.find((s) => s.id === id)?.name ?? id,
         provider,
-        teams: config.favoriteTeams,
+        favorites: config.favoriteTeams,
         timeZone: config.timeZone,
         logger: context.logger,
       });

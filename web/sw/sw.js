@@ -209,6 +209,8 @@ self.addEventListener('push', (event) => {
       // A newer notification about the same event replaces the old one instead of piling up.
       tag: typeof message.tag === 'string' ? message.tag : undefined,
       icon: '/icons/icon-192.png',
+      // The small icon in the status bar: Android paints it from the transparency alone.
+      badge: '/icons/badge-96.png',
       data: { url: safeTarget(message.url) },
     }),
   );

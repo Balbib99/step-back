@@ -1,4 +1,4 @@
-import type { PushEvent } from './detector.js';
+import type { NewsEvent, PushEvent } from './detector.js';
 
 export interface PushPayload {
   title: string;
@@ -46,4 +46,20 @@ export function messageFor(event: PushEvent, timeZone: string): PushPayload {
       };
     }
   }
+}
+
+const MAX_TITLE = 110;
+
+/** A featured news item: its title, where it comes from and which of your teams it is about. */
+export function newsMessageFor(event: NewsEvent, sourceName: string): PushPayload {
+  const { item, teams } = event;
+  const title =
+    item.title.length > MAX_TITLE ? `${item.title.slice(0, MAX_TITLE - 1)}…` : item.title;
+  return {
+    title,
+    body: `${sourceName} · ${teams.join(', ')}`,
+    // The app's news of that team: the article itself lives at its source.
+    url: `/noticias?equipo=${encodeURIComponent(teams[0]!)}`,
+    tag: event.key,
+  };
 }

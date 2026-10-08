@@ -4,7 +4,8 @@
     "name": "ESPN",
     "lang": "en",
     "type": "espn",
-    "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news"
+    "url": "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news",
+    "priority": true
   },
   {
     "id": "yahoo",

@@ -4,6 +4,9 @@ import webpush from 'web-push';
 import { buildApp, type App } from '../../core/app.js';
 import { loadConfig } from '../../core/config.js';
 import { gamesModule } from '../games/index.js';
+import { createNewsModule } from '../news/index.js';
+import { createNewsRepo } from '../news/repo.js';
+import type { NewsSource } from '../news/sources.js';
 import { createGamesRepo } from '../games/repo.js';
 import { game, TIP_OFF } from './fixtures.js';
 import { createPushModule, PUSH_JOB_ID } from './index.js';
@@ -27,7 +30,9 @@ const vapidEnv = () => {
   };
 };
 
-async function build(options: { push?: boolean; provider?: PushProvider } = {}) {
+async function build(
+  options: { push?: boolean; provider?: PushProvider; sources?: NewsSource[] } = {},
+) {
   app = await buildApp({
     config: loadConfig({
       NODE_ENV: 'test',
@@ -36,7 +41,11 @@ async function build(options: { push?: boolean; provider?: PushProvider } = {}) 
     }),
     modules: [
       gamesModule,
-      createPushModule(options.provider ? { provider: options.provider } : {}),
+      createNewsModule([]),
+      createPushModule({
+        ...(options.provider && { provider: options.provider }),
+        ...(options.sources && { sources: options.sources }),
+      }),
     ],
   });
   return app;
@@ -92,13 +101,24 @@ describe('push routes', () => {
   it('serves settings for each favourite with defaults, and keeps what is changed', async () => {
     const { server } = await build();
     const first = pushSettingsSchema.parse((await server.inject('/api/push/settings')).json());
-    expect(first.teams.map((t) => t.team)).toEqual(['MIN', 'LAL', 'PHI']);
-    expect(first.teams[0]).toEqual({ team: 'MIN', start: true, end: true, reminderMinutes: 30 });
+    expect(first.teams).toHaveLength(30); // every NBA team, the favourites first
+    expect(first.teams.slice(0, 3).map((t) => t.team)).toEqual(['MIN', 'LAL', 'PHI']);
+    expect(first.teams[0]).toEqual({
+      team: 'MIN',
+      start: true,
+      end: true,
+      reminderMinutes: 30,
+      news: false,
+    });
+    // The rest start with nothing on, until the owner asks.
+    expect(first.teams.slice(3).every((t) => !t.start && !t.end && !t.news)).toBe(true);
 
     const updated = await server.inject({
       method: 'PUT',
       url: '/api/push/settings',
-      payload: { teams: [{ team: 'LAL', start: false, end: true, reminderMinutes: 0 }] },
+      payload: {
+        teams: [{ team: 'LAL', start: false, end: true, reminderMinutes: 0, news: true }],
+      },
     });
     expect(updated.statusCode).toBe(200);
 
@@ -108,17 +128,33 @@ describe('push routes', () => {
       start: false,
       end: true,
       reminderMinutes: 0,
+      news: true,
     });
     expect(after.teams.find((t) => t.team === 'MIN')?.start).toBe(true); // untouched
   });
 
-  it('refuses settings for a team that is not a favourite, or a reminder that is not offered', async () => {
+  it('lets any NBA team have game alerts', async () => {
+    const { server } = await build();
+    const saved = await server.inject({
+      method: 'PUT',
+      url: '/api/push/settings',
+      payload: {
+        teams: [{ team: 'BOS', start: true, end: true, reminderMinutes: 0, news: false }],
+      },
+    });
+    expect(saved.statusCode).toBe(200);
+    const bos = pushSettingsSchema.parse(saved.json()).teams.find((t) => t.team === 'BOS');
+    expect(bos).toMatchObject({ start: true, end: true });
+  });
+
+  it('refuses settings for an unknown team, news for a team that is not a favourite, or a reminder that is not offered', async () => {
     const { server } = await build();
     const put = (teams: unknown[]) =>
       server.inject({ method: 'PUT', url: '/api/push/settings', payload: { teams } });
-    const ok = { start: true, end: true, reminderMinutes: 30 };
+    const ok = { start: true, end: true, reminderMinutes: 30, news: false };
 
-    expect((await put([{ team: 'BOS', ...ok }])).statusCode).toBe(400);
+    expect((await put([{ team: 'XXX', ...ok }])).statusCode).toBe(400);
+    expect((await put([{ team: 'BOS', ...ok, news: true }])).statusCode).toBe(400);
     expect((await put([{ team: 'MIN', ...ok, reminderMinutes: 7 }])).statusCode).toBe(400);
     expect(
       (
@@ -213,5 +249,55 @@ describe('the push job', () => {
     const { server } = await build({ provider });
     const health = (await server.inject('/api/health')).json();
     expect(health.jobs.map((j: { id: string }) => j.id)).toContain(PUSH_JOB_ID);
+  });
+});
+
+describe('featured news through the job', () => {
+  const espn: NewsSource = {
+    id: 'espn',
+    name: 'ESPN',
+    lang: 'en',
+    type: 'espn',
+    url: 'https://example.test/espn',
+    priority: true,
+  };
+  const reddit: NewsSource = { ...espn, id: 'reddit', name: 'r/nba', priority: false };
+
+  it('sends a recent item of the priority source about a team that has news on, and no other', async () => {
+    const sent: { title: string; body: string }[] = [];
+    const provider: PushProvider = {
+      send: async (_s, payload) => void sent.push({ title: payload.title, body: payload.body }),
+    };
+    const { server, db, scheduler } = await build({ provider, sources: [espn, reddit] });
+    await server.inject({ method: 'POST', url: '/api/push/subscribe', payload: subscription() });
+    await server.inject({
+      method: 'PUT',
+      url: '/api/push/settings',
+      payload: { teams: [{ team: 'MIN', start: true, end: true, reminderMinutes: 0, news: true }] },
+    });
+
+    const now = Date.now();
+    const item = (n: number) => ({
+      url: `https://example.test/${n}`,
+      title: `Edwards firma ${n}`,
+      summary: null,
+      publishedAt: now - 5 * MINUTE,
+      mediaKind: 'none' as const,
+      mediaUrl: null,
+      embedUrl: null,
+      durationSeconds: null,
+      teamIds: [],
+      playerNames: [],
+    });
+    const news = createNewsRepo(db, new Map());
+    const about = { teams: ['MIN'], players: [] };
+    news.ingest('espn', 'en', [{ item: item(1), tags: about }], now);
+    news.ingest('reddit', 'en', [{ item: item(2), tags: about }], now);
+    news.ingest('espn', 'en', [{ item: item(3), tags: { teams: ['BOS'], players: [] } }], now);
+
+    await scheduler.runNow(PUSH_JOB_ID);
+    await scheduler.runNow(PUSH_JOB_ID);
+
+    expect(sent).toEqual([{ title: 'Edwards firma 1', body: 'ESPN · MIN' }]);
   });
 });

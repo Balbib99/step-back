@@ -33,4 +33,12 @@ CREATE TABLE push_log (
 );
 `,
   },
+  {
+    id: 8,
+    name: 'push-news',
+    sql: `
+-- Featured news per favourite team; off until the owner turns it on.
+ALTER TABLE push_settings ADD COLUMN news INTEGER NOT NULL DEFAULT 0 CHECK (news IN (0, 1));
+`,
+  },
 ];

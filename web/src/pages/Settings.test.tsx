@@ -243,6 +243,7 @@ describe('Ajustes: qué avisar', () => {
         start: false,
         end: true,
         reminderMinutes: 30,
+        news: false,
       }),
     );
     expect(api.pushSettings.find((t) => t.team === 'MIN')?.start).toBe(true);
@@ -276,6 +277,75 @@ describe('Ajustes: qué avisar', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo guardar');
     await waitFor(() => expect(box).toBeChecked());
+  });
+});
+
+describe('Ajustes: noticias y otros equipos', () => {
+  it('turns featured news on for a favourite, off by default', async () => {
+    const user = userEvent.setup();
+    installBrowser();
+    renderRoute('/ajustes');
+
+    const box = await screen.findByRole('checkbox', {
+      name: 'Noticias destacadas de Minnesota Timberwolves',
+    });
+    expect(box).not.toBeChecked();
+    await user.click(box);
+
+    await waitFor(() => expect(api.pushSettings.find((t) => t.team === 'MIN')?.news).toBe(true));
+  });
+
+  it('offers featured news only for favourites', async () => {
+    const user = userEvent.setup();
+    installBrowser();
+    renderRoute('/ajustes');
+    await user.click(await screen.findByText(/Otros equipos/));
+
+    expect(
+      screen.queryByRole('checkbox', { name: 'Noticias destacadas de Boston Celtics' }),
+    ).toBeNull();
+    expect(
+      screen.getByRole('checkbox', { name: 'Inicio del partido de Boston Celtics' }),
+    ).toBeInTheDocument();
+  });
+
+  it('starts with the other teams off and turns one on', async () => {
+    const user = userEvent.setup();
+    installBrowser();
+    renderRoute('/ajustes');
+    await user.click(await screen.findByText(/Otros equipos/));
+
+    const start = screen.getByRole('checkbox', { name: 'Inicio del partido de Denver Nuggets' });
+    expect(start).not.toBeChecked();
+    await user.click(start);
+
+    await waitFor(() => expect(api.pushSettings.find((t) => t.team === 'DEN')?.start).toBe(true));
+    expect(api.pushSettings.find((t) => t.team === 'BOS')?.start).toBe(false);
+    expect(screen.getByText(/1 con avisos/)).toBeInTheDocument();
+  });
+
+  it('turns every other team on or off at once, and leaves the favourites alone', async () => {
+    const user = userEvent.setup();
+    installBrowser();
+    renderRoute('/ajustes');
+    await user.click(await screen.findByText(/Otros equipos/));
+
+    await user.click(screen.getByRole('button', { name: 'Activar todos' }));
+    await waitFor(() =>
+      expect(
+        api.pushSettings
+          .filter((t) => ['BOS', 'DEN'].includes(t.team))
+          .every((t) => t.start && t.end),
+      ).toBe(true),
+    );
+    expect(api.pushSettings.find((t) => t.team === 'MIN')?.reminderMinutes).toBe(30);
+
+    await user.click(screen.getByRole('button', { name: 'Quitar todos' }));
+    await waitFor(() =>
+      expect(
+        api.pushSettings.filter((t) => ['BOS', 'DEN'].includes(t.team)).some((t) => t.start),
+      ).toBe(false),
+    );
   });
 });
 

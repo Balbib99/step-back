@@ -168,18 +168,18 @@ export function usePushSettings(enabled: boolean) {
   });
 }
 
-/** Saves the settings of one team. The screen shows the change at once and goes back if it fails. */
+/** Saves the settings of some teams. The screen shows the change at once and goes back if it fails. */
 export function useSavePushSettings() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (team: TeamPushSettings) =>
-      sendJson('PUT', '/api/push/settings', { teams: [team] }, pushSettingsSchema),
-    onMutate: async (team) => {
+    mutationFn: (teams: TeamPushSettings[]) =>
+      sendJson('PUT', '/api/push/settings', { teams }, pushSettingsSchema),
+    onMutate: async (changed) => {
       await client.cancelQueries({ queryKey: PUSH_SETTINGS_KEY });
       const before = client.getQueryData<PushSettings>(PUSH_SETTINGS_KEY);
       if (before) {
         client.setQueryData<PushSettings>(PUSH_SETTINGS_KEY, {
-          teams: before.teams.map((t) => (t.team === team.team ? team : t)),
+          teams: before.teams.map((t) => changed.find((c) => c.team === t.team) ?? t),
         });
       }
       return { before };

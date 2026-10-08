@@ -512,6 +512,7 @@ describe('notifications', () => {
     const [title, options] = shown(worker);
     expect(title).toBe('Final: MIN 104 – 99 LAL');
     expect(options).toMatchObject({
+      badge: '/icons/badge-96.png',
       body: 'Gana Minnesota.',
       tag: 'end:42',
       data: { url: '/partido/42' },

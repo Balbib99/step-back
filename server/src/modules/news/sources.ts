@@ -15,6 +15,8 @@ export const sourceSchema = z.object({
   imageFromContent: z.boolean().optional(),
   /** Titles to leave out, as regular expressions (r/nba's daily threads). */
   skipTitles: z.array(z.string()).optional(),
+  /** Its items can be sent as notifications (module push). */
+  priority: z.boolean().optional(),
 });
 
 export type NewsSource = z.infer<typeof sourceSchema>;

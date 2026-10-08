@@ -1,6 +1,6 @@
-import type { TeamPushSettings } from '@step-back/shared';
+import type { NewsItem, TeamPushSettings } from '@step-back/shared';
 import { describe, expect, it } from 'vitest';
-import { detectEvents } from './detector.js';
+import { detectEvents, detectNews } from './detector.js';
 import { game, side, TIP_OFF } from './fixtures.js';
 
 const MINUTE = 60_000;
@@ -10,6 +10,7 @@ const settings = (team: string, extra: Partial<TeamPushSettings> = {}): TeamPush
   start: true,
   end: true,
   reminderMinutes: 30,
+  news: false,
   ...extra,
 });
 
@@ -107,5 +108,70 @@ describe('detectEvents', () => {
         [],
       );
     }
+  });
+});
+
+describe('detectNews', () => {
+  const NOW = Date.parse('2026-10-08T12:00:00Z');
+  const FAVORITES = ['MIN', 'LAL', 'PHI'];
+  const PRIORITY = new Set(['espn']);
+
+  const item = (id: number, extra: Partial<NewsItem> = {}): NewsItem => ({
+    id,
+    sourceId: 'espn',
+    sourceName: 'ESPN',
+    url: `https://www.espn.com/story/${id}`,
+    title: `Titular ${id}`,
+    summary: null,
+    lang: 'en',
+    publishedAt: new Date(NOW - 10 * MINUTE).toISOString(),
+    mediaKind: 'none',
+    imageUrl: null,
+    embedUrl: null,
+    durationSeconds: null,
+    teams: ['MIN'],
+    players: [],
+    ...extra,
+  });
+  const on = [settings('MIN', { news: true })];
+  const due = (items: NewsItem[], s = on) => detectNews(items, s, FAVORITES, PRIORITY, NOW);
+
+  it('is due for a recent item of a priority source about a team with news on', () => {
+    expect(due([item(1)]).map((e) => e.key)).toEqual(['news:1']);
+  });
+
+  it('is off by default and when the team has it off', () => {
+    expect(due([item(1)], [settings('MIN')])).toEqual([]);
+  });
+
+  it('ignores sources that are not priority', () => {
+    expect(due([item(1, { sourceId: 'reddit' })])).toEqual([]);
+  });
+
+  it('ignores items about other teams, and items about no team', () => {
+    expect(due([item(1, { teams: ['BOS'] }), item(2, { teams: [] })])).toEqual([]);
+  });
+
+  it('is not sent once it is old, however recently it was stored', () => {
+    const old = item(1, { publishedAt: new Date(NOW - 3 * HOUR).toISOString() });
+    expect(due([old])).toEqual([]);
+  });
+
+  it('only counts favourites: news is not available for any other team', () => {
+    const other = [settings('BOS', { news: true })];
+    expect(due([item(1, { teams: ['BOS'] })], other)).toEqual([]);
+  });
+
+  it('names the teams that asked, and gives the oldest first', () => {
+    const s = [settings('MIN', { news: true }), settings('LAL', { news: true })];
+    const events = due(
+      [
+        item(2, { teams: ['LAL', 'MIN', 'BOS'] }),
+        item(1, { publishedAt: new Date(NOW - 30 * MINUTE).toISOString() }),
+      ],
+      s,
+    );
+    expect(events.map((e) => e.key)).toEqual(['news:1', 'news:2']);
+    expect(events[1]!.teams).toEqual(['LAL', 'MIN']);
   });
 });

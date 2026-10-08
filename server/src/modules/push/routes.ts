@@ -3,6 +3,7 @@ import {
   pushSubscriptionSchema,
   pushTestSchema,
   pushUnsubscribeSchema,
+  isTeamAbbr,
 } from '@step-back/shared';
 import type { FastifyInstance } from 'fastify';
 import type { PushRepo } from './repo.js';
@@ -96,17 +97,23 @@ export function registerPushRoutes(
     return { sent: true };
   });
 
-  app.get('/push/settings', async () => ({ teams: repo.settings(favorites) }));
+  app.get('/push/settings', async () => ({ teams: repo.settings() }));
 
-  // Teams left out keep what they had. Only favourites have settings.
+  // Teams left out keep what they had. Any NBA team can have game alerts; only favourites can have news.
   app.put('/push/settings', async (request, reply) => {
     const parsed = pushSettingsSchema.safeParse(request.body);
     if (!parsed.success) return invalid(reply, 'Los ajustes no son válidos.');
     const teams = parsed.data.teams.map((s) => s.team);
-    if (teams.some((team) => !favorites.includes(team)) || new Set(teams).size !== teams.length) {
-      return invalid(reply, 'Solo se pueden ajustar los equipos favoritos, una vez cada uno.');
+    if (teams.some((team) => !isTeamAbbr(team)) || new Set(teams).size !== teams.length) {
+      return invalid(reply, 'Solo se pueden ajustar equipos de la NBA, una vez cada uno.');
+    }
+    if (parsed.data.teams.some((s) => s.news && !favorites.includes(s.team))) {
+      return invalid(
+        reply,
+        'Las noticias destacadas solo están disponibles para los equipos favoritos.',
+      );
     }
     repo.saveSettings(parsed.data.teams);
-    return { teams: repo.settings(favorites) };
+    return { teams: repo.settings() };
   });
 }

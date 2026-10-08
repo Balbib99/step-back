@@ -1,4 +1,4 @@
-import type { Game } from '@step-back/shared';
+import type { Game, NewsItem } from '@step-back/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CORE_MIGRATIONS } from '../../core/core-migrations.js';
 import { openDb } from '../../core/db.js';
@@ -48,13 +48,15 @@ describe('the dispatcher', () => {
   let repo: PushRepo;
   let clock: number;
   let games: Game[];
+  let news: NewsItem[];
 
   beforeEach(() => {
     db = openDb(':memory:');
     runMigrations(db, [...CORE_MIGRATIONS, ...PUSH_MIGRATIONS]);
-    repo = createPushRepo(db, () => clock);
+    repo = createPushRepo(db, ['MIN', 'LAL', 'PHI'], () => clock);
     clock = TIP_OFF - 20 * MINUTE;
     games = [game()];
+    news = [];
     repo.saveSubscription(subscription(1));
   });
 
@@ -62,15 +64,12 @@ describe('the dispatcher', () => {
   const dispatcherWith = (provider: PushProvider) =>
     createDispatcher({
       repo,
-      games: (teams, from, to) =>
-        games.filter(
-          (g) =>
-            (teams.includes(g.home.abbr) || teams.includes(g.away.abbr)) &&
-            g.startUtc >= from &&
-            g.startUtc < to,
-        ),
+      games: (from, to) => games.filter((g) => g.startUtc >= from && g.startUtc < to),
+      news: () => news,
       provider,
-      teams: ['MIN', 'LAL', 'PHI'],
+      favorites: ['MIN', 'LAL', 'PHI'],
+      prioritySources: new Set(['espn']),
+      sourceName: () => 'ESPN',
       timeZone: 'Europe/Madrid',
       logger,
       now: () => clock,
@@ -179,8 +178,8 @@ describe('the dispatcher', () => {
 
   it('stops the alerts of a team when it is turned off in the settings', async () => {
     repo.saveSettings([
-      { team: 'MIN', start: false, end: false, reminderMinutes: 0 },
-      { team: 'LAL', start: false, end: false, reminderMinutes: 0 },
+      { team: 'MIN', start: false, end: false, reminderMinutes: 0, news: false },
+      { team: 'LAL', start: false, end: false, reminderMinutes: 0, news: false },
     ]);
     const { provider, sent } = fakeProvider();
     const dispatcher = dispatcherWith(provider);
@@ -191,11 +190,104 @@ describe('the dispatcher', () => {
     expect(sent).toEqual([]);
   });
 
-  it('knows nothing of games of teams that are not favourites', async () => {
+  it('says nothing about games of teams nobody asked for', async () => {
     games = [game({}, 'DEN', 'GS')];
     const { provider, sent } = fakeProvider();
     await dispatcherWith(provider).run();
+    clock = TIP_OFF + MINUTE;
+    games = [game({ status: 'live' }, 'DEN', 'GS')];
+    await dispatcherWith(provider).run();
     expect(sent).toEqual([]);
+  });
+
+  it('tells the start and the end of a team that is not a favourite once it is asked', async () => {
+    repo.saveSettings([{ team: 'DEN', start: true, end: true, reminderMinutes: 0, news: false }]);
+    const { provider, sent } = fakeProvider();
+    const dispatcher = dispatcherWith(provider);
+
+    games = [game({}, 'DEN', 'GS')];
+    await dispatcher.run(); // no reminder asked
+    clock = TIP_OFF + MINUTE;
+    games = [game({ status: 'live' }, 'DEN', 'GS')];
+    await dispatcher.run();
+    await dispatcher.run();
+    clock = TIP_OFF + 3 * 60 * MINUTE;
+    games = [game({ status: 'final' }, 'DEN', 'GS')];
+    await dispatcher.run();
+
+    expect(sent.map((s) => s.title)).toEqual(['¡Empieza! DEN @ GS', 'Final: DEN - – - GS']);
+  });
+
+  describe('featured news', () => {
+    const story = (id: number, extra: Partial<NewsItem> = {}): NewsItem => ({
+      id,
+      sourceId: 'espn',
+      sourceName: 'ESPN',
+      url: `https://www.espn.com/story/${id}`,
+      title: `Titular ${id}`,
+      summary: null,
+      lang: 'en',
+      publishedAt: new Date(clock - 10 * MINUTE).toISOString(),
+      mediaKind: 'none',
+      imageUrl: null,
+      embedUrl: null,
+      durationSeconds: null,
+      teams: ['MIN'],
+      players: [],
+      ...extra,
+    });
+    const newsOn = () =>
+      repo.saveSettings([{ team: 'MIN', start: true, end: true, reminderMinutes: 0, news: true }]);
+
+    beforeEach(() => {
+      games = [];
+    });
+
+    it('is not sent unless the team has it on', async () => {
+      news = [story(1)];
+      const { provider, sent } = fakeProvider();
+      await dispatcherWith(provider).run();
+      expect(sent).toEqual([]);
+    });
+
+    it('sends the title once, and opens the news of the team', async () => {
+      newsOn();
+      news = [story(1)];
+      const { provider, sent } = fakeProvider();
+      await dispatcherWith(provider).run();
+      await dispatcherWith(provider).run();
+      expect(sent).toEqual([
+        {
+          endpoint: 'https://push.example/1',
+          title: 'Titular 1',
+          url: '/noticias?equipo=MIN',
+          ttl: 7200,
+        },
+      ]);
+    });
+
+    it('sends at most five a day, then more the next day', async () => {
+      newsOn();
+      news = [1, 2, 3, 4, 5, 6, 7].map((id) => story(id));
+      const { provider, sent } = fakeProvider();
+      await dispatcherWith(provider).run();
+      expect(sent).toHaveLength(5);
+
+      clock += 25 * 60 * MINUTE; // the next day: only fresh items are sent
+      news = [story(8)];
+      await dispatcherWith(provider).run();
+      expect(sent).toHaveLength(6);
+    });
+
+    it('does not use up the day on items that were already sent', async () => {
+      newsOn();
+      const { provider, sent } = fakeProvider();
+      news = [story(1)];
+      await dispatcherWith(provider).run();
+      news = [story(1), story(2)];
+      await dispatcherWith(provider).run();
+      expect(sent.map((s) => s.title)).toEqual(['Titular 1', 'Titular 2']);
+    });
   });
 });
 

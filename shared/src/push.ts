@@ -22,9 +22,11 @@ export const teamPushSettingsSchema = z.object({
   /** Tell me the result when it ends. */
   end: z.boolean(),
   reminderMinutes: z.union([z.literal(0), z.literal(15), z.literal(30), z.literal(60)]),
+  /** Tell me about a featured news item of this team. Only favourite teams can have it on. */
+  news: z.boolean(),
 });
 
-/** One entry per favourite team. */
+/** One entry per NBA team, the favourites first. */
 export const pushSettingsSchema = z.object({ teams: z.array(teamPushSettingsSchema) });
 
 export type PushSubscriptionInput = z.infer<typeof pushSubscriptionSchema>;

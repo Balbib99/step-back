@@ -110,6 +110,7 @@ function TeamRow({
           [
             ['start', 'Inicio del partido'],
             ['end', 'Resultado final'],
+            ['news', 'Noticias destacadas'],
           ] as const
         ).map(([field, label]) => (
           <label key={field} className="flex min-h-11 cursor-pointer items-center gap-2 text-sm">
@@ -148,6 +149,76 @@ function TeamRow({
   );
 }
 
+/** Every team that is not a favourite: game alerts only, off until asked. */
+function OtherTeams({
+  teams,
+  names,
+  onChange,
+}: {
+  teams: TeamPushSettings[];
+  names: Map<string, string>;
+  onChange: (next: TeamPushSettings[]) => void;
+}) {
+  const all = (on: boolean) => onChange(teams.map((t) => ({ ...t, start: on, end: on })));
+  const active = teams.filter((t) => t.start || t.end).length;
+  return (
+    <details className="mt-3 rounded-card bg-surface p-4">
+      <summary className="min-h-11 cursor-pointer text-sm font-semibold">
+        Otros equipos{active > 0 ? ` · ${active} con avisos` : ''}
+      </summary>
+      <p className="mt-2 text-[13px] text-text-2">
+        Inicio y resultado final de los partidos de cualquier equipo. Activar todos puede dar muchos
+        avisos en una noche de partidos.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" className={BUTTON} onClick={() => all(true)}>
+          Activar todos
+        </button>
+        <button type="button" className={BUTTON} onClick={() => all(false)}>
+          Quitar todos
+        </button>
+      </div>
+      <ul className="m-0 mt-2 grid list-none gap-1 p-0">
+        {teams.map((settings) => {
+          const name = names.get(settings.team) ?? settings.team;
+          return (
+            <li
+              key={settings.team}
+              className="flex items-center justify-between gap-3 border-t border-line py-1"
+            >
+              <span className="text-sm">{name}</span>
+              <span className="flex shrink-0 gap-3">
+                {(
+                  [
+                    ['start', 'Inicio', 'Inicio del partido'],
+                    ['end', 'Final', 'Resultado final'],
+                  ] as const
+                ).map(([field, short, label]) => (
+                  <label
+                    key={field}
+                    className="flex min-h-11 cursor-pointer items-center gap-1.5 text-[13px]"
+                  >
+                    <input
+                      type="checkbox"
+                      className="size-5 accent-[var(--color-ok)]"
+                      checked={settings[field]}
+                      aria-label={`${label} de ${name}`}
+                      onChange={(event) =>
+                        onChange([{ ...settings, [field]: event.target.checked }])
+                      }
+                    />
+                    {short}
+                  </label>
+                ))}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </details>
+  );
+}
+
 export function Settings() {
   const config = useConfig();
   const teams = useTeams();
@@ -157,6 +228,12 @@ export function Settings() {
   const device = useDevicePush(config.data?.vapidPublicKey ?? null);
 
   const names = new Map((teams.data?.teams ?? []).map((team) => [team.abbr, team.name]));
+  const favorites = config.data?.favoriteTeams ?? [];
+  const all = settings.data?.teams ?? [];
+  const favoriteSettings = all.filter((t) => favorites.includes(t.team));
+  const otherSettings = all
+    .filter((t) => !favorites.includes(t.team))
+    .sort((a, b) => (names.get(a.team) ?? a.team).localeCompare(names.get(b.team) ?? b.team, 'es'));
 
   return (
     <>
@@ -180,16 +257,29 @@ export function Settings() {
           {settings.isError ? (
             <EmptyState>No se pudieron cargar los avisos. Inténtalo más tarde.</EmptyState>
           ) : (
-            <ul className="m-0 grid list-none gap-3 p-0">
-              {(settings.data?.teams ?? []).map((team) => (
-                <TeamRow
-                  key={team.team}
-                  settings={team}
-                  name={names.get(team.team) ?? team.team}
+            <>
+              <ul className="m-0 grid list-none gap-3 p-0">
+                {favoriteSettings.map((team) => (
+                  <TeamRow
+                    key={team.team}
+                    settings={team}
+                    name={names.get(team.team) ?? team.team}
+                    onChange={(next) => save.mutate([next])}
+                  />
+                ))}
+              </ul>
+              <p className="mt-2 text-[13px] text-text-3">
+                Las noticias destacadas son titulares de ESPN sobre tu equipo, con un máximo de 5 al
+                día.
+              </p>
+              {otherSettings.length > 0 && (
+                <OtherTeams
+                  teams={otherSettings}
+                  names={names}
                   onChange={(next) => save.mutate(next)}
                 />
-              ))}
-            </ul>
+              )}
+            </>
           )}
           {save.isError && (
             <p role="alert" className="mt-3 text-[13px] text-text-2">

@@ -126,12 +126,20 @@ export const PUSH_CONFIG = {
     'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
 };
 
-export const PUSH_DEFAULTS: TeamPushSettings[] = ['MIN', 'LAL', 'PHI'].map((team) => ({
-  team,
-  start: true,
-  end: true,
-  reminderMinutes: 30,
-}));
+const OFF = { start: false, end: false, reminderMinutes: 0, news: false } as const;
+
+/** The three favourites with their alerts on, then two other teams with none. */
+export const PUSH_DEFAULTS: TeamPushSettings[] = [
+  ...['MIN', 'LAL', 'PHI'].map((team) => ({
+    team,
+    start: true,
+    end: true,
+    reminderMinutes: 30 as const,
+    news: false,
+  })),
+  { team: 'BOS', ...OFF },
+  { team: 'DEN', ...OFF },
+];
 
 export const HEALTH = {
   status: 'ok',
