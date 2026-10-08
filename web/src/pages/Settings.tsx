@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { REMINDER_OPTIONS, type TeamPushSettings } from '@step-back/shared';
 import { BackLink } from '../components/BackLink';
 import { EmptyState, PageHeader } from '../components/PageHeader';
@@ -18,7 +19,9 @@ const REMINDER_LABEL: Record<number, string> = {
 };
 
 function DeviceCard({ device, publicKey }: { device: DevicePush; publicKey: string | null }) {
-  const { permission, subscribed, busy, error, enable, disable } = device;
+  const { permission, subscribed, busy, error, enable, disable, test } = device;
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string }>();
 
   let status: string;
   let action: React.ReactNode = null;
@@ -33,9 +36,26 @@ function DeviceCard({ device, publicKey }: { device: DevicePush; publicKey: stri
   } else if (subscribed && permission === 'granted') {
     status = 'Las notificaciones están activadas en este dispositivo.';
     action = (
-      <button type="button" onClick={() => void disable()} disabled={busy} className={BUTTON}>
-        {busy ? 'Desactivando…' : 'Desactivar en este dispositivo'}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={testing}
+          className={BUTTON}
+          onClick={() => {
+            setTesting(true);
+            setTestResult(undefined);
+            void test().then((result) => {
+              setTestResult(result);
+              setTesting(false);
+            });
+          }}
+        >
+          {testing ? 'Enviando…' : 'Enviar notificación de prueba'}
+        </button>
+        <button type="button" onClick={() => void disable()} disabled={busy} className={BUTTON}>
+          {busy ? 'Desactivando…' : 'Desactivar en este dispositivo'}
+        </button>
+      </div>
     );
   } else {
     status = 'Recibe un aviso al empezar y al terminar los partidos de tus equipos.';
@@ -55,6 +75,11 @@ function DeviceCard({ device, publicKey }: { device: DevicePush; publicKey: stri
     <div className="grid gap-3 rounded-card bg-surface p-4">
       <p className="text-sm text-text-2">{status}</p>
       {action && <div>{action}</div>}
+      {testResult && (
+        <p role={testResult.ok ? 'status' : 'alert'} className="text-[13px] text-text-2">
+          {testResult.message}
+        </p>
+      )}
       {error && (
         <p role="alert" className="text-[13px] text-text-2">
           {error}

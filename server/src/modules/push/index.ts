@@ -1,3 +1,4 @@
+import type { Config } from '../../core/config.js';
 import type { AppModule } from '../../core/modules.js';
 import { createGamesRepo } from '../games/repo.js';
 import { PUSH_MIGRATIONS } from './push-migrations.js';
@@ -19,6 +20,9 @@ export const PUSH_JOB_ID = 'push:dispatch';
  * its routes answer 503 and it schedules nothing. `provider` is only for tests.
  */
 export function createPushModule(options: { provider?: PushProvider } = {}): AppModule {
+  const providerFor = (config: Config) =>
+    options.provider ?? (config.vapid ? createWebPushProvider(config.vapid) : undefined);
+
   return {
     id: 'push',
 
@@ -29,13 +33,13 @@ export function createPushModule(options: { provider?: PushProvider } = {}): App
         repo: createPushRepo(context.db),
         favorites: context.config.favoriteTeams,
         enabled: context.config.vapid !== undefined,
+        provider: providerFor(context.config),
       });
     },
 
     jobs: (context) => {
       const { config } = context;
-      const provider =
-        options.provider ?? (config.vapid ? createWebPushProvider(config.vapid) : undefined);
+      const provider = providerFor(config);
       if (!provider) return [];
 
       const repo = createPushRepo(context.db);

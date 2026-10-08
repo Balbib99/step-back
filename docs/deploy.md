@@ -80,12 +80,18 @@ Si "Instalar aplicación" no aparece, abre `chrome://inspect` desde un ordenador
 
 ## Activar las notificaciones (Web Push)
 
-1. En tu ordenador, desde la raíz del repo: `npx web-push generate-vapid-keys`. Da una clave pública y una privada.
-2. En `deploy/production.env` en la Pi pon las tres juntas (con una sola, el servidor no arranca):
-   `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT` (por ejemplo `mailto:tu@correo.com`).
+1. En la Pi (solo necesita Docker) genera las claves:
+
+```bash
+docker run --rm node:22-slim node -e "const c=require('crypto');const e=c.createECDH('prime256v1');e.generateKeys();console.log('VAPID_PUBLIC_KEY='+e.getPublicKey().toString('base64url'));console.log('VAPID_PRIVATE_KEY='+e.getPrivateKey().toString('base64url'))"
+```
+
+   Imprime dos líneas, `VAPID_PUBLIC_KEY=` (87 caracteres) y `VAPID_PRIVATE_KEY=` (43). Si la privada sale más corta, repite el comando.
+2. Copia esas dos líneas en `deploy/production.env` y añade `VAPID_SUBJECT=mailto:tu@correo.com`. Las tres juntas: con una o dos, el servidor no arranca.
 3. Reinicia el contenedor (`docker compose -f deploy/compose.yaml up -d`).
 4. En el móvil, con la app instalada: icono de campana de la barra superior → **Activar notificaciones** y acepta el permiso.
-5. **No cambies las claves después**: las suscripciones ya hechas dejan de recibir y hay que volver a activar las notificaciones en cada dispositivo.
+5. Pulsa **Enviar notificación de prueba**: debe llegar en unos segundos. Si no llega, mira `docker compose -f deploy/compose.yaml logs step-back`.
+6. **No cambies las claves después**: las suscripciones ya hechas dejan de recibir y hay que volver a activar las notificaciones en cada dispositivo.
 
 La Pi necesita salir a internet por HTTPS hacia los servicios push de Google y Mozilla; nada entra desde fuera. Las suscripciones y los ajustes viven en la base de datos: forman parte de la copia de seguridad (T28).
 

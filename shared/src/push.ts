@@ -33,3 +33,7 @@ export type PushSettings = z.infer<typeof pushSettingsSchema>;
 
 /** What subscribing and unsubscribing answer. */
 export const pushAckSchema = z.object({ subscribed: z.boolean() });
+
+/** The browser to send the test notification to. */
+export const pushTestSchema = z.object({ endpoint: z.string().url().max(2048) });
+export const pushTestAckSchema = z.object({ sent: z.boolean() });

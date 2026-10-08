@@ -1,6 +1,6 @@
-import { pushAckSchema } from '@step-back/shared';
+import { pushAckSchema, pushTestAckSchema } from '@step-back/shared';
 import { useCallback, useEffect, useState } from 'react';
-import { sendJson } from './api';
+import { ApiError, sendJson } from './api';
 
 /**
  * What this browser can do about notifications.
@@ -57,6 +57,8 @@ export interface DevicePush {
   /** Asks for permission (only called from a press) and subscribes this browser. */
   enable: () => Promise<void>;
   disable: () => Promise<void>;
+  /** Sends a test notification to this device; the result says what to tell the user. */
+  test: () => Promise<{ ok: boolean; message: string }>;
 }
 
 /** Notifications on this device: permission, subscription, and turning them on or off. */
@@ -142,5 +144,27 @@ export function useDevicePush(publicKey: string | null): DevicePush {
     }
   }, []);
 
-  return { permission, subscribed, busy, error, enable, disable };
+  const test = useCallback(async () => {
+    try {
+      const subscription = await currentSubscription();
+      if (!subscription) throw new Error('no subscription');
+      await sendJson(
+        'POST',
+        '/api/push/test',
+        { endpoint: subscription.endpoint },
+        pushTestAckSchema,
+      );
+      return { ok: true, message: 'Enviada. Debería llegar en unos segundos.' };
+    } catch (failure) {
+      return {
+        ok: false,
+        message:
+          failure instanceof ApiError && failure.detail
+            ? failure.detail
+            : 'No se pudo enviar la prueba. Inténtalo de nuevo.',
+      };
+    }
+  }, []);
+
+  return { permission, subscribed, busy, error, enable, disable, test };
 }

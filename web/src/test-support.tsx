@@ -308,6 +308,8 @@ export const api = {
   pushSettings: PUSH_DEFAULTS as TeamPushSettings[],
   /** Status to answer a push settings change with; 200 saves it. */
   pushSaveStatus: 200,
+  /** Status to answer the test notification with. */
+  pushTestStatus: 200,
   /** Bodies of the subscribe and unsubscribe requests, as `METHOD {json}`. */
   pushSubscriptions: [] as string[],
 };
@@ -333,6 +335,7 @@ export function stubApi() {
   api.config = CONFIG;
   api.pushSettings = PUSH_DEFAULTS.map((team) => ({ ...team }));
   api.pushSaveStatus = 200;
+  api.pushTestStatus = 200;
   api.pushSubscriptions = [];
   vi.stubGlobal(
     'fetch',
@@ -352,6 +355,16 @@ export function stubApi() {
           api.pushSettings = api.pushSettings.map((t) => teams.find((n) => n.team === t.team) ?? t);
         }
         return json({ teams: api.pushSettings });
+      }
+      if (url.includes('/api/push/test')) {
+        api.pushSubscriptions.push(`${init?.method} ${String(init?.body)}`);
+        if (api.pushTestStatus !== 200) {
+          return json(
+            { error: 'push_failed', message: 'El servicio de notificaciones no respondió.' },
+            api.pushTestStatus,
+          );
+        }
+        return json({ sent: true });
       }
       if (url.includes('/api/push/subscribe')) {
         api.pushSubscriptions.push(`${init?.method} ${String(init?.body)}`);

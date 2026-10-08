@@ -177,6 +177,39 @@ describe('Ajustes: este dispositivo', () => {
   });
 });
 
+describe('Ajustes: notificación de prueba', () => {
+  it('sends a test to this device and says it went', async () => {
+    const user = userEvent.setup();
+    installBrowser({ permission: 'granted', existing: true });
+    renderRoute('/ajustes');
+
+    await user.click(await screen.findByRole('button', { name: 'Enviar notificación de prueba' }));
+
+    await screen.findByText('Enviada. Debería llegar en unos segundos.');
+    expect(api.pushSubscriptions.at(-1)).toBe(`POST ${JSON.stringify({ endpoint: ENDPOINT })}`);
+  });
+
+  it('tells what the server said when the test fails', async () => {
+    const user = userEvent.setup();
+    installBrowser({ permission: 'granted', existing: true });
+    api.pushTestStatus = 502;
+    renderRoute('/ajustes');
+
+    await user.click(await screen.findByRole('button', { name: 'Enviar notificación de prueba' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'El servicio de notificaciones no respondió',
+    );
+  });
+
+  it('is not offered before notifications are on', async () => {
+    installBrowser();
+    renderRoute('/ajustes');
+    await screen.findByRole('button', { name: 'Activar notificaciones' });
+    expect(screen.queryByRole('button', { name: 'Enviar notificación de prueba' })).toBeNull();
+  });
+});
+
 describe('Ajustes: qué avisar', () => {
   it('lists the three favourites with their current settings', async () => {
     installBrowser();

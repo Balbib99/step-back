@@ -144,6 +144,52 @@ describe('push routes', () => {
   });
 });
 
+describe('the test notification', () => {
+  const post = (server: App['server'], endpoint: string) =>
+    server.inject({ method: 'POST', url: '/api/push/test', payload: { endpoint } });
+  const subscribe = (server: App['server'], n: number) =>
+    server.inject({ method: 'POST', url: '/api/push/subscribe', payload: subscription(n) });
+  const failing = (statusCode: number): PushProvider => ({
+    send: async () => {
+      throw Object.assign(new Error('push service refused'), { statusCode });
+    },
+  });
+  const count = (db: App['db']) =>
+    (db.prepare('SELECT COUNT(*) AS n FROM push_subscriptions').get() as { n: number }).n;
+
+  it('sends one notification to the device that asks, and to no other', async () => {
+    const sent: { endpoint: string; title: string }[] = [];
+    const provider: PushProvider = {
+      send: async (s, payload) => void sent.push({ endpoint: s.endpoint, title: payload.title }),
+    };
+    const { server } = await build({ provider });
+    await subscribe(server, 1);
+    await subscribe(server, 2);
+
+    expect((await post(server, subscription(2).endpoint)).statusCode).toBe(200);
+    expect(sent).toEqual([{ endpoint: subscription(2).endpoint, title: 'Notificación de prueba' }]);
+  });
+
+  it('says so when the device is not subscribed', async () => {
+    const { server } = await build({ provider: { send: async () => undefined } });
+    expect((await post(server, 'https://push.example/unknown')).statusCode).toBe(404);
+  });
+
+  it('drops a subscription the push service says is gone, and answers 410', async () => {
+    const { server, db } = await build({ provider: failing(410) });
+    await subscribe(server, 1);
+    expect((await post(server, subscription().endpoint)).statusCode).toBe(410);
+    expect(count(db)).toBe(0);
+  });
+
+  it('answers 502 when the push service fails, and keeps the subscription', async () => {
+    const { server, db } = await build({ provider: failing(503) });
+    await subscribe(server, 1);
+    expect((await post(server, subscription().endpoint)).statusCode).toBe(502);
+    expect(count(db)).toBe(1);
+  });
+});
+
 describe('the push job', () => {
   it('sends the start of a favourite game once, however many times it runs', async () => {
     const sent: string[] = [];
