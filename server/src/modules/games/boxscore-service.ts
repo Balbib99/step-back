@@ -9,7 +9,8 @@ import type { GamesRepo } from './repo.js';
 export const LIVE_TTL_SECONDS = 30;
 export const FINAL_TTL_SECONDS = 60 * 60;
 
-const keyOf = (gameId: string) => `boxscore:${gameId}`;
+// The version is part of the key: an entry kept by an older shape of the data is never served.
+const keyOf = (gameId: string) => `boxscore:v2:${gameId}`;
 
 export class BoxscoreUnavailableError extends Error {
   constructor(cause?: unknown) {

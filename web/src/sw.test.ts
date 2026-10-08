@@ -478,12 +478,22 @@ describe('pictures', () => {
     expect(worker.caches.stores.get('step-back-pictures-v1')).toBeUndefined();
   });
 
-  it('keeps at most 100 pictures, dropping the oldest', async () => {
+  it('keeps the photos of players like any other picture', async () => {
     const worker = load();
     worker.network.handler = () => new Response(PNG);
-    for (let id = 1; id <= 105; id++) await worker.request(`/api/news/${id}/image`);
+    await worker.request('/api/players/4897449/headshot');
+    worker.network.handler = () => new Response('', { status: 503 });
+    const { response } = await worker.request('/api/players/4897449/headshot');
+    expect(response!.status).toBe(200); // from storage, the network is not asked again
+    expect(pictures(worker).entries.size).toBe(1);
+  });
+
+  it('keeps at most 300 pictures, dropping the oldest', async () => {
+    const worker = load();
+    worker.network.handler = () => new Response(PNG);
+    for (let id = 1; id <= 305; id++) await worker.request(`/api/news/${id}/image`);
     const urls = [...pictures(worker).entries.keys()];
-    expect(urls).toHaveLength(100);
+    expect(urls).toHaveLength(300);
     expect(urls[0]).toBe(`${ORIGIN}/api/news/6/image`);
   });
 });

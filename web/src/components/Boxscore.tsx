@@ -1,123 +1,292 @@
-import type { Game, PlayerLine, StatLine, TeamBoxscore } from '@step-back/shared';
+import type { Game, PlayerLine, TeamBoxscore } from '@step-back/shared';
 import { onDarkColor } from '@step-back/shared';
-import { useState } from 'react';
-import { reasonLabel, signed, stat, topScore } from '../lib/boxscore';
+import { Fragment, useState } from 'react';
+import {
+  contribution,
+  detailParts,
+  shootingParts,
+  reasonLabel,
+  stat,
+  topScore,
+} from '../lib/boxscore';
 import { useBoxscore } from '../lib/queries';
+import { teamStyle } from '../lib/team-style';
 import { ChipGroup } from './Chips';
 import { EmptyState } from './PageHeader';
+import { PlayerFace } from './PlayerFace';
 
 const SECTION_TITLE = 'voice-name mt-7 mb-2.5 text-xl';
+const GROUP_TITLE =
+  'mt-4 mb-2 flex items-baseline justify-between text-[12px] font-semibold text-text-3';
 
-// Columns in the order a Spanish box score uses. `title` is what the abbreviation means.
-const COLUMNS: { label: string; title: string; value: (line: StatLine) => string }[] = [
-  { label: 'MIN', title: 'Minutos', value: (l) => stat(l.minutes) },
-  { label: 'PTS', title: 'Puntos', value: (l) => stat(l.points) },
-  { label: 'REB', title: 'Rebotes', value: (l) => stat(l.rebounds) },
-  { label: 'AST', title: 'Asistencias', value: (l) => stat(l.assists) },
-  { label: 'ROB', title: 'Robos', value: (l) => stat(l.steals) },
-  { label: 'TAP', title: 'Tapones', value: (l) => stat(l.blocks) },
-  { label: 'PER', title: 'Pérdidas', value: (l) => stat(l.turnovers) },
-  { label: 'TC', title: 'Tiros de campo (anotados-intentados)', value: (l) => stat(l.fieldGoals) },
-  { label: 'T3', title: 'Triples (anotados-intentados)', value: (l) => stat(l.threePointers) },
-  { label: 'TL', title: 'Tiros libres (anotados-intentados)', value: (l) => stat(l.freeThrows) },
-  {
-    label: '+/-',
-    title: 'Diferencia de puntos con él en pista',
-    value: (l) => signed(l.plusMinus),
-  },
-];
-const POINTS_COLUMN = 1;
+// The colours of the three parts of a bench player's bar. Points take the team's own colour.
+const REBOUNDS = '#6aa8ff';
+const ASSISTS = 'var(--color-ok)';
 
-const CELL = 'px-2 py-2.5 text-text-2';
-const STICKY = 'sticky left-0 z-[1] bg-surface';
-
-function PlayerRow({ player, best }: { player: PlayerLine; best: number | null }) {
+/** Pieces of a line joined by dots, so a line that does not fit breaks between pieces, never inside one. */
+function Dotted({ parts }: { parts: readonly string[] }) {
   return (
-    <tr className="border-t border-line">
-      <th scope="row" className={`${STICKY} px-3.5 py-2.5 text-left font-medium text-text`}>
-        <span className="block whitespace-nowrap text-sm">{player.shortName}</span>
-        {player.position && (
-          <span className="block text-[11px] text-text-3">{player.position}</span>
-        )}
-      </th>
-      {COLUMNS.map((column, index) => (
-        <td
-          key={column.label}
-          className={
-            index === POINTS_COLUMN && best !== null && player.points === best
-              ? 'px-2 py-2.5 font-bold text-text'
-              : CELL
-          }
-        >
-          {column.value(player)}
-        </td>
+    <>
+      {parts.map((part, index) => (
+        <Fragment key={part + index}>
+          {index > 0 && ' · '}
+          <span className="whitespace-nowrap">{part}</span>
+        </Fragment>
       ))}
-    </tr>
+    </>
   );
 }
 
-function GroupRow({ children }: { children: string }) {
+function Stat({ label, value }: { label: string; value: number | string | null }) {
   return (
-    <tr>
-      <th
-        scope="colgroup"
-        colSpan={COLUMNS.length + 1}
-        className={`${STICKY} px-3.5 pt-3 pb-1 text-left text-[12px] font-semibold text-text-3`}
-      >
-        {children}
-      </th>
-    </tr>
+    <div>
+      <span className="block text-[10.5px] font-semibold tracking-[0.02em] text-text-3">
+        {label}
+      </span>
+      <b className="voice-name text-[15px] [font-variant-numeric:tabular-nums]">{stat(value)}</b>
+    </div>
   );
 }
 
-function TeamTable({ team, teamName }: { team: TeamBoxscore; teamName: string }) {
+/** A starter: his photo on the team's colour, his points, and the other numbers that matter. */
+function StarterCard({
+  player,
+  abbr,
+  best,
+  wide,
+  more,
+}: {
+  player: PlayerLine;
+  abbr: string;
+  best: number | null;
+  wide: boolean;
+  more: boolean;
+}) {
+  return (
+    <article
+      aria-label={player.name}
+      className={`overflow-hidden rounded-card bg-surface ${
+        wide ? 'grid grid-cols-[42%_1fr]' : ''
+      }`}
+    >
+      <div
+        style={teamStyle(abbr)}
+        className={`team-field relative overflow-hidden ${wide ? 'min-h-[112px]' : 'h-[104px]'}`}
+      >
+        {player.jersey && (
+          <span
+            aria-hidden="true"
+            className="voice-number absolute -top-2.5 -right-1 text-[92px] opacity-[0.12]"
+          >
+            {player.jersey}
+          </span>
+        )}
+        <PlayerFace
+          player={player}
+          imageClassName="absolute bottom-0 left-1/2 h-[96%] w-auto max-w-none -translate-x-1/2"
+          initialsClassName="absolute inset-x-0 bottom-0 h-3/5 text-[38px] opacity-85"
+        />
+        {player.position && (
+          <span className="absolute top-2 left-2 rounded-[5px] bg-black/30 px-1.5 py-0.5 text-[11px] font-extrabold">
+            {player.position}
+          </span>
+        )}
+        {best !== null && player.points === best && (
+          <span className="absolute top-2 right-2 rounded-[5px] bg-[#ffd24a] px-1.5 py-0.5 text-[11px] font-extrabold text-[#111]">
+            ★ MÁX
+          </span>
+        )}
+      </div>
+      <div className="px-2.5 pt-2 pb-2.5">
+        <h4 className="voice-name text-[17px]">{player.shortName}</h4>
+        <p className="mt-1.5 mb-2 flex items-baseline gap-1.5">
+          <b className="voice-number text-[34px]">{stat(player.points)}</b>
+          <span className="text-[11px] font-bold text-text-3">PTS</span>
+          <span className="ml-auto text-[12px] text-text-2 [font-variant-numeric:tabular-nums]">
+            {stat(player.minutes)} min
+          </span>
+        </p>
+        <div className="grid grid-cols-5 border-t border-line pt-2 text-center">
+          <Stat label="REB" value={player.rebounds} />
+          <Stat label="AST" value={player.assists} />
+          <Stat label="ROB" value={player.steals} />
+          <Stat label="TAP" value={player.blocks} />
+          <Stat label="PER" value={player.turnovers} />
+        </div>
+        {more && (
+          <p className="mt-2 text-center text-[11px] text-text-3">
+            <Dotted parts={detailParts(player)} />
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
+
+/** A bench player: a row with his face, a bar that compares him with his bench, and his points. */
+function BenchRow({
+  player,
+  abbr,
+  accent,
+  biggest,
+  best,
+  more,
+}: {
+  player: PlayerLine;
+  abbr: string;
+  accent: string;
+  biggest: number;
+  best: number | null;
+  more: boolean;
+}) {
+  const share = (value: number | null) => `${((value ?? 0) / biggest) * 100}%`;
+  return (
+    <li
+      aria-label={player.name}
+      className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 rounded-card bg-surface px-3 py-2.5"
+    >
+      <div
+        style={teamStyle(abbr)}
+        className="team-field relative size-[38px] overflow-hidden rounded-full"
+      >
+        <PlayerFace
+          player={player}
+          imageClassName="absolute bottom-[-2px] left-1/2 h-[110%] w-auto max-w-none -translate-x-1/2"
+          initialsClassName="size-full text-[13px]"
+        />
+      </div>
+      <div className="min-w-0">
+        <p className="voice-name text-[15px]">
+          {player.shortName}
+          {best !== null && player.points === best && (
+            <span className="ml-1.5 rounded-[5px] bg-[#ffd24a] px-1.5 py-0.5 text-[10px] font-extrabold text-[#111]">
+              ★ MÁX
+            </span>
+          )}
+          <span className="ml-1.5 text-[11px] font-semibold text-text-3">
+            {[player.position, `${stat(player.minutes)} min`].filter(Boolean).join(' · ')}
+          </span>
+        </p>
+        <div aria-hidden="true" className="my-1.5 flex h-2 overflow-hidden rounded bg-surface-2">
+          <i style={{ width: share(player.points), background: accent }} />
+          <i style={{ width: share(player.rebounds), background: REBOUNDS }} />
+          <i style={{ width: share(player.assists), background: ASSISTS }} />
+        </div>
+        <p className="text-[11px] text-text-3">
+          <Dotted
+            parts={[
+              `REB ${stat(player.rebounds)}`,
+              `AST ${stat(player.assists)}`,
+              `ROB ${stat(player.steals)}`,
+              `TAP ${stat(player.blocks)}`,
+              `PER ${stat(player.turnovers)}`,
+            ]}
+          />
+        </p>
+        {more && (
+          <p className="mt-0.5 text-[11px] text-text-3">
+            <Dotted parts={detailParts(player)} />
+          </p>
+        )}
+      </div>
+      <p className="voice-number text-right text-[26px]">
+        {stat(player.points)}
+        <small className="voice-name mt-0.5 block text-[10px] font-bold text-text-3">PTS</small>
+      </p>
+    </li>
+  );
+}
+
+function Legend({ accent }: { accent: string }) {
+  const item = (colour: string, label: string) => (
+    <span className="inline-flex items-center gap-1.5">
+      <i aria-hidden="true" className="size-2 rounded-[2px]" style={{ background: colour }} />
+      {label}
+    </span>
+  );
+  return (
+    <p className="mb-2 flex gap-3 text-[11px] text-text-3">
+      {item(accent, 'Puntos')}
+      {item(REBOUNDS, 'Rebotes')}
+      {item(ASSISTS, 'Asistencias')}
+    </p>
+  );
+}
+
+function TeamStats({
+  team,
+  teamName,
+  more,
+}: {
+  team: TeamBoxscore;
+  teamName: string;
+  more: boolean;
+}) {
   const played = team.players.filter((p) => p.played);
   const starters = played.filter((p) => p.starter);
   const bench = played.filter((p) => !p.starter);
   const absent = team.players.filter((p) => !p.played);
   const best = topScore(played);
+  const accent = onDarkColor(team.abbr);
+  const biggest = Math.max(1, ...bench.map(contribution));
+  const { totals } = team;
 
   return (
-    <>
-      <div className="overflow-x-auto rounded-card bg-surface">
-        <table className="w-full min-w-[540px] border-collapse text-center text-sm tabular-nums">
-          <caption className="sr-only">Estadísticas de {teamName}</caption>
-          <thead>
-            <tr className="text-[12px] text-text-3">
-              <th scope="col" className={`${STICKY} px-3.5 py-2 text-left font-medium`}>
-                Jugador
-              </th>
-              {COLUMNS.map((column) => (
-                <th key={column.label} scope="col" className="px-2 py-2 font-medium">
-                  <abbr title={column.title} className="no-underline">
-                    {column.label}
-                  </abbr>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {starters.length > 0 && <GroupRow>Quinteto titular</GroupRow>}
-            {starters.map((p) => (
-              <PlayerRow key={p.id} player={p} best={best} />
-            ))}
-            {bench.length > 0 && <GroupRow>Banquillo</GroupRow>}
+    <div aria-label={`Estadísticas de ${teamName}`} role="group">
+      {starters.length > 0 && (
+        <>
+          <h3 className={GROUP_TITLE}>Quinteto titular</h3>
+          <ul className="m-0 grid list-none grid-cols-2 gap-2.5 p-0">
+            {starters.map((p, index) => {
+              const wide = starters.length % 2 === 1 && index === starters.length - 1;
+              return (
+                <li key={p.id} className={wide ? 'col-span-2' : ''}>
+                  <StarterCard player={p} abbr={team.abbr} best={best} wide={wide} more={more} />
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+
+      {bench.length > 0 && (
+        <>
+          <h3 className={GROUP_TITLE}>
+            <span>Banquillo</span>
+            <span>{bench.length} jugadores</span>
+          </h3>
+          <Legend accent={accent} />
+          <ul aria-label="Banquillo" className="m-0 grid list-none gap-2 p-0">
             {bench.map((p) => (
-              <PlayerRow key={p.id} player={p} best={best} />
+              <BenchRow
+                key={p.id}
+                player={p}
+                abbr={team.abbr}
+                accent={accent}
+                biggest={biggest}
+                best={best}
+                more={more}
+              />
             ))}
-            <tr className="voice-name border-t-2 border-line">
-              <th scope="row" className={`${STICKY} px-3.5 py-2.5 text-left text-base`}>
-                Total
-              </th>
-              {COLUMNS.map((column) => (
-                <td key={column.label} className="px-2 py-2.5 text-text">
-                  {column.value(team.totals)}
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
-      </div>
+          </ul>
+        </>
+      )}
+
+      <p className="mt-3 rounded-card bg-surface px-3 py-2.5 text-[12px] text-text-2 [font-variant-numeric:tabular-nums]">
+        <span className="font-semibold text-text">Equipo</span> ·{' '}
+        <Dotted
+          parts={[
+            `${stat(totals.points)} PTS`,
+            `${stat(totals.rebounds)} REB`,
+            `${stat(totals.assists)} AST`,
+            `${stat(totals.steals)} ROB`,
+            `${stat(totals.blocks)} TAP`,
+            `${stat(totals.turnovers)} PER`,
+            ...(more ? shootingParts(totals) : []),
+          ]}
+        />
+      </p>
+
       {absent.length > 0 && (
         <p className="mt-2.5 text-[13px] text-text-3">
           <span className="font-semibold text-text-2">No han jugado:</span>{' '}
@@ -130,15 +299,16 @@ function TeamTable({ team, teamName }: { team: TeamBoxscore; teamName: string })
           .
         </p>
       )}
-    </>
+    </div>
   );
 }
 
-/** The player numbers of a game that has started: one team at a time, so the table stays readable on a phone. */
+/** The player numbers of a game that has started: one team at a time, so it stays readable on a phone. */
 export function Boxscore({ game, favorites }: { game: Game; favorites: readonly string[] }) {
   const started = game.status === 'live' || game.status === 'final';
   const query = useBoxscore(game.id, started, game.status === 'live');
   const [chosen, setChosen] = useState<string>();
+  const [more, setMore] = useState(false);
 
   if (!started) return null;
 
@@ -177,7 +347,7 @@ export function Boxscore({ game, favorites }: { game: Game; favorites: readonly 
         </EmptyState>
       ) : (
         <>
-          <div className="mb-3">
+          <div className="flex items-center justify-between gap-3">
             <ChipGroup
               label="Equipo"
               value={current}
@@ -188,8 +358,18 @@ export function Boxscore({ game, favorites }: { game: Game; favorites: readonly 
                 colour: onDarkColor(side.abbr),
               }))}
             />
+            <button
+              type="button"
+              aria-pressed={more}
+              onClick={() => setMore((value) => !value)}
+              className={`min-h-10 shrink-0 cursor-pointer rounded-full border px-3.5 text-[13px] font-semibold ${
+                more ? 'border-text bg-text text-ground' : 'border-line bg-transparent text-text-2'
+              }`}
+            >
+              Más datos
+            </button>
           </div>
-          {team && <TeamTable team={team} teamName={names[current] ?? current} />}
+          {team && <TeamStats team={team} teamName={names[current] ?? current} more={more} />}
           {game.status === 'live' && (
             <p className="mt-2.5 text-[12px] text-text-3">Se actualiza cada medio minuto.</p>
           )}

@@ -43,6 +43,8 @@ const envSchema = z
     DB_PATH: z.string().min(1).default('./data/step-back.db'),
     // Where downloaded team crests are kept. Defaults to a `crests` folder next to the database.
     CRESTS_DIR: z.string().min(1).optional(),
+    // Where player photos are kept. Defaults to a `headshots` folder next to the database.
+    HEADSHOTS_DIR: z.string().min(1).optional(),
     // Where the pictures of news items are kept. Defaults to `news-images` next to the database.
     NEWS_IMAGES_DIR: z.string().min(1).optional(),
     // Folder with the built web app (web/dist). When set, the server also serves the app, so one
@@ -80,6 +82,7 @@ export interface Config {
   logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
   dbPath: string;
   crestsDir: string;
+  headshotsDir: string;
   newsImagesDir: string;
   webDir: string | undefined;
   timeZone: string;
@@ -118,6 +121,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     crestsDir:
       data.CRESTS_DIR ??
       join(data.DB_PATH === ':memory:' ? './data' : dirname(data.DB_PATH), 'crests'),
+    headshotsDir:
+      data.HEADSHOTS_DIR ??
+      join(data.DB_PATH === ':memory:' ? './data' : dirname(data.DB_PATH), 'headshots'),
     newsImagesDir:
       data.NEWS_IMAGES_DIR ??
       join(data.DB_PATH === ':memory:' ? './data' : dirname(data.DB_PATH), 'news-images'),

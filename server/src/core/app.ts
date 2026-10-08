@@ -60,6 +60,8 @@ export async function buildApp(options: BuildAppOptions): Promise<App> {
     cache: createKvCache(db),
     http: createHttpClient({
       userAgent: USER_AGENT,
+      // ESPN's picture host serves ~30 player photos at once when a box score is opened.
+      hostIntervalsMs: { 'a.espncdn.com': 80 },
       ...(options.fetch && { fetch: options.fetch }),
     }),
   };

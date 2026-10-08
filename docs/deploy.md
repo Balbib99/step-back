@@ -84,7 +84,7 @@ Para volver a una versión anterior: `git checkout <commit>` y el mismo `up -d -
 
 ## Copias de seguridad
 
-Qué se copia: la base de datos completa. Lo único que no se puede volver a descargar de las fuentes son las **suscripciones a notificaciones y los ajustes de avisos**; el resto (partidos, noticias, jugadas, escudos) se recupera solo. Por eso basta una copia local diaria de 14 días.
+Qué se copia: la base de datos completa. Lo único que no se puede volver a descargar de las fuentes son las **suscripciones a notificaciones y los ajustes de avisos**; el resto (partidos, noticias, jugadas, escudos, fotos de jugadores) se recupera solo. Por eso basta una copia local diaria de 14 días.
 
 `deploy/backup.sh` la hace con el propio contenedor (`node server.mjs backup`), usando la copia en caliente de SQLite, y comprueba la integridad antes de darla por buena. No necesita instalar nada en la Pi.
 
@@ -167,6 +167,7 @@ No hace falta ocuparse del espacio: cada módulo borra lo suyo una vez al día.
 | Historial de ejecuciones de tareas (`core:cleanup`) | 14 días (siempre se conserva la última ejecución de cada tarea) |
 | Datos en caché caducados (`core:cleanup`) | al caducar |
 | Registro de avisos enviados | 30 días |
+| Fotos de jugadores (`/data/headshots`) | Se descargan al verlas y se renuevan al mes. Ocupan unos 15-25 KB cada una, así que una temporada entera son unas decenas de MB como mucho. Se recuperan solas: no hace falta copiarlas. |
 
 El volumen de datos suele ocupar unas decenas de MB. El registro de Docker está limitado a 3 archivos de 10 MB.
 

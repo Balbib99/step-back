@@ -23,7 +23,7 @@ export interface CrestStore {
   warm(): Promise<{ downloaded: number; failed: string[] }>;
 }
 
-const isPng = (bytes: Uint8Array) =>
+export const isPng = (bytes: Uint8Array) =>
   bytes.length > PNG_MAGIC.length &&
   bytes.length <= MAX_BYTES &&
   PNG_MAGIC.every((byte, index) => bytes[index] === byte);

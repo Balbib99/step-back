@@ -141,6 +141,7 @@ export function player(
     shortName,
     jersey: '1',
     position: 'G',
+    photoUrl: `/api/players/${id}/headshot`,
     starter: true,
     played: true,
     reason: null,

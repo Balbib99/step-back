@@ -26,6 +26,8 @@ export const playerLineSchema = statLineSchema.extend({
   jersey: z.string().nullable(),
   /** "G", "F", "C"... */
   position: z.string().nullable(),
+  /** Where the app serves his photo from, or null when the source has none. */
+  photoUrl: z.string().nullable().default(null),
   starter: z.boolean(),
   /** False for a player who has not been on court: all his numbers are null. */
   played: z.boolean(),

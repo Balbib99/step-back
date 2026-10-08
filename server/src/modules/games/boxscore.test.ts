@@ -84,6 +84,16 @@ describe('parseBoxscore, with the real ESPN answer', () => {
     });
   });
 
+  it('points to the photo on this server, only for players ESPN has one of', () => {
+    const leons = box.away!.players.find((p) => p.shortName === 'M. Leons')!;
+    expect(leons.photoUrl).toBe('/api/players/4897449/headshot');
+    // ESPN has no photo of G. Ike and J. Kent.
+    expect(box.away!.players.find((p) => p.shortName === 'G. Ike')!.photoUrl).toBeNull();
+    expect(box.home!.players.find((p) => p.shortName === 'J. Kent')!.photoUrl).toBeNull();
+    const withPhoto = [...box.away!.players, ...box.home!.players].filter((p) => p.photoUrl);
+    expect(withPhoto).toHaveLength(27);
+  });
+
   it('adds up: the points of the players are the points of the team', () => {
     for (const team of [box.away!, box.home!]) {
       const sum = team.players.reduce((total, p) => total + (p.points ?? 0), 0);

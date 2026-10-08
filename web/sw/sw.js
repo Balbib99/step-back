@@ -9,7 +9,7 @@
 //  - Data (/api) asks the network first and falls back to the last copy. This is deliberately not
 //    "stale while revalidate": that would show a live score as it was a minute ago and the app
 //    would not look again until its next refresh. Online you always see the latest.
-//  - Pictures (/api/crests, news images, thumbnails) are kept once and reused: the server already
+//  - Pictures (/api/crests, news images, thumbnails, player photos) are kept once and reused: the server already
 //    serves them as unchanging.
 //  - /api/health is never stored: it is how the app finds out the server is down.
 //  - Only successful answers are stored, so a login prompt or an error is never kept.
@@ -29,12 +29,13 @@ const PICTURES = 'step-back-pictures-v1';
 const DATA_TIMEOUT_MS = 4000;
 const PAGE_TIMEOUT_MS = 3000;
 const MAX_DATA_ENTRIES = 150;
-const MAX_PICTURES = 100;
+const MAX_PICTURES = 300;
 
 const SAVED_AT = 'x-step-back-saved-at';
 const FROM_STORAGE = 'x-step-back-from-storage';
 
-const PICTURE_PATH = /^\/api\/(crests\/[^/]+|news\/\d+\/image|highlights\/\d+\/thumb)$/;
+const PICTURE_PATH =
+  /^\/api\/(crests\/[^/]+|news\/\d+\/image|highlights\/\d+\/thumb|players\/\d+\/headshot)$/;
 
 /** A stored copy matches whatever `Vary` says: it was saved by this same browser. */
 const MATCH = { ignoreVary: true };

@@ -56,6 +56,15 @@ describe('loadConfig', () => {
     expect(loadConfig({ CRESTS_DIR: '/tmp/crests' }).crestsDir).toBe('/tmp/crests');
   });
 
+  it('keeps player photos next to the database unless told otherwise', () => {
+    const slashes = (path: string) => path.replaceAll('\\', '/');
+    expect(slashes(loadConfig({}).headshotsDir)).toBe('data/headshots');
+    expect(slashes(loadConfig({ DB_PATH: '/srv/step-back/db/app.db' }).headshotsDir)).toBe(
+      '/srv/step-back/db/headshots',
+    );
+    expect(loadConfig({ HEADSHOTS_DIR: '/tmp/faces' }).headshotsDir).toBe('/tmp/faces');
+  });
+
   it('treats empty optional variables as unset', () => {
     expect(loadConfig({ DEEPL_API_KEY: '' }).deeplApiKey).toBeUndefined();
   });

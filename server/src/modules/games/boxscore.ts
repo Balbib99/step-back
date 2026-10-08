@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { HttpClient } from '../../core/http.js';
 import { parseWith } from '../espn-common.js';
 import { ESPN_BASE } from './adapter.js';
+import { headshotPath, isPlayerId } from './headshots.js';
 
 // ESPN's game summary is ~450 KB with odds, plays and news; only `boxscore.players` is read.
 const espnAthlete = z.object({
@@ -11,6 +12,7 @@ const espnAthlete = z.object({
     displayName: z.string(),
     shortName: z.string().optional(),
     jersey: z.string().optional(),
+    headshot: z.object({ href: z.string() }).optional(),
     position: z.object({ abbreviation: z.string().optional() }).optional(),
   }),
   starter: z.boolean().optional(),
@@ -97,6 +99,8 @@ function toTeam(source: z.infer<typeof espnTeamPlayers>): TeamBoxscore | null {
       shortName: athlete.shortName ?? athlete.displayName,
       jersey: athlete.jersey ?? null,
       position: athlete.position?.abbreviation ?? null,
+      // Only players ESPN has a photo for; the photo itself is fetched when someone looks.
+      photoUrl: athlete.headshot && isPlayerId(athlete.id) ? headshotPath(athlete.id) : null,
       starter: entry.starter === true,
       played,
       reason: entry.didNotPlay === true && entry.reason ? entry.reason : null,

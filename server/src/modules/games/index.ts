@@ -2,6 +2,7 @@ import type { AppModule } from '../../core/modules.js';
 import type { ModuleContext } from '../../core/modules.js';
 import { createBoxscoreService, type BoxscoreService } from './boxscore-service.js';
 import { loadCalendar } from './calendar.js';
+import { createHeadshotStore, type HeadshotStore } from './headshots.js';
 import { createCrestStore, type CrestStore } from './crests.js';
 import { seasonForDate } from './dates.js';
 import { GAMES_MIGRATIONS } from './games-migrations.js';
@@ -47,6 +48,20 @@ function boxscoreServiceFor(context: ModuleContext): BoxscoreService {
   return service;
 }
 
+const headshotStores = new WeakMap<ModuleContext, HeadshotStore>();
+function headshotStoreFor(context: ModuleContext): HeadshotStore {
+  let store = headshotStores.get(context);
+  if (!store) {
+    store = createHeadshotStore({
+      dir: context.config.headshotsDir,
+      http: context.http,
+      logger: context.logger,
+    });
+    headshotStores.set(context, store);
+  }
+  return store;
+}
+
 export const gamesModule: AppModule = {
   id: 'games',
 
@@ -59,6 +74,7 @@ export const gamesModule: AppModule = {
       context.config,
       crestStoreFor(context),
       boxscoreServiceFor(context),
+      headshotStoreFor(context),
     );
   },
 

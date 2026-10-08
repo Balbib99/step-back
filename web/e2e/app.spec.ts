@@ -34,19 +34,29 @@ test('calendario: today shows the game, and opening it gives the match page', as
   await expect(page.getByText('Target Center')).toBeVisible();
 });
 
-test('partido: a finished game gives the numbers of each player', async ({ page }) => {
+test('partido: a finished game gives the numbers of each player, starters first and then the bench', async ({
+  page,
+}) => {
   await page.goto('/partido/e2e-final');
 
-  const grid = page.getByRole('table', { name: 'Estadísticas de Golden State Warriors' });
-  await expect(grid).toBeVisible();
-  const terry = grid.getByRole('row').filter({ hasText: 'D. Terry' });
-  // Minutes 43, points 23, rebounds 8, assists 9: the recorded line.
-  await expect(terry.getByRole('cell').nth(1)).toHaveText('23');
-  await expect(terry.getByRole('cell').nth(3)).toHaveText('9');
+  const warriors = page.getByRole('group', { name: 'Estadísticas de Golden State Warriors' });
+  await expect(warriors).toBeVisible();
+  // The starters are cards: D. Terry had 23 points in 43 minutes, with 8 rebounds and 9 assists.
+  const terry = warriors.getByRole('article', { name: 'Dalen Terry' });
+  await expect(terry).toContainText('23');
+  await expect(terry).toContainText('43 min');
+  await expect(terry).toContainText('REB8AST9');
+  await expect(terry).not.toContainText('MÁX'); // the top scorer of the team came off the bench
+  // The bench is a list of rows: M. Kelly scored 24 off the bench.
+  const kelly = warriors
+    .getByRole('list', { name: 'Banquillo' })
+    .getByRole('listitem', { name: 'Miles Kelly' });
+  await expect(kelly).toContainText('24');
+  await expect(kelly).toContainText('★ MÁX');
 
   await page.getByRole('button', { name: 'POR', exact: true }).click();
   await expect(
-    page.getByRole('table', { name: 'Estadísticas de Portland Trail Blazers' }),
+    page.getByRole('group', { name: 'Estadísticas de Portland Trail Blazers' }),
   ).toBeVisible();
 });
 

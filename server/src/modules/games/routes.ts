@@ -4,6 +4,7 @@ import type { Config } from '../../core/config.js';
 import { addDays, isRealDate, localDaysRangeUtc } from './dates.js';
 import { CrestUnavailableError, type CrestStore } from './crests.js';
 import { BoxscoreUnavailableError, type BoxscoreService } from './boxscore-service.js';
+import { HeadshotUnavailableError, isPlayerId, type HeadshotStore } from './headshots.js';
 import type { GamesRepo } from './repo.js';
 
 const MAX_RANGE_DAYS = 400;
@@ -44,6 +45,7 @@ export function registerGamesRoutes(
   config: Config,
   crests: CrestStore,
   boxscores: BoxscoreService,
+  headshots: HeadshotStore,
 ): void {
   app.get('/teams', async () => ({
     teams: repo.teams().map((team) => ({ ...team, crestUrl: crestPath(team.abbr) })),
@@ -114,6 +116,24 @@ export function registerGamesRoutes(
           error: 'boxscore_unavailable',
           message: 'No se pudieron obtener las estadísticas. Inténtalo más tarde.',
         });
+      }
+      throw error;
+    }
+  });
+
+  // Player photos are downloaded from ESPN once, kept on disk and served from here.
+  app.get<{ Params: { id: string } }>('/players/:id/headshot', async (request, reply) => {
+    if (!isPlayerId(request.params.id)) return reply.code(404).send({ error: 'not_found' });
+    try {
+      const photo = await headshots.get(request.params.id);
+      if (!photo) return reply.code(404).send({ error: 'not_found' });
+      return reply
+        .header('content-type', 'image/png')
+        .header('cache-control', 'public, max-age=604800')
+        .send(Buffer.from(photo));
+    } catch (error) {
+      if (error instanceof HeadshotUnavailableError) {
+        return reply.code(502).send({ error: 'headshot_unavailable' });
       }
       throw error;
     }
