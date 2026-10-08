@@ -174,10 +174,31 @@ El volumen de datos suele ocupar unas decenas de MB. El registro de Docker está
 
 - **Autenticación:** solo la de Caddy. Sin contraseña, `/` y `/api/*` devuelven 401.
 - **Cabeceras:** HSTS lo pone Caddy (solo tiene sentido con HTTPS). El resto (`Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`) las envía la propia app; el CSP solo permite contenido propio y el reproductor de `youtube-nocookie.com`. Si algún día añades una fuente de imágenes o vídeo externa, hay que ampliarlo en `server/src/core/security-headers.ts`.
+- **Peticiones de otras webs:** el navegador envía solo la contraseña guardada de Caddy a cualquier petición a esta dirección, incluso las que dispara otra página. Por eso la app rechaza (403) cualquier cambio (`POST`, `PUT`, `DELETE`) cuyo origen no sea ella misma.
 - **Contenedor:** sistema de archivos de solo lectura salvo `/data` y `/tmp`, sin privilegios, sin permisos de Linux (`cap_drop: ALL`), usuario sin root, 400 MB de memoria como máximo.
 - **Secretos:** solo en `deploy/production.env` (no está en git ni en la imagen).
 
 Si tras una actualización el contenedor no arranca y los registros hablan de `EROFS` (escritura en un sistema de solo lectura), avísame con el mensaje: significa que algo escribe fuera de `/data`. Para salir del paso, quita temporalmente `read_only: true` y `tmpfs` de `deploy/compose.yaml`.
+
+## Rendimiento
+
+- **Compresión:** la app no comprime sus respuestas; lo hace Caddy (`encode zstd gzip` en el Caddyfile de ejemplo). Sin esa línea la primera carga pesa unas 4 veces más y la nota de Lighthouse baja de 99 a 84. No la quites.
+- **Memoria:** medida en un ordenador con Windows, el servidor ocupa unos 80 MB tras dos minutos en marcha. En la Pi, comprueba el contenedor completo en reposo:
+
+```bash
+docker stats --no-stream step-back
+```
+
+  El objetivo es menos de 300 MB; el límite del contenedor es 400 MB.
+- **Lighthouse (móvil, con compresión):** rendimiento 96-99, accesibilidad 96-100, buenas prácticas 100 en Hoy, Calendario, Clasificación, Noticias, Jugadas, Partido y Equipo. Para repetirlo desde un ordenador con Chrome, contra la app real: `npx lighthouse https://step-back.duckdns.org --only-categories=performance,accessibility` (hay que dar la contraseña en la URL o usar el servidor de pruebas de abajo).
+
+## Pruebas de extremo a extremo
+
+```bash
+npm run e2e -w web
+```
+
+Compila la web y abre Chrome (el que ya tienes instalado) sobre un servidor de pruebas que usa respuestas grabadas en lugar de internet. Comprueban la portada, el calendario, la clasificación, la traducción de una noticia y el modo sin conexión. No hacen falta en la Pi.
 
 ## Ajustes (`deploy/production.env`)
 

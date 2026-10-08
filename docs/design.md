@@ -31,7 +31,7 @@ Lo que la hace propia y no una app deportiva genérica:
 | `--line` | `#2F3442` | Bordes y separadores |
 | `--text` | `#EEF0F3` | Texto principal |
 | `--text-2` | `#A7ADBA` | Texto secundario |
-| `--text-3` | `#7D8493` | Metadatos (hora, fuente) |
+| `--text-3` | `#8A91A0` | Metadatos (hora, fuente) |
 | `--live` | `#FF3B30` | Punto "en juego" |
 | `--ok` | `#5DD39E` | Punto "actualizado" |
 

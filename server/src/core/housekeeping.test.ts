@@ -204,3 +204,58 @@ describe('security headers', () => {
     expect(CONTENT_SECURITY_POLICY).not.toMatch(/\*/);
   });
 });
+
+describe('requests from other sites', () => {
+  let app: App | undefined;
+  afterEach(async () => {
+    await app?.server.close();
+    app = undefined;
+  });
+
+  const build = async () => {
+    app = await buildApp({
+      config: loadConfig({ NODE_ENV: 'test', DB_PATH: ':memory:' }),
+      modules: [
+        {
+          id: 'demo',
+          routes: (instance) => {
+            instance.post('/demo', async () => ({ changed: true }));
+            instance.get('/demo', async () => ({ read: true }));
+          },
+        },
+      ],
+    });
+    return app.server;
+  };
+  const post = (server: App['server'], headers: Record<string, string>) =>
+    server.inject({
+      method: 'POST',
+      url: '/api/demo',
+      headers: { host: 'step-back.test', ...headers },
+    });
+
+  it('cannot change anything: a page of another site is refused', async () => {
+    const server = await build();
+    const refused = await post(server, { origin: 'https://evil.example' });
+    expect(refused.statusCode).toBe(403);
+    expect(refused.json().error).toBe('cross_origin');
+    expect((await post(server, { origin: 'null' })).statusCode).toBe(403);
+    // Same name, other port or scheme, is another site too.
+    expect((await post(server, { origin: 'https://step-back.test:8443' })).statusCode).toBe(403);
+  });
+
+  it('the app itself, and tools that send no origin, can', async () => {
+    const server = await build();
+    expect((await post(server, { origin: 'https://step-back.test' })).statusCode).toBe(200);
+    expect((await post(server, {})).statusCode).toBe(200);
+  });
+
+  it('reading is not restricted', async () => {
+    const server = await build();
+    const read = await server.inject({
+      url: '/api/demo',
+      headers: { host: 'step-back.test', origin: 'https://evil.example' },
+    });
+    expect(read.statusCode).toBe(200);
+  });
+});

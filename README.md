@@ -28,6 +28,7 @@ npm run dev          # servidor (puerto 3000) y web (puerto 5173) juntos
 npm test             # todas las pruebas
 npm run lint
 npm run typecheck
+npm run e2e -w web   # pruebas de extremo a extremo con Chrome (compila la web antes)
 npm run build        # compila la web y empaqueta el servidor
 ```
 

@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 import { serviceWorker } from './vite-plugin-sw.ts';
 
 export default defineConfig({
@@ -13,5 +13,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
     css: false,
+    // Playwright's tests run with `npm run e2e`, not here.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
   },
 });

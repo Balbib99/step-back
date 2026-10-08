@@ -8,3 +8,8 @@ data/
 
 # Secrets for the production container
 deploy/production.env
+
+# Playwright
+web/test-results/
+web/playwright-report/
+web/.e2e-data/

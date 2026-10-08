@@ -195,7 +195,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: restaurar en una BD limpia; revisión de cabeceras con `curl -I`.
   - Deps: T24, T27 · Files: `deploy/backup.sh`, `server/src/core/cleanup.ts`, `Caddyfile.example`, tests
 
-- [ ] **T29 — E2E, Lighthouse y rendimiento en la Pi** (M)
+- [x] **T29 — E2E, Lighthouse y rendimiento en la Pi** (M)
   - Acceptance: 3-5 e2e con Playwright; Lighthouse móvil (Perf ≥ 85, A11y ≥ 90); RAM < 300 MB en reposo; revisión de seguridad.
   - Verify: `npm run e2e -w web`; medición con `docker stats`.
   - Deps: T28 · Files: `web/e2e/*`, ajustes menores
