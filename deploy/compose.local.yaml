@@ -27,6 +27,11 @@ services:
     ports:
       - '127.0.0.1:3000:3000'
     mem_limit: 400m
+    # Nothing is written outside /data (the volume) and /tmp (memory): an update replaces the
+    # image, and a mistake or an intruder cannot change the program.
+    read_only: true
+    tmpfs:
+      - /tmp
     security_opt:
       - no-new-privileges:true
     cap_drop:

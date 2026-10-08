@@ -14,7 +14,10 @@ export interface JobRuns {
   latestPerJob(): JobRun[];
   /** Most recent successful run of a job, if any. */
   lastSuccess(jobId: string): JobRun | undefined;
-  /** Deletes runs that started before `olderThan` (epoch ms); returns how many. */
+  /**
+   * Deletes runs that started before `olderThan` (epoch ms), except the latest run and the latest
+   * success of each job, which `/api/health` reports; returns how many.
+   */
   prune(olderThan: number): number;
 }
 
@@ -47,7 +50,10 @@ export function createJobRuns(db: Db): JobRuns {
     SELECT job_id, started_at, finished_at, status, error FROM job_runs
     WHERE job_id = ? AND status = 'ok' ORDER BY id DESC LIMIT 1
   `);
-  const prune = db.prepare('DELETE FROM job_runs WHERE started_at < ?');
+  const prune = db.prepare(`
+    DELETE FROM job_runs WHERE started_at < ?
+      AND id NOT IN (SELECT MAX(id) FROM job_runs GROUP BY job_id, status)
+  `);
 
   return {
     record(run) {

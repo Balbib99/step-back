@@ -9,6 +9,14 @@ step-back.duckdns.org {
 		CHANGE_ME_USER CHANGE_ME_PASSWORD_HASH
 	}
 
+	# HSTS belongs here because only Caddy speaks HTTPS. The rest of the security headers (CSP,
+	# nosniff, referrer policy, frame protection) are sent by the app itself, so they stay in
+	# step with the code. Do not add includeSubDomains or preload: duckdns.org is not yours.
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
 	encode zstd gzip
 
 	reverse_proxy step-back:3000

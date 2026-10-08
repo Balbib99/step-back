@@ -72,9 +72,9 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 ### Checkpoint F: Notificaciones funcionando en Android
 
 ### Phase 7: Cierre (`deploy`, parte 2)
-- [ ] T28 Copias de seguridad, limpieza diaria y cabeceras de seguridad
+- [x] T28 Copias de seguridad, limpieza diaria y cabeceras de seguridad
 - [ ] T29 Pruebas e2e, Lighthouse y revisión de rendimiento en la Pi
-- [ ] T30 Documentación operativa
+- [x] T30 Documentación operativa
 
 ### Checkpoint G: v1 completa
 

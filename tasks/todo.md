@@ -190,7 +190,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
 
 ## Phase 7: Cierre
 
-- [ ] **T28 — Copias, limpieza y cabeceras** (M)
+- [x] **T28 — Copias, limpieza y cabeceras** (M)
   - Acceptance: `backup.sh` diario con rotación de 14 días y restauración probada; limpieza diaria (noticias > 90 días, traducciones > 7 días); cabeceras HSTS, CSP, `X-Content-Type-Options`, `Referrer-Policy`; FS del contenedor de solo lectura salvo `/data`.
   - Verify: restaurar en una BD limpia; revisión de cabeceras con `curl -I`.
   - Deps: T24, T27 · Files: `deploy/backup.sh`, `server/src/core/cleanup.ts`, `Caddyfile.example`, tests
@@ -200,7 +200,7 @@ Comando de verificación estándar (V): `npm test`, `npm run lint`, `npm run typ
   - Verify: `npm run e2e -w web`; medición con `docker stats`.
   - Deps: T28 · Files: `web/e2e/*`, ajustes menores
 
-- [ ] **T30 — Documentación operativa** (S)
+- [x] **T30 — Documentación operativa** (S)
   - Acceptance: `docs/deploy.md` con instalación, actualización, restauración, qué hacer cuando una fuente falla.
   - Verify: otra persona (o tú en un entorno limpio) sigue la guía.
   - Deps: T29 · Files: `docs/deploy.md`, `README.md`

@@ -9,6 +9,7 @@ import { CORE_MIGRATIONS } from './core-migrations.js';
 import { runMigrations } from './migrations.js';
 import type { AppModule, ModuleContext } from './modules.js';
 import { registerCoreRoutes } from './routes.js';
+import { registerSecurityHeaders } from './security-headers.js';
 import { createScheduler, type Scheduler } from './scheduler.js';
 import { registerWeb, sendSinglePage, wantsSinglePage } from './web.js';
 
@@ -66,6 +67,8 @@ export async function buildApp(options: BuildAppOptions): Promise<App> {
   const server: FastifyInstance = Fastify({
     loggerInstance: logger.child({ component: 'http' }) as FastifyBaseLogger,
   });
+
+  registerSecurityHeaders(server);
 
   const servesWeb = config.webDir !== undefined;
   server.setNotFoundHandler((request, reply) => {
