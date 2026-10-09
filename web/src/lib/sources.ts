@@ -13,6 +13,7 @@ const JOBS: Record<string, { section: Section; source: string }> = {
   'news:cbs': { section: 'news', source: 'CBS Sports' },
   'news:reddit': { section: 'news', source: 'r/nba' },
   'news:gigantes': { section: 'news', source: 'Gigantes del Basket' },
+  'news:drafteados': { section: 'news', source: 'Drafteados' },
   'highlights:refresh': { section: 'highlights', source: 'el canal de la NBA en YouTube' },
 };
 

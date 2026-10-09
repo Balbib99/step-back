@@ -253,6 +253,7 @@ export function newsItem(id: number, extra: Partial<NewsItem> = {}): NewsItem {
     imageUrl: null,
     embedUrl: null,
     durationSeconds: null,
+    short: false,
     teams: [],
     players: [],
     ...extra,
@@ -286,6 +287,23 @@ export const NEWS: NewsItem[] = [
   newsItem(4, { title: 'Rumores del mercado de fichajes', sourceName: 'Yahoo Sports' }),
   newsItem(5, { title: 'Nuggets contra Warriors', teams: ['DEN', 'GS'] }),
 ];
+
+/** Three Shorts of a Spanish channel, the newest first (they are only listed when asked for). */
+export const SHORTS: NewsItem[] = [11, 12, 13].map((id, index) =>
+  newsItem(id, {
+    sourceId: 'drafteados',
+    sourceName: 'Drafteados',
+    url: `https://www.youtube.com/shorts/short${id}`,
+    title: `Short ${id}`,
+    lang: 'es',
+    mediaKind: 'video',
+    imageUrl: `/api/news/${id}/image`,
+    embedUrl: `https://www.youtube-nocookie.com/embed/short${id}`,
+    short: true,
+    teams: index === 0 ? ['MIN'] : [],
+    publishedAt: new Date(Date.parse('2026-10-07T09:00:00Z') - index * 3_600_000).toISOString(),
+  }),
+);
 
 export function highlight(id: number, extra: Partial<Highlight> = {}): Highlight {
   const ytId = `video${String(id).padStart(6, '0')}`;
@@ -523,7 +541,10 @@ export function stubApi() {
             (!wantedTeams || n.teams.some((t) => wantedTeams.includes(t))) &&
             (!params.get('player') || n.players.includes(params.get('player')!)) &&
             (!params.get('lang') || n.lang === params.get('lang')) &&
-            (!params.get('media') || n.mediaKind === params.get('media')),
+            (!params.get('media') || n.mediaKind === params.get('media')) &&
+            // Like the server: Shorts only when asked for, and then only them.
+            (params.get('shorts') === 'include' ||
+              (params.get('shorts') === 'only' ? n.short : !n.short)),
         );
         // The cursor is just the offset: the app only hands it back.
         const start = Number(params.get('before') ?? 0);

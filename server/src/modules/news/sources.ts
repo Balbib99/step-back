@@ -8,8 +8,8 @@ export const sourceSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),
   name: z.string().min(1),
   lang: newsLangSchema,
-  /** `espn` is ESPN's own news API; `feed` is any RSS or Atom feed. */
-  type: z.enum(['espn', 'feed']),
+  /** `espn` is ESPN's own news API; `feed` is any RSS or Atom feed; `youtube` is a channel's video feed. */
+  type: z.enum(['espn', 'feed', 'youtube']),
   url: z.string().url(),
   /** Use the first picture of the article text when the item has no media tags (Yahoo). */
   imageFromContent: z.boolean().optional(),

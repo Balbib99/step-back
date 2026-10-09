@@ -164,9 +164,13 @@ export type FeedFetchResult =
 export async function fetchFeed(
   http: HttpClient,
   url: string,
-  options: ParseFeedOptions & { validators?: FeedValidators } = {},
+  options: ParseFeedOptions & {
+    validators?: FeedValidators;
+    /** For feeds that are not plain RSS or Atom articles (a YouTube channel). */
+    parse?: (xml: string) => FeedItem[];
+  } = {},
 ): Promise<FeedFetchResult> {
-  const { validators, ...parseOptions } = options;
+  const { validators, parse, ...parseOptions } = options;
   const headers: Record<string, string> = {
     accept: 'application/rss+xml, application/atom+xml, application/xml;q=0.9, */*;q=0.8',
   };
@@ -180,7 +184,7 @@ export async function fetchFeed(
 
   return {
     kind: 'items',
-    items: parseFeed(response.body, parseOptions),
+    items: parse ? parse(response.body) : parseFeed(response.body, parseOptions),
     validators: {
       etag: response.headers.get('etag') ?? undefined,
       lastModified: response.headers.get('last-modified') ?? undefined,

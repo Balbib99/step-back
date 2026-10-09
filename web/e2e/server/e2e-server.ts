@@ -63,7 +63,12 @@ const upstream = (async (input: string | URL | Request, init?: RequestInit) => {
     return text(fixture('news/gigantes.rss.xml'), 'application/xml');
   }
   if (host === 'www.youtube.com') {
-    return text(fixture('highlights/nba-channel.atom.xml'), 'application/xml');
+    // Two channels: the Spanish one (Drafteados, in Noticias) and the NBA's (Jugadas).
+    const spanish = url.searchParams.get('channel_id') === 'UCTJNmeP0HiOU4-qOMNVNoGA';
+    return text(
+      fixture(spanish ? 'news/drafteados.atom.xml' : 'highlights/nba-channel.atom.xml'),
+      'application/xml',
+    );
   }
   if (host === 'api-free.deepl.com') {
     if (pathname.endsWith('/usage'))
@@ -166,6 +171,7 @@ for (const id of ['standings:refresh', 'news:espn', 'news:yahoo', 'news:cbs', 'n
   await scheduler.runNow(id);
 }
 await scheduler.runNow('news:gigantes');
+await scheduler.runNow('news:drafteados');
 await scheduler.runNow('highlights:refresh');
 
 await server.listen({ host: config.host, port: PORT });

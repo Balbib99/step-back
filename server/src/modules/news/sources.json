@@ -36,5 +36,12 @@
     "lang": "es",
     "type": "feed",
     "url": "https://www.gigantes.com/nba/feed/"
+  },
+  {
+    "id": "drafteados",
+    "name": "Drafteados",
+    "lang": "es",
+    "type": "youtube",
+    "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCTJNmeP0HiOU4-qOMNVNoGA"
   }
 ]

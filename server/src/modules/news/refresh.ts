@@ -6,6 +6,7 @@ import type { NewsRepo } from './repo.js';
 import { fetchFeed } from './rss.js';
 import type { NewsSource } from './sources.js';
 import { createTagger, type TaggerTeam } from './tagger.js';
+import { parseYoutubeNews } from './youtube-adapter.js';
 
 export interface RefreshResult {
   /** Items the source offered. */
@@ -35,6 +36,7 @@ export async function refreshSource(deps: {
     const result = await fetchFeed(http, source.url, {
       validators: repo.sourceState(source.id),
       ...(source.imageFromContent !== undefined && { imageFromContent: source.imageFromContent }),
+      ...(source.type === 'youtube' && { parse: parseYoutubeNews }),
     });
     if (result.kind === 'not-modified') return { seen: 0, added: 0, notModified: true };
     items = result.items;

@@ -2,6 +2,7 @@ import type { NewsItem, NewsLang, NewsMediaKind } from '@step-back/shared';
 import type { Db } from '../../core/db.js';
 import type { FeedItem } from './feed-item.js';
 import type { Tags } from './tagger.js';
+import { isShortUrl } from './youtube-adapter.js';
 
 export interface NewsFilter {
   /** Only items about any of these teams (abbreviations). */
@@ -10,6 +11,8 @@ export interface NewsFilter {
   lang?: NewsLang;
   /** Only items whose media is of this kind. */
   media?: Exclude<NewsMediaKind, 'none'>;
+  /** YouTube Shorts: only them, none of them (the default), or mixed in. */
+  shorts?: 'only' | 'exclude' | 'include';
   /** Cursor from a previous page: only older items. */
   before?: string;
   limit: number;
@@ -52,6 +55,8 @@ type Row = {
   embed_url: string | null;
   media_duration_s: number | null;
 };
+
+const SHORTS_PREFIX = 'https://www.youtube.com/shorts/';
 
 export const newsImagePath = (id: number) => `/api/news/${id}/image`;
 
@@ -105,6 +110,7 @@ export function createNewsRepo(db: Db, sourceNames: ReadonlyMap<string, string>)
       imageUrl: row.media_url ? newsImagePath(row.id) : null,
       embedUrl: row.embed_url,
       durationSeconds: row.media_duration_s,
+      short: isShortUrl(row.url),
       teams: teams.get(row.id) ?? [],
       players: players.get(row.id) ?? [],
     }));
@@ -167,6 +173,9 @@ export function createNewsRepo(db: Db, sourceNames: ReadonlyMap<string, string>)
         where.push('n.media_kind = ?');
         params.push(filter.media);
       }
+      // Shorts have their own section: the news feed leaves them out unless asked.
+      if (filter.shorts === 'only') where.push(`n.url LIKE '${SHORTS_PREFIX}%'`);
+      else if (filter.shorts !== 'include') where.push(`n.url NOT LIKE '${SHORTS_PREFIX}%'`);
       if (filter.teams && filter.teams.length > 0) {
         where.push(
           `EXISTS (SELECT 1 FROM news_tags t WHERE t.news_id = n.id AND t.kind = 'team' AND t.ref IN (${filter.teams.map(() => '?').join(',')}))`,

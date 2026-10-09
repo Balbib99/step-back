@@ -1,17 +1,26 @@
 import { onDarkColor } from '@step-back/shared';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ChipGroup, ChipRow, type ChipOption } from '../components/Chips';
 import { NewsCard } from '../components/NewsCard';
+import { ShortCard } from '../components/ShortCard';
 import { EmptyState, PageHeader } from '../components/PageHeader';
 import { DEFAULT_TIME_ZONE } from '../lib/format';
 import type { NewsFilters } from '../lib/news';
 import { useConfig, useNews, useTeams } from '../lib/queries';
 import { useTranslationAvailability } from '../lib/translation';
 
-// The address keeps the view (/noticias?equipo=LAL&tipo=videos&idioma=es&jugador=LeBron%20James),
-// so going back or reloading returns to the same place. Defaults are left out of it.
+// The address keeps the view (/noticias?equipo=LAL&tipo=videos&idioma=es&jugador=LeBron%20James,
+// or /noticias?vista=shorts), so going back or reloading returns to the same place. Defaults are
+// left out of it.
 
 type TeamScope = 'mis' | 'todos' | string;
+type View = 'noticias' | 'shorts';
+
+const VIEWS: ChipOption[] = [
+  { value: 'noticias', label: 'Noticias' },
+  { value: 'shorts', label: 'Shorts' },
+];
 
 function Skeleton() {
   return (
@@ -43,12 +52,18 @@ export function News() {
   const timeZone = config.data?.timeZone ?? DEFAULT_TIME_ZONE;
   const favorites = config.data?.favoriteTeams ?? [];
 
-  const wantedScope: TeamScope = params.get('equipo') ?? 'mis';
+  const view: View = params.get('vista') === 'shorts' ? 'shorts' : 'noticias';
+  const shortsView = view === 'shorts';
+  // The news open on your teams; the Shorts open on all of them, because most are about the league.
+  const defaultScope: TeamScope = shortsView ? 'todos' : 'mis';
+  const wantedScope: TeamScope = params.get('equipo') ?? defaultScope;
   // Without configured favourites there is nothing for "Mis equipos" to show.
   const scope: TeamScope = wantedScope === 'mis' && favorites.length === 0 ? 'todos' : wantedScope;
-  const video = params.get('tipo') === 'videos';
-  const spanish = params.get('idioma') === 'es';
+  const video = !shortsView && params.get('tipo') === 'videos';
+  const spanish = !shortsView && params.get('idioma') === 'es';
   const player = params.get('jugador') ?? undefined;
+  // Only one Short plays at a time.
+  const [playing, setPlaying] = useState<number>();
 
   const update = (
     changes: Record<string, string | undefined>,
@@ -72,6 +87,7 @@ export function News() {
     player,
     lang: spanish ? 'es' : undefined,
     video,
+    ...(shortsView && { shorts: true }),
   };
   // Not before the configuration is known: until then "Mis equipos" has no teams, and the app
   // would ask for every team's news first and then ask again.
@@ -99,27 +115,46 @@ export function News() {
       <PageHeader title="Noticias" sources={['news']} />
 
       <div className="mt-3">
+        <ChipGroup
+          label="Vista"
+          options={VIEWS}
+          value={view}
+          onChange={(value) => {
+            setPlaying(undefined);
+            // The two views have their own filters: starting one from the other's would confuse.
+            setParams(value === 'shorts' ? { vista: 'shorts' } : {}, { replace: true });
+          }}
+        />
+      </div>
+
+      <div className="mt-3">
         <ChipRow>
           <ChipGroup
             label="Equipo"
             options={scopeOptions}
             value={scope}
-            onChange={(value) => update({ equipo: value ?? 'mis' }, { equipo: 'mis' })}
+            onChange={(value) =>
+              update({ equipo: value ?? defaultScope }, { equipo: defaultScope })
+            }
           />
-          <ChipGroup
-            label="Tipo"
-            options={[{ value: 'videos', label: 'Vídeos' }]}
-            value={video ? 'videos' : undefined}
-            optional
-            onChange={(value) => update({ tipo: value })}
-          />
-          <ChipGroup
-            label="Idioma"
-            options={[{ value: 'es', label: 'Español' }]}
-            value={spanish ? 'es' : undefined}
-            optional
-            onChange={(value) => update({ idioma: value })}
-          />
+          {!shortsView && (
+            <>
+              <ChipGroup
+                label="Tipo"
+                options={[{ value: 'videos', label: 'Vídeos' }]}
+                value={video ? 'videos' : undefined}
+                optional
+                onChange={(value) => update({ tipo: value })}
+              />
+              <ChipGroup
+                label="Idioma"
+                options={[{ value: 'es', label: 'Español' }]}
+                value={spanish ? 'es' : undefined}
+                optional
+                onChange={(value) => update({ idioma: value })}
+              />
+            </>
+          )}
         </ChipRow>
       </div>
 
@@ -137,7 +172,7 @@ export function News() {
         </p>
       )}
 
-      {nearlySpent && (
+      {nearlySpent && !shortsView && (
         <p
           role="note"
           className="mt-3 rounded-card border border-warn/40 bg-surface p-3 text-[13px] text-text-2"
@@ -151,45 +186,73 @@ export function News() {
           <Skeleton />
         ) : news.isError && items.length === 0 ? (
           <EmptyState>
-            No se pudieron cargar las noticias. Comprueba que el servidor está en marcha.
+            {shortsView
+              ? 'No se pudieron cargar los Shorts.'
+              : 'No se pudieron cargar las noticias.'}{' '}
+            Comprueba que el servidor está en marcha.
             <br />
             <ActionButton onClick={() => void news.refetch()}>Reintentar</ActionButton>
           </EmptyState>
         ) : items.length === 0 ? (
           <EmptyState>
-            {filtered
-              ? 'No hay noticias con estos filtros.'
-              : 'Todavía no hay noticias. Aparecerán aquí en unos minutos.'}
+            {shortsView
+              ? filtered
+                ? 'No hay Shorts con estos filtros.'
+                : 'Todavía no hay Shorts. Aparecerán aquí en unos minutos.'
+              : filtered
+                ? 'No hay noticias con estos filtros.'
+                : 'Todavía no hay noticias. Aparecerán aquí en unos minutos.'}
             {filtered && (
               <>
                 <br />
-                <ActionButton onClick={() => setParams({}, { replace: true })}>
-                  Ver todas las noticias
+                <ActionButton
+                  onClick={() =>
+                    setParams(shortsView ? { vista: 'shorts' } : {}, { replace: true })
+                  }
+                >
+                  {shortsView ? 'Ver todos los Shorts' : 'Ver todas las noticias'}
                 </ActionButton>
               </>
             )}
           </EmptyState>
         ) : (
           <>
-            <ul className="m-0 grid list-none gap-3 p-0">
-              {items.map((item) => (
-                <li key={item.id}>
-                  <NewsCard
-                    item={item}
-                    favorites={favorites}
-                    teams={teamsByAbbr}
-                    timeZone={timeZone}
-                    now={now}
-                    onPlayer={(name) => update({ jugador: name })}
-                    translation={translation}
-                  />
-                </li>
-              ))}
-            </ul>
+            {shortsView ? (
+              <ul aria-label="Shorts" className="m-0 grid list-none grid-cols-2 gap-3 p-0">
+                {items.map((item) => (
+                  <li key={item.id} className={playing === item.id ? 'col-span-2' : ''}>
+                    <ShortCard
+                      item={item}
+                      timeZone={timeZone}
+                      now={now}
+                      playing={playing === item.id}
+                      onPlay={() => setPlaying(item.id)}
+                      onClose={() => setPlaying(undefined)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="m-0 grid list-none gap-3 p-0">
+                {items.map((item) => (
+                  <li key={item.id}>
+                    <NewsCard
+                      item={item}
+                      favorites={favorites}
+                      teams={teamsByAbbr}
+                      timeZone={timeZone}
+                      now={now}
+                      onPlayer={(name) => update({ jugador: name })}
+                      translation={translation}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {news.isFetchNextPageError && (
               <p role="alert" className="mt-3 text-center text-[13px] text-text-2">
-                No se pudieron cargar más noticias.
+                No se pudieron cargar más {shortsView ? 'Shorts' : 'noticias'}.
               </p>
             )}
             {news.hasNextPage && (

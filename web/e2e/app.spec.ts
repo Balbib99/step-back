@@ -104,6 +104,46 @@ test('noticias: an English post is translated on demand and the original is one 
   await expect(post.getByRole('button', { name: 'Ver traducción' })).toBeVisible();
 });
 
+test('shorts: the short videos of a Spanish channel have their own view and play in the app', async ({
+  page,
+}) => {
+  // The player is YouTube's: it is not reached from the tests, only asked for.
+  await page.route('https://www.youtube-nocookie.com/**', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<p>player</p>' }),
+  );
+  const blocked: string[] = [];
+  page.on('console', (message) => {
+    if (message.text().includes('Content Security Policy')) blocked.push(message.text());
+  });
+
+  await page.goto('/noticias');
+  // The news do not mix the Shorts in.
+  await expect(page.getByRole('article').first()).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Shorts' })).toHaveCount(0);
+
+  await page.getByRole('group', { name: 'Vista' }).getByRole('button', { name: 'Shorts' }).click();
+  const shorts = page.getByRole('list', { name: 'Shorts' });
+  await expect(shorts).toBeVisible();
+  await expect(page).toHaveURL(/vista=shorts/);
+  await expect(shorts.getByRole('listitem')).toHaveCount(7);
+  await expect(shorts.getByRole('listitem').first()).toContainText('Drafteados');
+
+  // The newest Short of the recorded channel feed.
+  await shorts
+    .getByRole('button', { name: /Reproducir NIKOLA JOKIC VA A SER EL NUEVO MR/ })
+    .click();
+  const player = page.locator('iframe[title^="NIKOLA JOKIC"]');
+  await expect(player).toBeVisible();
+  await expect(player).toHaveAttribute(
+    'src',
+    /youtube-nocookie\.com\/embed\/vq3_0AVlrJM\?autoplay=1/,
+  );
+
+  await page.getByRole('button', { name: 'Cerrar' }).click();
+  await expect(player).toHaveCount(0);
+  expect(blocked).toEqual([]);
+});
+
 test('sin conexión: the app opens with what it had and says it is not live', async ({
   page,
   context,

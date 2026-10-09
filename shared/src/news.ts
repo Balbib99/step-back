@@ -27,6 +27,8 @@ export const newsItemSchema = z.object({
   /** A player that can be embedded in the page (YouTube); absent when the video only opens at its source. */
   embedUrl: z.string().nullable(),
   durationSeconds: z.number().int().nullable(),
+  /** A YouTube Short: a vertical video of under a minute, shown in its own section. */
+  short: z.boolean().default(false),
   /** Abbreviations of the teams it is about. */
   teams: z.array(z.string()),
   /** Names of the players it is about. */

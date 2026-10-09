@@ -20,6 +20,8 @@ Un feed unificado de noticias de la NBA, filtrable por equipo y jugador, con pri
 | `reddit` | r/nba | `reddit.com/r/nba/.rss` (Atom) | `media:thumbnail`, descartando los de 140 px | Se omiten los hilos diarios (`skipTitles`). |
 | `gigantes` | Gigantes del Basket | `gigantes.com/nba/feed/` (WordPress) | ninguno | **El feed existe.** `gigantes.com/feed` da todo el baloncesto y esta es la sección NBA (10 piezas). Las imágenes del texto son portadas de revistas, no del artículo, así que no se usan; sacar la `og:image` exigiría descargar cada página. |
 
+- **Drafteados** (canal de YouTube en español, `type: youtube`): sus vídeos largos salen en Noticias como publicaciones de vídeo y sus **Shorts** (direcciones `/shorts/`) en una vista propia, «Shorts», de Noticias (`?vista=shorts`, API `?shorts=only`). Su web (`drafteados.com`) es solo corporativa y no tiene RSS. No cuenta como fuente prioritaria: nunca genera notificaciones de noticia destacada.
+
 No incluidas: **HoopsHype** responde 402 "Access Restricted" a clientes no navegador. Si se quiere, se añade como línea de `sources.json` el día que su feed funcione.
 
 ## Modelo

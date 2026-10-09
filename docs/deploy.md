@@ -149,7 +149,7 @@ Cada tarea con problema sale con su `id`, la hora del último intento y el error
 |---|---|---|
 | `games:calendar`, `games:refresh` | Calendario y marcadores de ESPN | Casi siempre es una caída pasajera y se arregla sola. Si dura días o el error habla de un formato inesperado, ESPN cambió su API: hay que actualizar `server/src/modules/games/adapter.ts` y sus muestras de prueba. |
 | `standings:refresh` | Clasificación de ESPN | Igual que la anterior (`server/src/modules/standings/`). |
-| `news:espn`, `news:yahoo`, `news:cbs`, `news:reddit`, `news:gigantes` | Una fuente de noticias | Las demás siguen. Si una falla durante días, su dirección habrá cambiado: edita o quita esa línea en `server/src/modules/news/sources.json` y vuelve a desplegar. |
+| `news:espn`, `news:yahoo`, `news:cbs`, `news:reddit`, `news:gigantes`, `news:drafteados` | Una fuente de noticias (la última es el canal de YouTube de Drafteados, que alimenta también la vista Shorts) | Las demás siguen. Si una falla durante días, su dirección habrá cambiado: edita o quita esa línea en `server/src/modules/news/sources.json` y vuelve a desplegar. |
 | `highlights:refresh` | Vídeos del canal de la NBA en YouTube | Pasajero casi siempre. Si dura, comprueba que el canal sigue existiendo y su feed responde. |
 | `translation:quota` | Crédito de DeepL | Falla a propósito cuando queda menos del 10 %. Cuando se agota, el botón de traducir se desactiva y las noticias siguen en su idioma. Un crédito nuevo o una clave nueva en `production.env` lo arregla. |
 | `push:dispatch` | Envío de notificaciones | Un dispositivo que falla no es un fallo de la tarea (queda en los registros como `push could not be delivered`). Si la tarea falla, mira el error en los registros. |

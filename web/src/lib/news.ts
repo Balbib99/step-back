@@ -39,6 +39,8 @@ export interface NewsFilters {
   player: string | undefined;
   lang: 'es' | undefined;
   video: boolean;
+  /** Only the YouTube Shorts (their own section). Without it, the news leave them out. */
+  shorts?: boolean;
 }
 
 /** The /api/news query for a set of filters (without the page cursor). */
@@ -48,6 +50,7 @@ export function newsQuery(filters: NewsFilters, before?: string): string {
   if (filters.player) params.set('player', filters.player);
   if (filters.lang) params.set('lang', filters.lang);
   if (filters.video) params.set('media', 'video');
+  if (filters.shorts) params.set('shorts', 'only');
   if (before) params.set('before', before);
   return `?${params.toString()}`;
 }

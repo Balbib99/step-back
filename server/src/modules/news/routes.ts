@@ -21,6 +21,9 @@ const newsQuery = z.object({
   player: z.string().trim().min(1).max(80).optional(),
   lang: z.enum(['en', 'es'], { message: 'lang must be en or es' }).optional(),
   media: z.enum(['video'], { message: 'media must be video' }).optional(),
+  shorts: z
+    .enum(['only', 'exclude', 'include'], { message: 'shorts must be only, exclude or include' })
+    .optional(),
   before: z
     .string()
     .refine((value) => parseCursor(value) !== undefined, 'before is not a valid cursor')
@@ -43,13 +46,14 @@ export function registerNewsRoutes(app: FastifyInstance, repo: NewsRepo, images:
         message: parsed.error.issues.map((issue) => issue.message).join('; '),
       });
     }
-    const { team, player, lang, media, before, limit } = parsed.data;
+    const { team, player, lang, media, shorts, before, limit } = parsed.data;
     return repo.list({
       limit,
       ...(team && { teams: team }),
       ...(player && { player }),
       ...(lang && { lang }),
       ...(media && { media }),
+      ...(shorts && { shorts }),
       ...(before && { before }),
     });
   });

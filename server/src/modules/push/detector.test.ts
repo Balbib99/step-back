@@ -129,6 +129,7 @@ describe('detectNews', () => {
     imageUrl: null,
     embedUrl: null,
     durationSeconds: null,
+    short: false,
     teams: ['MIN'],
     players: [],
     ...extra,
