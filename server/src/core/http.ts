@@ -10,6 +10,14 @@ export class HttpError extends Error {
   }
 }
 
+/** A request the caller's policy refused: the first address, or a redirect to somewhere else. */
+export class UrlRefusedError extends HttpError {
+  constructor(url: string) {
+    super(`Refused by the address policy: ${url}`, url);
+    this.name = 'UrlRefusedError';
+  }
+}
+
 export interface HttpResponse<Body = string> {
   status: number;
   headers: Headers;
@@ -24,6 +32,12 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   timeoutMs?: number;
   retries?: number;
+  /**
+   * For addresses written by third parties. It is asked about the first address and about every
+   * redirect target before anything is requested from them; redirects are followed by hand, at
+   * most three, and a refusal fails the request without retrying.
+   */
+  allowUrl?: (url: string) => boolean | Promise<boolean>;
 }
 
 export interface HttpClient {
@@ -53,6 +67,7 @@ export interface HttpClientOptions {
 }
 
 const MAX_RETRY_AFTER_MS = 30_000;
+const MAX_REDIRECTS = 3;
 const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const isRetryableStatus = (status: number) => status === 408 || status === 429 || status >= 500;
@@ -98,6 +113,29 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     if (delay > 0) await sleep(delay);
   }
 
+  // Redirects are followed by hand so that the policy sees every address the request goes to.
+  async function fetchChecked(
+    first: string,
+    init: RequestInit,
+    allowUrl: NonNullable<RequestOptions['allowUrl']>,
+  ): Promise<Response> {
+    let current = first;
+    for (let hop = 0; ; hop++) {
+      if (!(await allowUrl(current))) throw new UrlRefusedError(current);
+      const response = await fetchImpl(current, { ...init, redirect: 'manual' });
+      const location = response.headers.get('location');
+      const redirected = response.status >= 300 && response.status < 400 && response.status !== 304;
+      if (!redirected || !location) return response;
+      await response.body?.cancel();
+      if (hop >= MAX_REDIRECTS) throw new UrlRefusedError(current);
+      try {
+        current = new URL(location, current).toString();
+      } catch {
+        throw new UrlRefusedError(location);
+      }
+    }
+  }
+
   async function send<Body>(
     rawUrl: string,
     request: RequestOptions,
@@ -113,12 +151,15 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
       await waitForSlot(host);
       let serverDelay: number | undefined;
       try {
-        const response = await fetchImpl(url, {
+        const init: RequestInit = {
           method: request.method ?? 'GET',
           ...(request.body !== undefined && { body: request.body }),
           headers: { 'user-agent': userAgent, accept: '*/*', ...request.headers },
           signal: AbortSignal.timeout(timeoutMs),
-        });
+        };
+        const response = request.allowUrl
+          ? await fetchChecked(url, init, request.allowUrl)
+          : await fetchImpl(url, init);
         const body = await read(response);
         if ((response.status >= 200 && response.status < 300) || response.status === 304) {
           return { status: response.status, headers: response.headers, body };
@@ -127,7 +168,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
         if (!isRetryableStatus(response.status)) throw lastError;
         serverDelay = retryAfterMs(response.headers, now());
       } catch (error) {
-        if (error === lastError) throw error; // non-retryable HTTP status
+        if (error === lastError || error instanceof UrlRefusedError) throw error; // not retryable
         const timedOut = error instanceof Error && error.name === 'TimeoutError';
         lastError = new HttpError(
           timedOut ? `Timed out after ${timeoutMs} ms: ${url}` : `Request failed: ${url}`,

@@ -28,6 +28,7 @@ function storesFor(context: ModuleContext) {
         http: context.http,
         repo,
         logger: context.logger,
+        ...(context.resolve && { resolve: context.resolve }),
       }),
     };
     stores.set(context, found);

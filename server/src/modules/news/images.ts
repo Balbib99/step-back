@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node
 import { join } from 'node:path';
 import type { HttpClient } from '../../core/http.js';
 import type { Logger } from '../../core/logger.js';
+import { resolvesToPublic, type Resolve } from '../../core/public-address.js';
 import { isPublicHttpsUrl } from './text.js';
 
 /** The CBS pictures are PNGs of 2-3 MB; anything much larger is not a news picture. */
@@ -49,8 +50,13 @@ export function createImageStore(deps: {
   /** Where the picture of an item lives at its source. */
   repo: { mediaUrl(id: number): string | undefined };
   logger: Logger;
+  /** Resolves host names, to refuse the ones that lead inside the network. Injectable for tests. */
+  resolve?: Resolve;
 }): ImageStore {
-  const { dir, http, repo, logger } = deps;
+  const { dir, http, repo, logger, resolve } = deps;
+  // The address and every redirect must be public https, both by name and by what it resolves to.
+  const allowUrl = async (address: string) =>
+    isPublicHttpsUrl(address) && (await resolvesToPublic(new URL(address).hostname, resolve));
   const inFlight = new Map<number, Promise<NewsImage>>();
   const fileOf = (id: number) => join(dir, `${id}.img`);
 
@@ -68,7 +74,7 @@ export function createImageStore(deps: {
     if (!isPublicHttpsUrl(url))
       throw new ImageUnavailableError(id, 'the address is not a public https one');
     try {
-      const { body } = await http.getBytes(url);
+      const { body } = await http.getBytes(url, { allowUrl });
       const type = sniffImageType(body);
       if (!type) throw new Error('not an image');
       if (body.length > MAX_BYTES) throw new Error(`larger than ${MAX_BYTES} bytes`);

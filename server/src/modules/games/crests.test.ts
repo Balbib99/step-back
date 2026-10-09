@@ -12,6 +12,7 @@ import { parseTeams } from './adapter.js';
 import {
   CrestUnavailableError,
   createCrestStore,
+  isEspnImageUrl,
   resizedCrestUrl,
   type CrestStore,
 } from './crests.js';
@@ -50,6 +51,16 @@ describe('resizedCrestUrl', () => {
   });
 });
 
+describe('isEspnImageUrl', () => {
+  it('is only https on ESPN image host', () => {
+    expect(isEspnImageUrl('https://a.espncdn.com/i/teamlogos/nba/500/min.png')).toBe(true);
+    expect(isEspnImageUrl('http://a.espncdn.com/x.png')).toBe(false);
+    expect(isEspnImageUrl('https://a.espncdn.com.evil.example/x.png')).toBe(false);
+    expect(isEspnImageUrl('https://127.0.0.1/x.png')).toBe(false);
+    expect(isEspnImageUrl('not a url')).toBe(false);
+  });
+});
+
 describe('CrestStore', () => {
   let dir: string;
   let repo: ReturnType<typeof createGamesRepo>;
@@ -65,6 +76,17 @@ describe('CrestStore', () => {
 
   const store = (http: HttpClient): CrestStore => createCrestStore({ dir, http, repo, logger });
   const resized = 'combiner';
+
+  it('never fetches a crest from a host other than ESPN image one', async () => {
+    repo.upsertTeams(
+      parseTeams(readEspnFixture('teams.json')).map((team) =>
+        team.abbr === 'MIN' ? { ...team, logoUrl: 'http://127.0.0.1:8080/cam.png' } : team,
+      ),
+    );
+    const { http, getBytes } = fakeHttp(() => png(1));
+    await expect(store(http).get('MIN')).rejects.toBeInstanceOf(CrestUnavailableError);
+    expect(getBytes).not.toHaveBeenCalled();
+  });
 
   it('downloads the resized crest the first time and keeps it on disk', async () => {
     const { http, getBytes } = fakeHttp(() => png(1));

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createHttpClient, HttpError } from './http.js';
+import { createHttpClient, HttpError, UrlRefusedError } from './http.js';
 
 type FetchMock = ReturnType<typeof vi.fn<typeof fetch>>;
 
@@ -193,6 +193,68 @@ describe('getBytes', () => {
     await expect(missing.client.getBytes('https://example.com/b.png')).rejects.toMatchObject({
       status: 404,
     });
+  });
+});
+
+describe('allowUrl: redirects followed by hand', () => {
+  const go = (to: string) => reply(302, '', { location: to });
+
+  it('follows redirects as fetch would when there is no policy', async () => {
+    const { client, fetchMock } = setup([reply(200, 'ok')]);
+    await client.get('https://example.com/a');
+    expect(fetchMock.mock.calls[0]?.[1]?.redirect).toBeUndefined();
+  });
+
+  it('asks the policy about the first address and about every redirect target', async () => {
+    const { client, fetchMock } = setup([
+      go('/b'),
+      go('https://cdn.example.net/c'),
+      reply(200, 'done'),
+    ]);
+    const asked: string[] = [];
+    const response = await client.get('https://example.com/a', {
+      allowUrl: (url) => {
+        asked.push(url);
+        return true;
+      },
+    });
+    expect(response.body).toBe('done');
+    expect(asked).toEqual([
+      'https://example.com/a',
+      'https://example.com/b',
+      'https://cdn.example.net/c',
+    ]);
+    expect(fetchMock.mock.calls.every(([, init]) => init?.redirect === 'manual')).toBe(true);
+  });
+
+  it('fails without retrying, and without calling the target, when the policy refuses a redirect', async () => {
+    const { client, fetchMock } = setup([go('http://127.0.0.1/x'), reply(200, 'internal')]);
+    await expect(
+      client.get('https://example.com/a', { allowUrl: (url) => url.startsWith('https://') }),
+    ).rejects.toBeInstanceOf(UrlRefusedError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses the first address when the policy says no, without any request', async () => {
+    const { client, fetchMock } = setup([reply(200, 'x')]);
+    await expect(client.get('https://example.com/a', { allowUrl: () => false })).rejects.toThrow(
+      /address policy/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('stops after three redirects', async () => {
+    const { client, fetchMock } = setup([go('/1'), go('/2'), go('/3'), go('/4'), reply(200, 'x')]);
+    await expect(
+      client.get('https://example.com/a', { allowUrl: () => true }),
+    ).rejects.toBeInstanceOf(UrlRefusedError);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it('does not treat a 304 as a redirect', async () => {
+    const { client } = setup([reply(304, '', { location: '/elsewhere' })]);
+    const response = await client.get('https://example.com/a', { allowUrl: () => true });
+    expect(response.status).toBe(304);
   });
 });
 

@@ -23,6 +23,15 @@ export interface CrestStore {
   warm(): Promise<{ downloaded: number; failed: string[] }>;
 }
 
+export function isEspnImageUrl(raw: string): boolean {
+  try {
+    const url = new URL(raw);
+    return url.protocol === 'https:' && url.hostname === 'a.espncdn.com';
+  } catch {
+    return false;
+  }
+}
+
 export const isPng = (bytes: Uint8Array) =>
   bytes.length > PNG_MAGIC.length &&
   bytes.length <= MAX_BYTES &&
@@ -57,8 +66,9 @@ export function createCrestStore(deps: {
   }
 
   async function download(abbr: string, logoUrl: string): Promise<Uint8Array> {
+    // Crests come from ESPN's image host and no other, whatever the team data says.
     const candidates = [resizedCrestUrl(logoUrl), logoUrl].filter(
-      (url, index, all) => all.indexOf(url) === index,
+      (url, index, all) => all.indexOf(url) === index && isEspnImageUrl(url),
     );
     let lastError: unknown;
     for (const url of candidates) {

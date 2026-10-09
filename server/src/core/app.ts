@@ -8,11 +8,14 @@ import { createLogger, type Logger } from './logger.js';
 import { CORE_MIGRATIONS } from './core-migrations.js';
 import { runMigrations } from './migrations.js';
 import type { AppModule, ModuleContext } from './modules.js';
+import type { Resolve } from './public-address.js';
 import { registerCoreRoutes } from './routes.js';
 import { registerSameOriginCheck } from './same-origin.js';
 import { registerSecurityHeaders } from './security-headers.js';
 import { createScheduler, type Scheduler } from './scheduler.js';
 import { registerWeb, sendSinglePage, wantsSinglePage } from './web.js';
+
+const stubResolve: Resolve = async () => ['93.184.216.34'];
 
 export interface BuildAppOptions {
   config: Config;
@@ -20,6 +23,8 @@ export interface BuildAppOptions {
   logger?: Logger;
   /** Injectable so tests never touch the network. */
   fetch?: typeof fetch;
+  /** Injectable for the same reason. With an injected `fetch` and no `resolve`, every name is public. */
+  resolve?: Resolve;
 }
 
 export interface App {
@@ -51,6 +56,7 @@ export async function buildApp(options: BuildAppOptions): Promise<App> {
     throw error;
   }
 
+  const resolve = options.resolve ?? (options.fetch ? stubResolve : undefined);
   const jobRuns = createJobRuns(db);
   const context: ModuleContext = {
     config,
@@ -64,6 +70,7 @@ export async function buildApp(options: BuildAppOptions): Promise<App> {
       hostIntervalsMs: { 'a.espncdn.com': 80 },
       ...(options.fetch && { fetch: options.fetch }),
     }),
+    ...(resolve && { resolve }),
   };
   const scheduler = createScheduler({ jobRuns, logger });
 

@@ -24,6 +24,35 @@ describe('decodeEntities', () => {
   });
 });
 
+describe('stripHtml with hostile input', () => {
+  // A feed author could send a description made of "<": the patterns that drop tags went
+  // quadratic on it and stalled the only thread (about 0.9 s for 32 KB).
+  it.each([
+    ['a run of <', '<'],
+    ['an unclosed <script', '<script'],
+    ['an unclosed <a', '<a '],
+  ])('is fast with five million characters of %s', (_name, unit) => {
+    const started = performance.now();
+    stripHtml(unit.repeat(Math.ceil(5_000_000 / unit.length)));
+    expect(performance.now() - started).toBeLessThan(50);
+  });
+
+  it('is fast through cleanSummary and cleanTitle too', () => {
+    const started = performance.now();
+    cleanSummary('<'.repeat(5_000_000));
+    cleanTitle('<'.repeat(5_000_000));
+    expect(performance.now() - started).toBeLessThan(100);
+  });
+
+  it('still gives the text of an ordinary long description', () => {
+    expect(stripHtml(`<p>${'word '.repeat(100)}</p>`.repeat(3)).startsWith('word word')).toBe(true);
+  });
+
+  it('keeps a lone < that is not a tag', () => {
+    expect(stripHtml('1 < 2 and <b>bold</b>')).toBe('1 < 2 and bold');
+  });
+});
+
 describe('stripHtml and cleanTitle', () => {
   it('keeps the text, drops tags, scripts and extra whitespace', () => {
     expect(stripHtml('<p>One</p>\n<p>two &amp; <b>three</b></p><script>alert(1)</script>')).toBe(
@@ -98,6 +127,9 @@ describe('isPublicHttpsUrl', () => {
     'https://192.168.1.1/x',
     'https://[::1]/x',
     'https://printer.local/x',
+    'https://localhost./x',
+    'https://router.lan./x',
+    'https://printer.local../x',
     'https://user:pass@a.example.com/x',
     'ftp://a.example.com/x',
     'nonsense',

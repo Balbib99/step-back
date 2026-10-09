@@ -6,6 +6,7 @@ import type { HttpClient } from './http.js';
 import type { JobRuns } from './job-runs.js';
 import type { Logger } from './logger.js';
 import type { Migration } from './migrations.js';
+import type { Resolve } from './public-address.js';
 import type { JobDefinition } from './scheduler.js';
 
 /** Everything a module may use. Modules receive it instead of reaching for globals. */
@@ -16,6 +17,8 @@ export interface ModuleContext {
   cache: KvCache;
   jobRuns: JobRuns;
   http: HttpClient;
+  /** Host name resolution, for the modules that fetch addresses written by third parties. */
+  resolve?: Resolve;
 }
 
 /**

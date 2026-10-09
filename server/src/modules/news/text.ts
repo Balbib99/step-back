@@ -30,13 +30,18 @@ export function decodeEntities(text: string): string {
   });
 }
 
+// A title or a summary of 280 characters never needs more than this much markup. Feeds are
+// written by third parties, and the patterns below get slow on very long runs of "<".
+const MAX_RAW_CHARS = 8_000;
+
 /** Text of an HTML fragment: tags dropped, entities decoded, whitespace collapsed. */
 export function stripHtml(html: string): string {
   return decodeEntities(
     html
+      .slice(0, MAX_RAW_CHARS)
       .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
       .replace(/<\/(p|div|li|h\d|br)>|<br\s*\/?>/gi, ' ')
-      .replace(/<[^>]*>/g, ' '),
+      .replace(/<[^<>]*>/g, ' '),
   )
     .replace(/\s+/g, ' ')
     .trim();
@@ -98,7 +103,8 @@ export function isPublicHttpsUrl(raw: string): boolean {
     return false;
   }
   if (url.protocol !== 'https:' || url.username || url.password) return false;
-  const host = url.hostname.toLowerCase();
+  // "localhost." and "router.lan." are the same names with the root dot written out.
+  const host = url.hostname.toLowerCase().replace(/\.+$/, '');
   if (isIP(host.replace(/^\[|\]$/g, '')) !== 0) return false;
   if (!host.includes('.')) return false; // "caddy", "localhost": names that only exist inside
   return !/\.(local|localhost|internal|lan|home|intranet)$/.test(host);
