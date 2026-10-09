@@ -1,5 +1,6 @@
 # Add this block to the Caddyfile that already runs on the Raspberry Pi.
-# Caddy and the step-back container must share a Docker network (see CADDY_NETWORK in compose.yaml).
+# Caddy and the step-back container must share a Docker network, and only the two of them (see
+# PROXY_NETWORK in compose.yaml and "Red privada" in docs/deploy.md).
 
 step-back.duckdns.org {
 	# The only protection the app has: nobody gets past this without the password.

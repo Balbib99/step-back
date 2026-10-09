@@ -4,7 +4,7 @@ Guía para instalar, actualizar, copiar, restaurar y vigilar step-back. Todos lo
 
 ## Qué se despliega
 
-Un solo contenedor, `step-back`, que hace de servidor (API y tareas programadas) y sirve la web ya compilada. No publica ningún puerto en la Pi: tu Caddy llega a él por una red de Docker compartida y es **Caddy quien pide la contraseña**. La app no tiene autenticación propia, así que nunca debe quedar accesible de otra forma.
+Un solo contenedor, `step-back`, que hace de servidor (API y tareas programadas) y sirve la web ya compilada. No publica ningún puerto en la Pi: tu Caddy llega a él por una red de Docker **que solo comparten los dos** y es **Caddy quien pide la contraseña**. La app no tiene autenticación propia, así que nunca debe quedar accesible de otra forma; por eso no está en la red `edge` que usan tus otras apps (ver «Red privada entre Caddy y step-back»).
 
 ```
 móvil ──HTTPS──▶ Caddy (step-back.duckdns.org, basic_auth) ──▶ step-back:3000 ──▶ volumen /data
@@ -27,7 +27,7 @@ Todo lo que debe sobrevivir a una actualización (base de datos, escudos, imáge
 ## Requisitos en la Pi
 
 - Docker con Compose v2.24 o superior (`docker compose version`). Lo pide la opción `env_file ... required: false`.
-- Tu Caddy en Docker, en una red de Docker que el contenedor de step-back también pueda usar. Por defecto el compose usa la red `edge` (`docker network ls` la lista); si cambia, arranca con `CADDY_NETWORK=nombre`.
+- Tu Caddy en Docker. step-back crea su propia red privada, `step-back-proxy` (otro nombre con `PROXY_NETWORK=nombre`), y Caddy se conecta a ella: pasos en «Red privada entre Caddy y step-back».
 - Los puertos 80 y 443 del router apuntando a la Pi, y `step-back.duckdns.org` apuntando a tu IP pública, para que Caddy consiga el certificado.
 
 ## Probarlo primero en un ordenador
@@ -52,10 +52,64 @@ docker compose -f deploy/compose.yaml logs -f step-back
 
 La primera construcción en la Pi tarda unos minutos. Después:
 
-1. Genera el hash de tu contraseña: `docker run --rm caddy:2 caddy hash-password`.
-2. Añade el bloque de `deploy/Caddyfile.example` a tu Caddyfile con ese hash.
-3. Recarga Caddy (`docker exec <tu-contenedor-caddy> caddy reload --config /etc/caddy/Caddyfile`).
-4. Programa la copia diaria (sección «Copias de seguridad»).
+1. Conecta Caddy a la red de step-back (sección «Red privada entre Caddy y step-back»).
+2. Genera el hash de tu contraseña: `docker run --rm caddy:2 caddy hash-password`.
+3. Añade el bloque de `deploy/Caddyfile.example` a tu Caddyfile con ese hash.
+4. Recarga Caddy (`docker exec <tu-contenedor-caddy> caddy reload --config /etc/caddy/Caddyfile`).
+5. Programa la copia diaria (sección «Copias de seguridad»).
+
+## Red privada entre Caddy y step-back
+
+step-back no tiene contraseña propia: la única puerta es Caddy. Si estuviera en una red de Docker compartida con otras apps (por ejemplo `edge`), cualquiera de esos contenedores podría llamar a `http://step-back:3000` directamente y saltarse la contraseña. Por eso step-back tiene una red propia, `step-back-proxy`, y en ella solo están **step-back y Caddy**. La crea el propio `compose.yaml` al arrancar.
+
+### Primera vez (instalación nueva)
+
+```bash
+docker compose -f deploy/compose.yaml up -d --build
+docker network connect step-back-proxy <tu-contenedor-caddy>
+```
+
+### Si step-back ya estaba funcionando en `edge` (migración)
+
+Hay unos segundos en que la web da error 502, entre el primer y el segundo comando.
+
+```bash
+git pull
+docker compose -f deploy/compose.yaml up -d --build
+docker network connect step-back-proxy <tu-contenedor-caddy>
+```
+
+Comprueba el resultado:
+
+```bash
+docker network inspect step-back-proxy --format '{{range .Containers}}{{.Name}} {{end}}'   # caddy y step-back, nada más
+docker network inspect edge --format '{{range .Containers}}{{.Name}} {{end}}'              # step-back ya no sale
+curl -s -u usuario https://step-back.duckdns.org/api/health                               # status: ok
+```
+
+No hace falta recargar Caddy: el Caddyfile no cambia, sigue apuntando a `step-back:3000`.
+
+### Que sobreviva a reinicios y actualizaciones de Caddy
+
+`docker network connect` se pierde cuando el contenedor de Caddy se **vuelve a crear** (al actualizar su imagen o al hacer `up` de su proyecto); un simple reinicio de la Pi o de Caddy no debería perderlo. Para dejarlo fijo, añade la red al compose donde vive Caddy (el proyecto `infra`):
+
+```yaml
+services:
+  caddy:
+    networks:
+      - edge # la que ya tenga
+      - step-back-proxy
+
+networks:
+  step-back-proxy:
+    external: true
+```
+
+Con `external: true`, ese compose necesita que la red exista: arranca step-back primero si montas todo desde cero. Mientras no hagas este cambio, si tras recrear Caddy la web da 502, repite el `docker network connect`.
+
+### Volver atrás
+
+`git checkout <commit-anterior> -- deploy/compose.yaml` y `docker compose -f deploy/compose.yaml up -d --build`: step-back vuelve a `edge`. Después puedes quitar Caddy de la red nueva (`docker network disconnect step-back-proxy <tu-contenedor-caddy>`).
 
 ## Comprobar que funciona
 
@@ -111,7 +165,7 @@ Las copias están en la misma tarjeta que la base de datos: protegen de un error
 deploy/restore.sh ~/step-back-backups/step-back-2026-10-08.db.gz
 ```
 
-Pregunta antes de hacer nada, para el contenedor, guarda la base de datos actual como `step-back.db.before-restore` dentro del volumen, escribe la copia y arranca de nuevo. Si algo falla a mitad, devuelve la base de datos anterior y no arranca la app sobre una base vacía.
+Pregunta antes de hacer nada. Primero descomprime la copia a un fichero temporal y comprueba que es una base de datos SQLite completa; si no lo es, se detiene sin tocar nada. Después para el contenedor, guarda la base de datos actual como `step-back.db.before-restore` dentro del volumen, escribe la copia (comprobando que llegaron todos los bytes) y arranca de nuevo. Si algo falla a mitad, devuelve la base de datos anterior y no arranca la app sobre una base vacía.
 
 Después comprueba `docker compose -f deploy/compose.yaml ps` (healthy) y abre Ajustes en la app: tus avisos y tu dispositivo deben seguir ahí.
 

@@ -3,8 +3,10 @@
 #   docker compose -f deploy/compose.yaml up -d --build
 #
 # The container publishes no port on the host: Caddy reaches it as http://step-back:3000 over a
-# Docker network both share (CADDY_NETWORK, "edge" by default). Caddy is also what asks for the
-# password, so the app must never be reachable any other way.
+# Docker network that only the two of them share (PROXY_NETWORK, "step-back-proxy" by default;
+# Caddy joins it, see docs/deploy.md). Caddy is also what asks for the password, so the app must
+# never be reachable any other way: it is deliberately NOT on the network that the rest of the
+# apps on the Pi use, or any of them could call it without the password.
 
 name: step-back
 
@@ -34,7 +36,7 @@ services:
     volumes:
       - data:/data
     networks:
-      - caddy
+      - proxy
     expose:
       - '3000'
 
@@ -58,6 +60,7 @@ volumes:
   data:
 
 networks:
-  caddy:
-    name: ${CADDY_NETWORK:-edge}
-    external: true
+  # Created by this file. It is a normal bridge, so the container can still reach ESPN and the
+  # other sources; what is private is who can reach the container.
+  proxy:
+    name: ${PROXY_NETWORK:-step-back-proxy}
