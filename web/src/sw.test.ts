@@ -545,6 +545,45 @@ describe('notifications', () => {
     }
   });
 
+  it.each([
+    '/\\evil.example/', // the parser turns the backslash into a slash: "//evil.example/"
+    '/\\\\evil.example/',
+    '\\\\evil.example/',
+    '/\t/evil.example/', // the parser drops tabs and line breaks
+    '/\n/evil.example/',
+    ' //evil.example/',
+    'https://step-back.duckdns.org.evil.example/',
+    'data:text/html,<script>alert(1)</script>',
+    'blob:https://evil.example/x',
+  ])('does not take %j for a page of the app', async (url) => {
+    const worker = load();
+    await worker.dispatch('push', pushOf({ title: 'x', url }));
+    expect(shown(worker)[1]).toMatchObject({ data: { url: '/' } });
+  });
+
+  it('keeps the path, the query and the fragment of a page of the app', async () => {
+    const worker = load();
+    await worker.dispatch(
+      'push',
+      pushOf({ title: 'x', url: '/noticias?equipo=MIN&tipo=videos#top' }),
+    );
+    expect(shown(worker)[1]).toMatchObject({
+      data: { url: '/noticias?equipo=MIN&tipo=videos#top' },
+    });
+  });
+
+  it('accepts the full address of the app itself, as a path', async () => {
+    const worker = load();
+    await worker.dispatch('push', pushOf({ title: 'x', url: `${ORIGIN}/partido/42?a=1` }));
+    expect(shown(worker)[1]).toMatchObject({ data: { url: '/partido/42?a=1' } });
+  });
+
+  it('checks the address again when the notification is tapped, whatever it stored', async () => {
+    const worker = load();
+    await click(worker, '/\\evil.example/');
+    expect(worker.self.clients.openWindow).toHaveBeenCalledWith('/');
+  });
+
   const click = (worker: ReturnType<typeof load>, url: string) =>
     worker.dispatch('notificationclick', { notification: { close: vi.fn(), data: { url } } });
 

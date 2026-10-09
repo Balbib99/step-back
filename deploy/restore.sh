@@ -42,14 +42,24 @@ as_root() {
   docker run --rm -i --user root --entrypoint sh -v "$VOLUME:/data" "$IMAGE" -c "$1"
 }
 
+# Decompress first, to a file, while nothing has been touched. In a pipeline, plain sh only reports
+# the last command: a gunzip that dies halfway would look like a success and skip the rollback below.
+TMP_DB="$(mktemp)"
+trap 'rm -f "$TMP_DB"' EXIT
+gunzip -c "$BACKUP" >"$TMP_DB" || { echo "could not decompress $BACKUP" >&2; exit 1; }
+[ -s "$TMP_DB" ] || { echo "$BACKUP holds an empty file" >&2; exit 1; }
+[ "$(head -c 15 "$TMP_DB")" = "SQLite format 3" ] || { echo "$BACKUP is not a SQLite database" >&2; exit 1; }
+SIZE="$(wc -c <"$TMP_DB" | tr -d ' ')"
+
 $COMPOSE stop step-back
 
 # From here on, whatever happens, the app must start again.
-trap '$COMPOSE start step-back' EXIT
+trap '$COMPOSE start step-back; rm -f "$TMP_DB"' EXIT
 
 as_root 'rm -f /data/step-back.db.before-restore /data/step-back.db-wal /data/step-back.db-shm
          [ ! -f /data/step-back.db ] || mv /data/step-back.db /data/step-back.db.before-restore'
-if ! gunzip -c "$BACKUP" | as_root 'cat > /data/step-back.db && [ -s /data/step-back.db ] && chown node:node /data/step-back.db'; then
+# The write counts only if every byte arrived.
+if ! as_root "cat > /data/step-back.db && [ \"\$(wc -c </data/step-back.db | tr -d ' ')\" = $SIZE ] && chown node:node /data/step-back.db" <"$TMP_DB"; then
   # Never start the app on a missing or half-written database: put the old one back.
   echo "the restore failed; putting the previous database back" >&2
   as_root '[ ! -f /data/step-back.db.before-restore ] || mv -f /data/step-back.db.before-restore /data/step-back.db'

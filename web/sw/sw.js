@@ -217,9 +217,20 @@ self.addEventListener('push', (event) => {
   );
 });
 
-/** Only a path of this app is opened, whatever the message says. */
+/**
+ * Only a page of this app is opened, whatever the message says. The address is read the way the
+ * browser will read it, and its origin compared: a text pattern misses what the parser rewrites
+ * ("/\evil.example/" becomes "//evil.example/", a different site).
+ */
 function safeTarget(url) {
-  return typeof url === 'string' && /^\/(?!\/)/.test(url) ? url : '/';
+  if (typeof url !== 'string') return '/';
+  try {
+    const parsed = new URL(url, self.location.origin);
+    if (parsed.origin !== self.location.origin) return '/';
+    return parsed.pathname + parsed.search + parsed.hash;
+  } catch {
+    return '/';
+  }
 }
 
 self.addEventListener('notificationclick', (event) => {
