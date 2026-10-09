@@ -76,7 +76,7 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 - [x] T29 Pruebas e2e, Lighthouse y revisión de rendimiento en la Pi
 - [x] T30 Documentación operativa
 
-### Checkpoint G: v1 completa
+### Checkpoint G: v1 completa (revisado con el usuario el 2026-10-09; 9 de 11 criterios cerrados, 2 pendientes del calendario)
 
 ## Parallelization
 
@@ -99,6 +99,8 @@ Backend Node/Fastify con SQLite que recoge datos de ESPN, RSS y YouTube, y una P
 | Rendimiento en la Pi | Bajo | Límite de memoria y refresco adaptativo. Medición en T29. |
 
 ## Open Questions
+
+- **Pendiente de la temporada regular (desde el 20 de octubre):** (1) medir el enlace vídeo↔partido (criterio 5, objetivo ≥ 90 % en 24 h); (2) en la copia local hay 1.200 de los 1.230 partidos de temporada regular: comprobar si faltan por ser de la Copa NBA sin equipos asignados.
 
 - `channel_id` de la NBA verificado en T20. Pendiente: medir el enlace vídeo↔partido en temporada regular (el canal no publica resúmenes en pretemporada).
 - Dirección visual: el usuario la decide en T6.
