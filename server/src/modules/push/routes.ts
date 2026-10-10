@@ -1,4 +1,5 @@
 import {
+  GAME_ID_PATTERN,
   pushSettingsSchema,
   pushSubscriptionSchema,
   pushTestSchema,
@@ -98,6 +99,28 @@ export function registerPushRoutes(
   });
 
   app.get('/push/settings', async () => ({ teams: repo.settings() }));
+
+  // The live score of single games, asked for from the game screen. A handful at a time is plenty.
+  const MAX_FOLLOWS = 30;
+  app.get('/push/follows', async () => ({ games: repo.follows() }));
+
+  app.put('/push/follows/:gameId', async (request, reply) => {
+    const { gameId } = request.params as { gameId: string };
+    if (!GAME_ID_PATTERN.test(gameId)) return invalid(reply, 'El partido no es válido.');
+    const current = repo.follows();
+    if (!current.includes(gameId) && current.length >= MAX_FOLLOWS) {
+      return invalid(reply, 'Hay demasiados partidos seguidos. Deja de seguir alguno.');
+    }
+    repo.follow(gameId);
+    return { following: true };
+  });
+
+  app.delete('/push/follows/:gameId', async (request, reply) => {
+    const { gameId } = request.params as { gameId: string };
+    if (!GAME_ID_PATTERN.test(gameId)) return invalid(reply, 'El partido no es válido.');
+    repo.unfollow(gameId);
+    return { following: false };
+  });
 
   // Teams left out keep what they had. Any NBA team can have game alerts; only favourites can have news.
   app.put('/push/settings', async (request, reply) => {

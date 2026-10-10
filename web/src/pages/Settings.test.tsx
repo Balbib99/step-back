@@ -244,6 +244,7 @@ describe('Ajustes: qué avisar', () => {
         end: true,
         reminderMinutes: 30,
         news: false,
+        live: true,
       }),
     );
     expect(api.pushSettings.find((t) => t.team === 'MIN')?.start).toBe(true);

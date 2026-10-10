@@ -178,8 +178,8 @@ describe('the dispatcher', () => {
 
   it('stops the alerts of a team when it is turned off in the settings', async () => {
     repo.saveSettings([
-      { team: 'MIN', start: false, end: false, reminderMinutes: 0, news: false },
-      { team: 'LAL', start: false, end: false, reminderMinutes: 0, news: false },
+      { team: 'MIN', start: false, end: false, reminderMinutes: 0, news: false, live: false },
+      { team: 'LAL', start: false, end: false, reminderMinutes: 0, news: false, live: false },
     ]);
     const { provider, sent } = fakeProvider();
     const dispatcher = dispatcherWith(provider);
@@ -201,7 +201,9 @@ describe('the dispatcher', () => {
   });
 
   it('tells the start and the end of a team that is not a favourite once it is asked', async () => {
-    repo.saveSettings([{ team: 'DEN', start: true, end: true, reminderMinutes: 0, news: false }]);
+    repo.saveSettings([
+      { team: 'DEN', start: true, end: true, reminderMinutes: 0, news: false, live: false },
+    ]);
     const { provider, sent } = fakeProvider();
     const dispatcher = dispatcherWith(provider);
 
@@ -216,6 +218,127 @@ describe('the dispatcher', () => {
     await dispatcher.run();
 
     expect(sent.map((s) => s.title)).toEqual(['¡Empieza! DEN @ GS', 'Final: DEN - – - GS']);
+  });
+
+  describe('live score', () => {
+    const playing = (away: number, home: number, period = 1, clockText = '9:30') =>
+      game(
+        {
+          status: 'live',
+          period,
+          clock: clockText,
+          away: { ...game().away, score: away },
+          home: { ...game().home, score: home },
+        },
+        'MIN',
+        'LAL',
+      );
+
+    /** A provider that keeps the whole payload, for what the notification carries. */
+    const recording = () => {
+      const payloads: Parameters<PushProvider['send']>[1][] = [];
+      const ttls: number[] = [];
+      const provider: PushProvider = {
+        send: async (_subscription, payload, ttl) => {
+          payloads.push(payload);
+          ttls.push(ttl);
+        },
+      };
+      return { provider, payloads, ttls };
+    };
+
+    beforeEach(() => {
+      clock = TIP_OFF + 10 * MINUTE;
+    });
+
+    it('is a silent notification of the same tag, updated with each change of the score', async () => {
+      const { provider, payloads } = recording();
+      const dispatcher = dispatcherWith(provider);
+
+      games = [playing(21, 18)];
+      await dispatcher.run();
+      await dispatcher.run(); // nothing changed: nothing is sent
+      games = [playing(23, 18)];
+      await dispatcher.run();
+
+      const live = payloads.filter((p) => p.tag === 'live:1001');
+      expect(live.map((p) => p.title)).toEqual(['MIN 21 – 18 LAL', 'MIN 23 – 18 LAL']);
+      expect(live.every((p) => p.silent === true)).toBe(true);
+      expect(live[0]!.body).toBe('En directo · Q1 9:30');
+      expect(live[0]!.url).toBe('/partido/1001');
+    });
+
+    it('does not keep a score that is old: a short time to live', async () => {
+      const { provider, ttls, payloads } = recording();
+      games = [playing(21, 18)];
+      await dispatcherWith(provider).run();
+      const index = payloads.findIndex((p) => p.tag === 'live:1001');
+      expect(ttls[index]).toBeLessThanOrEqual(120);
+    });
+
+    it('names the overtimes', async () => {
+      const { provider, payloads } = recording();
+      games = [playing(110, 110, 5, '2:10')];
+      await dispatcherWith(provider).run();
+      expect(payloads.find((p) => p.tag === 'live:1001')!.body).toBe('En directo · PR1 2:10');
+    });
+
+    it('is off for a team that has it off, until the game is followed', async () => {
+      repo.saveSettings([
+        { team: 'MIN', start: false, end: false, reminderMinutes: 0, news: false, live: false },
+        { team: 'LAL', start: false, end: false, reminderMinutes: 0, news: false, live: false },
+      ]);
+      const { provider, payloads } = recording();
+      const dispatcher = dispatcherWith(provider);
+      games = [playing(21, 18)];
+      await dispatcher.run();
+      expect(payloads).toEqual([]);
+
+      repo.follow('1001');
+      await dispatcher.run();
+      expect(payloads.map((p) => p.title)).toEqual(['MIN 21 – 18 LAL']);
+    });
+
+    it('works for a team that is not a favourite when its game is followed', async () => {
+      repo.follow('1001');
+      const { provider, payloads } = recording();
+      games = [
+        game(
+          {
+            status: 'live',
+            period: 3,
+            clock: '4:12',
+            away: { ...game().away, abbr: 'DEN', score: 70 },
+            home: { ...game().home, abbr: 'GS', score: 66 },
+          },
+          'DEN',
+          'GS',
+        ),
+      ];
+      await dispatcherWith(provider).run();
+      expect(payloads.map((p) => p.title)).toEqual(['DEN 70 – 66 GS']);
+    });
+
+    it('is replaced by the result: the final notification takes the older ones off the screen', async () => {
+      const { provider, payloads } = recording();
+      const dispatcher = dispatcherWith(provider);
+      games = [playing(98, 96, 4, '0:00')];
+      await dispatcher.run();
+      clock = TIP_OFF + 3 * 60 * MINUTE;
+      games = [
+        game({
+          status: 'final',
+          away: { ...game().away, score: 99, winner: true },
+          home: { ...game().home, score: 96, winner: false },
+        }),
+      ];
+      await dispatcher.run();
+      const end = payloads.find((p) => p.tag === 'end:1001')!;
+      expect(end.closes).toEqual(
+        expect.arrayContaining(['live:1001', 'start:1001', 'reminder:1001']),
+      );
+      expect(end.silent).toBeUndefined(); // the result does make a sound
+    });
   });
 
   describe('featured news', () => {
@@ -238,7 +361,9 @@ describe('the dispatcher', () => {
       ...extra,
     });
     const newsOn = () =>
-      repo.saveSettings([{ team: 'MIN', start: true, end: true, reminderMinutes: 0, news: true }]);
+      repo.saveSettings([
+        { team: 'MIN', start: true, end: true, reminderMinutes: 0, news: true, live: false },
+      ]);
 
     beforeEach(() => {
       games = [];

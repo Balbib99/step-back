@@ -109,15 +109,18 @@ describe('push routes', () => {
       end: true,
       reminderMinutes: 30,
       news: false,
+      live: true, // a favourite has the live score from the start
     });
     // The rest start with nothing on, until the owner asks.
-    expect(first.teams.slice(3).every((t) => !t.start && !t.end && !t.news)).toBe(true);
+    expect(first.teams.slice(3).every((t) => !t.start && !t.end && !t.news && !t.live)).toBe(true);
 
     const updated = await server.inject({
       method: 'PUT',
       url: '/api/push/settings',
       payload: {
-        teams: [{ team: 'LAL', start: false, end: true, reminderMinutes: 0, news: true }],
+        teams: [
+          { team: 'LAL', start: false, end: true, reminderMinutes: 0, news: true, live: false },
+        ],
       },
     });
     expect(updated.statusCode).toBe(200);
@@ -129,8 +132,58 @@ describe('push routes', () => {
       end: true,
       reminderMinutes: 0,
       news: true,
+      live: false,
     });
     expect(after.teams.find((t) => t.team === 'MIN')?.start).toBe(true); // untouched
+    expect(after.teams.find((t) => t.team === 'MIN')?.live).toBe(true);
+  });
+
+  it('gives the favourites saved before the live score existed the default, which is on', async () => {
+    const { server, db } = await build();
+    // A row as the app wrote it before: no value for `live`.
+    db.prepare(
+      `INSERT INTO push_settings (team, start, "end", reminder_minutes, news) VALUES ('LAL', 1, 0, 15, 0)`,
+    ).run();
+    const settings = pushSettingsSchema.parse((await server.inject('/api/push/settings')).json());
+    expect(settings.teams.find((t) => t.team === 'LAL')).toMatchObject({ start: true, live: true });
+    expect(settings.teams.find((t) => t.team === 'BOS')?.live).toBe(false);
+  });
+
+  describe('following a game', () => {
+    const put = (server: App['server'], id: string) =>
+      server.inject({ method: 'PUT', url: `/api/push/follows/${id}` });
+
+    it('keeps the games followed, once each, and forgets one that is unfollowed', async () => {
+      const { server } = await build();
+      expect((await put(server, '401898390')).json()).toEqual({ following: true });
+      await put(server, '401898390');
+      await put(server, '401898391');
+      const list = (await server.inject('/api/push/follows')).json();
+      expect(list).toEqual({ games: ['401898390', '401898391'] });
+
+      const removed = await server.inject({ method: 'DELETE', url: '/api/push/follows/401898390' });
+      expect(removed.json()).toEqual({ following: false });
+      expect((await server.inject('/api/push/follows')).json()).toEqual({ games: ['401898391'] });
+    });
+
+    it('refuses an id that is not a game id', async () => {
+      const { server } = await build();
+      for (const id of ['a%20b', 'x'.repeat(41), '..%2F..']) {
+        expect((await put(server, id)).statusCode).toBe(400);
+      }
+    });
+
+    it('stops at thirty games, so the table cannot grow without limit', async () => {
+      const { server } = await build();
+      for (let n = 0; n < 30; n++) await put(server, `g${n}`);
+      expect((await put(server, 'g30')).statusCode).toBe(400);
+      expect((await put(server, 'g0')).statusCode).toBe(200); // one already followed is fine
+    });
+
+    it('is off, like everything of push, when the server has no keys', async () => {
+      const { server } = await build({ push: false });
+      expect((await put(server, '1')).statusCode).toBe(503);
+    });
   });
 
   it('lets any NBA team have game alerts', async () => {
@@ -139,7 +192,9 @@ describe('push routes', () => {
       method: 'PUT',
       url: '/api/push/settings',
       payload: {
-        teams: [{ team: 'BOS', start: true, end: true, reminderMinutes: 0, news: false }],
+        teams: [
+          { team: 'BOS', start: true, end: true, reminderMinutes: 0, news: false, live: false },
+        ],
       },
     });
     expect(saved.statusCode).toBe(200);
@@ -151,7 +206,7 @@ describe('push routes', () => {
     const { server } = await build();
     const put = (teams: unknown[]) =>
       server.inject({ method: 'PUT', url: '/api/push/settings', payload: { teams } });
-    const ok = { start: true, end: true, reminderMinutes: 30, news: false };
+    const ok = { start: true, end: true, reminderMinutes: 30, news: false, live: false };
 
     expect((await put([{ team: 'XXX', ...ok }])).statusCode).toBe(400);
     expect((await put([{ team: 'BOS', ...ok, news: true }])).statusCode).toBe(400);
@@ -273,7 +328,11 @@ describe('featured news through the job', () => {
     await server.inject({
       method: 'PUT',
       url: '/api/push/settings',
-      payload: { teams: [{ team: 'MIN', start: true, end: true, reminderMinutes: 0, news: true }] },
+      payload: {
+        teams: [
+          { team: 'MIN', start: true, end: true, reminderMinutes: 0, news: true, live: false },
+        ],
+      },
     });
 
     const now = Date.now();

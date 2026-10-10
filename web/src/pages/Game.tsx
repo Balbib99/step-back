@@ -10,7 +10,16 @@ import { ApiError } from '../lib/api';
 import { dayLabel, localDay } from '../lib/dates';
 import { DEFAULT_TIME_ZONE, formatClock } from '../lib/format';
 import { phaseLabel } from '../lib/game-text';
-import { useConfig, useGameHighlights, useNews, useTeams } from '../lib/queries';
+import { pushPermission } from '../lib/push';
+import {
+  useConfig,
+  useFollowGame,
+  useGameHighlights,
+  useNews,
+  usePushFollows,
+  usePushSettings,
+  useTeams,
+} from '../lib/queries';
 import { useTranslationAvailability } from '../lib/translation';
 
 const SECTION_TITLE = 'voice-name mt-7 mb-2.5 text-xl';
@@ -60,6 +69,70 @@ function LineScore({ game }: { game: GameType }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+/**
+ * The live score as one notification that updates in place. A game of a team that has it on gets
+ * it by itself; any other one is followed with a button, for as long as the game lasts.
+ */
+function FollowScore({ game }: { game: GameType }) {
+  const config = useConfig();
+  const pushOn = config.data?.features.push === true;
+  const settings = usePushSettings(pushOn);
+  const follows = usePushFollows(pushOn);
+  const follow = useFollowGame();
+  const open = game.status === 'scheduled' || game.status === 'live';
+  if (!pushOn || !open) return null;
+
+  const automatic = (settings.data?.teams ?? []).some(
+    (t) => t.live && (t.team === game.home.abbr || t.team === game.away.abbr),
+  );
+  const following = (follows.data?.games ?? []).includes(game.id);
+  const permission = pushPermission();
+
+  return (
+    <section aria-label="Marcador en el móvil" className="mt-3 rounded-card bg-surface p-4">
+      {automatic ? (
+        <p className="text-sm text-text-2">
+          El marcador en directo te llegará solo al móvil, en una notificación que se va
+          actualizando, porque es un partido de uno de tus equipos.{' '}
+          <Link to="/ajustes" className="text-text underline">
+            Cambiarlo en Ajustes
+          </Link>
+        </p>
+      ) : (
+        <div className="grid gap-2.5">
+          <button
+            type="button"
+            aria-pressed={following}
+            onClick={() => follow.mutate({ gameId: game.id, follow: !following })}
+            className="inline-flex min-h-11 w-fit cursor-pointer items-center rounded-full border border-line bg-transparent px-4 text-sm font-semibold text-text"
+          >
+            {following ? 'Dejar de seguir el marcador' : 'Seguir el marcador en el móvil'}
+          </button>
+          <p className="text-[13px] text-text-2">
+            {following
+              ? 'Mientras dure el partido, el marcador llegará en una notificación que se va actualizando.'
+              : 'Recibirás el marcador en una única notificación que se actualiza con cada cambio, sin sonido.'}
+          </p>
+          {permission !== 'granted' && (
+            <p className="text-[13px] text-text-2">
+              Para recibirlo, activa antes las notificaciones de este dispositivo en{' '}
+              <Link to="/ajustes" className="text-text underline">
+                Ajustes
+              </Link>
+              .
+            </p>
+          )}
+        </div>
+      )}
+      {follow.isError && (
+        <p role="alert" className="mt-2 text-[13px] text-text-2">
+          No se pudo guardar el cambio. Inténtalo de nuevo.
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -149,6 +222,7 @@ export function Game() {
       <div className="mt-4">
         <GameCard game={match} teams={teamsByAbbr} timeZone={timeZone} linked={false} />
       </div>
+      <FollowScore game={match} />
       <LineScore game={match} />
       <Boxscore game={match} favorites={favorites} />
 

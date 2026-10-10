@@ -24,6 +24,8 @@ export const teamPushSettingsSchema = z.object({
   reminderMinutes: z.union([z.literal(0), z.literal(15), z.literal(30), z.literal(60)]),
   /** Tell me about a featured news item of this team. Only favourite teams can have it on. */
   news: z.boolean(),
+  /** Keep the live score of its games in one notification that updates in place. */
+  live: z.boolean(),
 });
 
 /** One entry per NBA team, the favourites first. */
@@ -32,9 +34,17 @@ export const pushSettingsSchema = z.object({ teams: z.array(teamPushSettingsSche
 export type PushSubscriptionInput = z.infer<typeof pushSubscriptionSchema>;
 export type TeamPushSettings = z.infer<typeof teamPushSettingsSchema>;
 export type PushSettings = z.infer<typeof pushSettingsSchema>;
+export type PushFollows = z.infer<typeof pushFollowsSchema>;
 
 /** What subscribing and unsubscribing answer. */
 export const pushAckSchema = z.object({ subscribed: z.boolean() });
+
+/** Games followed one by one (the live score), whichever teams play them. */
+export const pushFollowsSchema = z.object({ games: z.array(z.string()) });
+export const pushFollowAckSchema = z.object({ following: z.boolean() });
+
+/** What a game id looks like, to keep anything else out of the table. */
+export const GAME_ID_PATTERN = /^[A-Za-z0-9_-]{1,40}$/;
 
 /** The browser to send the test notification to. */
 export const pushTestSchema = z.object({ endpoint: z.string().url().max(2048) });

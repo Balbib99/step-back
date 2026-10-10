@@ -11,6 +11,7 @@ const settings = (team: string, extra: Partial<TeamPushSettings> = {}): TeamPush
   end: true,
   reminderMinutes: 30,
   news: false,
+  live: false,
   ...extra,
 });
 
@@ -77,6 +78,70 @@ describe('detectEvents', () => {
       expect(detectEvents([final], [settings('MIN', { end: false })], TIP_OFF + 3 * HOUR)).toEqual(
         [],
       );
+    });
+  });
+
+  describe('live score', () => {
+    const playing = (away: number | null, home: number | null, period: number | null = 1) =>
+      game({
+        status: 'live',
+        period,
+        away: side('MIN', away),
+        home: side('LAL', home),
+      });
+    const liveOn = [settings('MIN', { start: false, end: false, live: true })];
+
+    it('is due while a game of a team with it on is live', () => {
+      const events = detectEvents([playing(21, 18)], liveOn, TIP_OFF + 10 * MINUTE);
+      expect(events).toMatchObject([{ kind: 'live', key: 'live:1001:21-18:1' }]);
+    });
+
+    it('is a new event with every change of the score or of the period, and the same one otherwise', () => {
+      const key = (g: ReturnType<typeof playing>) =>
+        detectEvents([g], liveOn, TIP_OFF + 10 * MINUTE)[0]!.key;
+      expect(key(playing(21, 18))).toBe(key(playing(21, 18)));
+      expect(key(playing(23, 18))).not.toBe(key(playing(21, 18)));
+      expect(key(playing(21, 18, 2))).not.toBe(key(playing(21, 18, 1)));
+    });
+
+    it('goes with the start of the game, which is its own event', () => {
+      const s = [settings('MIN', { live: true })];
+      expect(kinds(detectEvents([playing(0, 0)], s, TIP_OFF + MINUTE))).toEqual([
+        'start:1001',
+        'live:1001:0-0:1',
+      ]);
+    });
+
+    it('is off with the team setting off, and for a game nobody followed', () => {
+      const off = [settings('MIN', { live: false })];
+      const events = detectEvents([playing(21, 18)], off, TIP_OFF + 10 * MINUTE);
+      expect(events.filter((e) => e.kind === 'live')).toEqual([]);
+    });
+
+    it('is on for a game followed one by one, whatever its teams ask', () => {
+      const other = game({
+        status: 'live',
+        period: 2,
+        away: side('DEN', 40),
+        home: side('GS', 38),
+      });
+      const none = [settings('DEN', { start: false, end: false, live: false })];
+      const events = detectEvents([other], none, TIP_OFF + 30 * MINUTE, new Set(['1001']));
+      expect(kinds(events)).toEqual(['live:1001:40-38:2']);
+    });
+
+    it('is never for a game that has not started, is over, or has no score yet', () => {
+      const at = TIP_OFF + 10 * MINUTE;
+      const live = (events: ReturnType<typeof detectEvents>) =>
+        events.filter((e) => e.kind === 'live');
+      expect(live(detectEvents([game()], liveOn, TIP_OFF - 5 * MINUTE))).toEqual([]);
+      const final = game({ status: 'final', away: side('MIN', 99), home: side('LAL', 98) });
+      expect(live(detectEvents([final], liveOn, TIP_OFF + 3 * HOUR))).toEqual([]);
+      expect(live(detectEvents([playing(null, null)], liveOn, at))).toEqual([]);
+    });
+
+    it('is dropped for a game whose status has been stuck on live for hours', () => {
+      expect(detectEvents([playing(50, 48)], liveOn, TIP_OFF + 7 * HOUR)).toEqual([]);
     });
   });
 

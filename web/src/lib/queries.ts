@@ -6,13 +6,15 @@ import {
   healthResponseSchema,
   highlightsResponseSchema,
   newsResponseSchema,
+  pushFollowAckSchema,
+  pushFollowsSchema,
   pushSettingsSchema,
   standingsResponseSchema,
   teamsResponseSchema,
   translationResponseSchema,
   translationStatusSchema,
 } from '@step-back/shared';
-import type { PushSettings, TeamPushSettings } from '@step-back/shared';
+import type { PushFollows, PushSettings, TeamPushSettings } from '@step-back/shared';
 import {
   QueryClient,
   useInfiniteQuery,
@@ -189,6 +191,45 @@ export function useSavePushSettings() {
       if (context?.before) client.setQueryData(PUSH_SETTINGS_KEY, context.before);
     },
     onSuccess: (saved) => client.setQueryData(PUSH_SETTINGS_KEY, saved),
+  });
+}
+
+const PUSH_FOLLOWS_KEY = ['push-follows'];
+
+/** The games whose live score is followed one by one. Only asked when the server has push on. */
+export function usePushFollows(enabled: boolean) {
+  return useQuery({
+    queryKey: PUSH_FOLLOWS_KEY,
+    queryFn: ({ signal }) => fetchJson('/api/push/follows', pushFollowsSchema, signal),
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+/** Follows or unfollows the live score of a game. The screen shows it at once and goes back if it fails. */
+export function useFollowGame() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ gameId, follow }: { gameId: string; follow: boolean }) =>
+      sendJson(
+        follow ? 'PUT' : 'DELETE',
+        `/api/push/follows/${encodeURIComponent(gameId)}`,
+        {},
+        pushFollowAckSchema,
+      ),
+    onMutate: async ({ gameId, follow }) => {
+      await client.cancelQueries({ queryKey: PUSH_FOLLOWS_KEY });
+      const before = client.getQueryData<PushFollows>(PUSH_FOLLOWS_KEY);
+      const others = (before?.games ?? []).filter((id) => id !== gameId);
+      client.setQueryData<PushFollows>(PUSH_FOLLOWS_KEY, {
+        games: follow ? [...others, gameId] : others,
+      });
+      return { before };
+    },
+    onError: (_error, _vars, context) => {
+      if (context?.before) client.setQueryData(PUSH_FOLLOWS_KEY, context.before);
+    },
+    onSettled: () => client.invalidateQueries({ queryKey: PUSH_FOLLOWS_KEY }),
   });
 }
 

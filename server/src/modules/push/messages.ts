@@ -7,6 +7,19 @@ export interface PushPayload {
   url: string;
   /** A newer notification with the same tag replaces the older one. */
   tag: string;
+  /** No sound or vibration: for updates that are not news by themselves (the live score). */
+  silent?: boolean;
+  /** Tags of notifications this one makes obsolete: they are taken off the screen. */
+  closes?: string[];
+}
+
+/** The tag of the notification that holds the live score of a game, updated in place. */
+export const liveTag = (gameId: string) => `live:${gameId}`;
+
+/** Q1 to Q4, then PR1, PR2... for the overtimes. */
+function periodLabel(period: number | null): string {
+  if (period === null || period < 1) return 'En juego';
+  return period <= 4 ? `Q${period}` : `PR${period - 4}`;
 }
 
 function clock(startUtc: string, timeZone: string): string {
@@ -36,6 +49,16 @@ export function messageFor(event: PushEvent, timeZone: string): PushPayload {
       };
     case 'start':
       return { title: `¡Empieza! ${away.abbr} @ ${home.abbr}`, body: matchup, url, tag };
+    case 'live': {
+      const part = periodLabel(game.period);
+      return {
+        title: `${away.abbr} ${away.score ?? '-'} – ${home.score ?? '-'} ${home.abbr}`,
+        body: `En directo · ${game.clock ? `${part} ${game.clock}` : part}`,
+        url,
+        tag: liveTag(game.id),
+        silent: true,
+      };
+    }
     case 'end': {
       const winner = [home, away].find((side) => side.winner === true);
       return {
@@ -43,6 +66,8 @@ export function messageFor(event: PushEvent, timeZone: string): PushPayload {
         body: winner ? `Gana ${winner.name}.` : matchup,
         url,
         tag,
+        // The result replaces everything said about this game before.
+        closes: [liveTag(game.id), `start:${game.id}`, `reminder:${game.id}`],
       };
     }
   }

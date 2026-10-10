@@ -20,6 +20,8 @@ const TTL_SECONDS: Record<PushKind | 'news', number> = {
   start: 30 * 60,
   end: 6 * 60 * 60,
   news: 2 * 60 * 60,
+  // An old score is worse than none: a phone that was off does not get the ones it missed.
+  live: 2 * 60,
 };
 
 /** Sends one notification to one browser. Rejects with an error carrying `statusCode` when the service refuses. */
@@ -41,7 +43,13 @@ export function createWebPushProvider(vapid: {
           keys: { p256dh: subscription.p256dh, auth: subscription.auth },
         },
         JSON.stringify(payload),
-        { vapidDetails: vapid, TTL: ttlSeconds, urgency: 'high', timeout: 15_000 },
+        {
+          vapidDetails: vapid,
+          TTL: ttlSeconds,
+          // A silent update is not worth waking the phone up for as quickly as a goal.
+          urgency: payload.silent ? 'normal' : 'high',
+          timeout: 15_000,
+        },
       );
     },
   };
@@ -130,7 +138,7 @@ export function createDispatcher(deps: {
         new Date(at - END_NEWS_FOR_MS).toISOString(),
         new Date(at + MAX_REMINDER_MS + 1).toISOString(),
       );
-      for (const event of detectEvents(games, settings, at)) {
+      for (const event of detectEvents(games, settings, at, new Set(repo.follows()))) {
         await deliver(event.key, messageFor(event, deps.timeZone), TTL_SECONDS[event.kind], result);
       }
 

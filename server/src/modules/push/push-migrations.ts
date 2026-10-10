@@ -41,4 +41,21 @@ CREATE TABLE push_log (
 ALTER TABLE push_settings ADD COLUMN news INTEGER NOT NULL DEFAULT 0 CHECK (news IN (0, 1));
 `,
   },
+  {
+    id: 9,
+    name: 'push-live',
+    sql: `
+-- Live score as one notification that updates in place. NULL means "not chosen yet": a favourite
+-- team has it on, any other team off. It is a column that can be empty on purpose, so that the
+-- favourites saved before this existed also get the default.
+ALTER TABLE push_settings ADD COLUMN live INTEGER CHECK (live IS NULL OR live IN (0, 1));
+
+-- Games the owner asked to follow from the game screen, whatever teams play them. They are
+-- forgotten a day after they were asked for.
+CREATE TABLE push_follows (
+  game_id    TEXT    PRIMARY KEY,
+  created_at INTEGER NOT NULL
+);
+`,
+  },
 ];

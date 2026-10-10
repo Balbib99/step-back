@@ -1,6 +1,6 @@
 import type { Game, NewsItem, TeamPushSettings } from '@step-back/shared';
 
-export type PushKind = 'reminder' | 'start' | 'end';
+export type PushKind = 'reminder' | 'start' | 'end' | 'live';
 
 export interface PushEvent {
   /** Unique per game and kind: what makes a notification go out once. */
@@ -20,6 +20,8 @@ const HOUR = 60 * MINUTE;
  */
 export const START_NEWS_FOR_MS = HOUR;
 export const END_NEWS_FOR_MS = 8 * HOUR;
+/** A game still "live" after this long has a stuck status: its score is not worth showing. */
+export const LIVE_FOR_MS = 6 * HOUR;
 /** Reminders reach at most this far ahead (the largest option). */
 export const MAX_REMINDER_MS = 60 * MINUTE;
 
@@ -27,11 +29,16 @@ export const MAX_REMINDER_MS = 60 * MINUTE;
  * Which notifications are due right now. It looks only at the state of the games and the
  * settings, never at what was seen before: whether one was already sent is up to the event log.
  * A game between two teams with alerts on is one event, not two.
+ *
+ * The live score is the one event that repeats within a game: its key holds the score and the
+ * period, so every change is a new event and the same state is sent once. `followed` are the
+ * games asked for one by one, whichever teams play them.
  */
 export function detectEvents(
   games: readonly Game[],
   settings: readonly TeamPushSettings[],
   now: number,
+  followed: ReadonlySet<string> = new Set(),
 ): PushEvent[] {
   const events: PushEvent[] = [];
   for (const game of games) {
@@ -53,6 +60,23 @@ export function detectEvents(
       events.push({ key: `start:${game.id}`, kind: 'start', game, reminderMinutes });
     } else if (game.status === 'final' && wantsEnd && sinceStart < END_NEWS_FOR_MS) {
       events.push({ key: `end:${game.id}`, kind: 'end', game, reminderMinutes });
+    }
+
+    const wantsLive = teams.some((s) => s.live) || followed.has(game.id);
+    const { home: homeSide, away: awaySide } = game;
+    if (
+      game.status === 'live' &&
+      wantsLive &&
+      sinceStart < LIVE_FOR_MS &&
+      homeSide.score !== null &&
+      awaySide.score !== null
+    ) {
+      events.push({
+        key: `live:${game.id}:${awaySide.score}-${homeSide.score}:${game.period ?? 0}`,
+        kind: 'live',
+        game,
+        reminderMinutes,
+      });
     }
   }
   return events;

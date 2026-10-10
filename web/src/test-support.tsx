@@ -215,7 +215,7 @@ export const PUSH_CONFIG = {
     'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
 };
 
-const OFF = { start: false, end: false, reminderMinutes: 0, news: false } as const;
+const OFF = { start: false, end: false, reminderMinutes: 0, news: false, live: false } as const;
 
 /** The three favourites with their alerts on, then two other teams with none. */
 export const PUSH_DEFAULTS: TeamPushSettings[] = [
@@ -225,6 +225,7 @@ export const PUSH_DEFAULTS: TeamPushSettings[] = [
     end: true,
     reminderMinutes: 30 as const,
     news: false,
+    live: true,
   })),
   { team: 'BOS', ...OFF },
   { team: 'DEN', ...OFF },
@@ -429,6 +430,9 @@ export const api = {
   pushSaveStatus: 200,
   /** Status to answer the test notification with. */
   pushTestStatus: 200,
+  /** The games whose live score is followed, and the status to answer a change with. */
+  pushFollows: [] as string[],
+  pushFollowStatus: 200,
   /** Bodies of the subscribe and unsubscribe requests, as `METHOD {json}`. */
   pushSubscriptions: [] as string[],
 };
@@ -457,6 +461,8 @@ export function stubApi() {
   api.pushSettings = PUSH_DEFAULTS.map((team) => ({ ...team }));
   api.pushSaveStatus = 200;
   api.pushTestStatus = 200;
+  api.pushFollows = [];
+  api.pushFollowStatus = 200;
   api.pushSubscriptions = [];
   vi.stubGlobal(
     'fetch',
@@ -477,6 +483,15 @@ export function stubApi() {
         }
         return json({ teams: api.pushSettings });
       }
+      const following = /\/api\/push\/follows\/([^/?]+)/.exec(url);
+      if (following) {
+        const id = decodeURIComponent(following[1]!);
+        if (api.pushFollowStatus !== 200) return json({ error: 'boom' }, api.pushFollowStatus);
+        api.pushFollows = api.pushFollows.filter((g) => g !== id);
+        if (init?.method === 'PUT') api.pushFollows.push(id);
+        return json({ following: init?.method === 'PUT' });
+      }
+      if (url.includes('/api/push/follows')) return json({ games: api.pushFollows });
       if (url.includes('/api/push/test')) {
         api.pushSubscriptions.push(`${init?.method} ${String(init?.body)}`);
         if (api.pushTestStatus !== 200) {

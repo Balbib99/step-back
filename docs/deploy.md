@@ -186,6 +186,12 @@ docker run --rm node:22-slim node -e "const c=require('crypto');const e=c.create
 5. Pulsa **Enviar notificación de prueba**: debe llegar en unos segundos. Si no llega, mira `docker compose -f deploy/compose.yaml logs step-back`.
 6. **No cambies las claves después**: las suscripciones ya hechas dejan de recibir y hay que volver a activar las notificaciones en cada dispositivo.
 
+### Marcador en vivo
+
+Mientras juega uno de tus equipos favoritos, el móvil muestra una **única notificación, sin sonido, que se actualiza sola** con cada cambio del marcador o del cuarto, y que el resultado final sustituye. Se activa por equipo en Ajustes (**Marcador en vivo**, activado por defecto para los favoritos). Para cualquier otro partido, entra en su pantalla y pulsa **Seguir el marcador en el móvil**.
+
+Cosas que conviene saber: no es una burbuja flotante (eso necesita una app nativa), no tiene reloj en marcha, y como cualquier notificación de una web se puede descartar deslizándola; vuelve con la siguiente actualización. Cada actualización tarda hasta unos 30 s en llegar.
+
 La Pi necesita salir a internet por HTTPS hacia los servicios push de Google y Mozilla; nada entra desde fuera. Las suscripciones y los ajustes viven en la base de datos, así que forman parte de la copia de seguridad.
 
 ## Cuando una fuente falla

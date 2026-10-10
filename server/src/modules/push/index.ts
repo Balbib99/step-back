@@ -13,6 +13,8 @@ const DAY = 24 * 60 * 60_000;
 const DISPATCH_EVERY_MS = 30_000;
 /** An event is only repeated within hours, so a month of log is far more than needed. */
 const LOG_KEPT_MS = 30 * DAY;
+/** A game followed one by one is over well within a day. */
+const FOLLOW_KEPT_MS = 36 * 60 * 60_000;
 
 export const PUSH_JOB_ID = 'push:dispatch';
 
@@ -72,6 +74,7 @@ export function createPushModule(
           run: async () => {
             await dispatcher.run();
             repo.purgeLog(Date.now() - LOG_KEPT_MS);
+            repo.purgeFollows(Date.now() - FOLLOW_KEPT_MS);
           },
         },
       ];

@@ -193,9 +193,11 @@ self.addEventListener('fetch', (event) => {
   if (answer) event.respondWith(answer);
 });
 
-// Notifications (module push). The server sends { title, body, url, tag }; every push must show
-// something (the browser withdraws the permission from a worker that stays silent), so a message
-// that cannot be read still shows a generic one.
+// Notifications (module push). The server sends { title, body, url, tag, silent?, closes? }; every
+// push must show something (the browser withdraws the permission from a worker that stays silent),
+// so a message that cannot be read still shows a generic one.
+//   silent: no sound or vibration (the live score, which is an update, not news).
+//   closes: tags of older notifications this one replaces (the result replaces the live score).
 self.addEventListener('push', (event) => {
   let message = {};
   try {
@@ -204,16 +206,31 @@ self.addEventListener('push', (event) => {
     // Not JSON: the generic notification below.
   }
   const title = typeof message.title === 'string' && message.title ? message.title : 'step-back';
+  const closes = Array.isArray(message.closes)
+    ? message.closes.filter((tag) => typeof tag === 'string')
+    : [];
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body: typeof message.body === 'string' ? message.body : '',
-      // A newer notification about the same event replaces the old one instead of piling up.
-      tag: typeof message.tag === 'string' ? message.tag : undefined,
-      icon: '/icons/icon-192.png',
-      // The small icon in the status bar: Android paints it from the transparency alone.
-      badge: '/icons/badge-96.png',
-      data: { url: safeTarget(message.url) },
-    }),
+    (async () => {
+      await self.registration.showNotification(title, {
+        body: typeof message.body === 'string' ? message.body : '',
+        // A newer notification about the same event replaces the old one instead of piling up.
+        tag: typeof message.tag === 'string' ? message.tag : undefined,
+        icon: '/icons/icon-192.png',
+        // The small icon in the status bar: Android paints it from the transparency alone.
+        badge: '/icons/badge-96.png',
+        ...(message.silent === true && { silent: true }),
+        data: { url: safeTarget(message.url) },
+      });
+      // Taken off after the new one is up, so there is never a moment with nothing on screen.
+      if (typeof self.registration.getNotifications !== 'function') return;
+      for (const tag of closes) {
+        try {
+          for (const old of await self.registration.getNotifications({ tag })) old.close();
+        } catch {
+          // A notification that cannot be closed is only left there.
+        }
+      }
+    })(),
   );
 });
 

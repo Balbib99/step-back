@@ -20,6 +20,13 @@ export interface PushRepo {
   /** One entry per NBA team, the favourites first; a team never saved uses the defaults. */
   settings(): TeamPushSettings[];
   saveSettings(settings: TeamPushSettings[]): void;
+  /** Ids of the games followed one by one. */
+  follows(): string[];
+  follow(gameId: string): void;
+  /** True when it was followed. */
+  unfollow(gameId: string): boolean;
+  /** Forgets follows asked for before `before` (epoch ms). */
+  purgeFollows(before: number): number;
   /** Marks an event as sent. False when it already was: the caller must not send it again. */
   claim(eventKey: string): boolean;
   /** Takes the mark back, so a failed send is tried again. */
@@ -35,8 +42,15 @@ type Row = Record<string, string | number>;
 /** Favourites start with their alerts on; every other team with none, until the owner asks. */
 export function defaultSettings(team: string, favorite: boolean): TeamPushSettings {
   return favorite
-    ? { team, start: true, end: true, reminderMinutes: DEFAULT_REMINDER_MINUTES, news: false }
-    : { team, start: false, end: false, reminderMinutes: 0, news: false };
+    ? {
+        team,
+        start: true,
+        end: true,
+        reminderMinutes: DEFAULT_REMINDER_MINUTES,
+        news: false,
+        live: true,
+      }
+    : { team, start: false, end: false, reminderMinutes: 0, news: false, live: false };
 }
 
 export function createPushRepo(
@@ -55,10 +69,17 @@ export function createPushRepo(
   );
   const selectSettings = db.prepare('SELECT * FROM push_settings');
   const upsertSettings = db.prepare(`
-    INSERT INTO push_settings (team, start, "end", reminder_minutes, news) VALUES (?, ?, ?, ?, ?)
+    INSERT INTO push_settings (team, start, "end", reminder_minutes, news, live)
+    VALUES (?, ?, ?, ?, ?, ?)
     ON CONFLICT (team) DO UPDATE SET start = excluded.start, "end" = excluded."end",
-      reminder_minutes = excluded.reminder_minutes, news = excluded.news
+      reminder_minutes = excluded.reminder_minutes, news = excluded.news, live = excluded.live
   `);
+  const selectFollows = db.prepare('SELECT game_id FROM push_follows ORDER BY created_at, game_id');
+  const insertFollow = db.prepare(
+    'INSERT OR IGNORE INTO push_follows (game_id, created_at) VALUES (?, ?)',
+  );
+  const deleteFollow = db.prepare('DELETE FROM push_follows WHERE game_id = ?');
+  const purgeFollows = db.prepare('DELETE FROM push_follows WHERE created_at < ?');
   const insertLog = db.prepare('INSERT OR IGNORE INTO push_log (event_key, sent_at) VALUES (?, ?)');
   const deleteLog = db.prepare('DELETE FROM push_log WHERE event_key = ?');
   const purgeLog = db.prepare('DELETE FROM push_log WHERE sent_at < ?');
@@ -68,7 +89,14 @@ export function createPushRepo(
 
   const saveAll = db.transaction((settings: TeamPushSettings[]) => {
     for (const s of settings) {
-      upsertSettings.run(s.team, Number(s.start), Number(s.end), s.reminderMinutes, Number(s.news));
+      upsertSettings.run(
+        s.team,
+        Number(s.start),
+        Number(s.end),
+        s.reminderMinutes,
+        Number(s.news),
+        Number(s.live),
+      );
     }
   });
 
@@ -88,10 +116,16 @@ export function createPushRepo(
           end: row.end === 1,
           reminderMinutes: row.reminder_minutes as TeamPushSettings['reminderMinutes'],
           news: row.news === 1,
+          // Never chosen (NULL): the default of its kind.
+          live: (row.live as number | null) === null ? favorites.includes(team) : row.live === 1,
         };
       });
     },
     saveSettings: (settings) => saveAll(settings),
+    follows: () => (selectFollows.all() as { game_id: string }[]).map((row) => row.game_id),
+    follow: (gameId) => void insertFollow.run(gameId, now()),
+    unfollow: (gameId) => deleteFollow.run(gameId).changes > 0,
+    purgeFollows: (before) => purgeFollows.run(before).changes,
     claim: (eventKey) => insertLog.run(eventKey, now()).changes === 1,
     release: (eventKey) => void deleteLog.run(eventKey),
     countClaimed: (prefix, since) => (countClaimed.get(prefix, since) as { n: number }).n,

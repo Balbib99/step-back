@@ -111,6 +111,7 @@ function TeamRow({
             ['start', 'Inicio del partido'],
             ['end', 'Resultado final'],
             ['news', 'Noticias destacadas'],
+            ['live', 'Marcador en vivo'],
           ] as const
         ).map(([field, label]) => (
           <label key={field} className="flex min-h-11 cursor-pointer items-center gap-2 text-sm">
@@ -168,7 +169,8 @@ function OtherTeams({
       </summary>
       <p className="mt-2 text-[13px] text-text-2">
         Inicio y resultado final de los partidos de cualquier equipo. Activar todos puede dar muchos
-        avisos en una noche de partidos.
+        avisos en una noche de partidos. Para seguir el marcador de un partido concreto, usa el
+        botón de su pantalla.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button type="button" className={BUTTON} onClick={() => all(true)}>
@@ -270,7 +272,8 @@ export function Settings() {
               </ul>
               <p className="mt-2 text-[13px] text-text-3">
                 Las noticias destacadas son titulares de ESPN sobre tu equipo, con un máximo de 5 al
-                día.
+                día. El marcador en vivo es una única notificación, sin sonido, que se actualiza con
+                cada cambio mientras dura el partido.
               </p>
               {otherSettings.length > 0 && (
                 <OtherTeams

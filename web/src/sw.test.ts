@@ -79,7 +79,13 @@ function load(options: { precache?: string[]; build?: string } = {}) {
       matchAll: vi.fn(async (): Promise<FakeClient[]> => []),
       openWindow: vi.fn(async () => undefined),
     },
-    registration: { showNotification: vi.fn(async () => undefined) },
+    registration: {
+      showNotification: vi.fn(async () => undefined),
+      // What is on screen, by tag: the worker asks for it to take older notifications off.
+      getNotifications: vi.fn<(filter: { tag: string }) => Promise<{ close: () => void }[]>>(
+        async () => [],
+      ),
+    },
   };
   const fetchFake = async (request: { url: string; method: string }) => {
     network.requests.push(request.url);
@@ -527,6 +533,48 @@ describe('notifications', () => {
       tag: 'end:42',
       data: { url: '/partido/42' },
     });
+  });
+
+  it('shows a silent update without sound, and a normal one with the default behaviour', async () => {
+    const worker = load();
+    await worker.dispatch(
+      'push',
+      pushOf({
+        title: 'MIN 21 – 18 LAL',
+        body: 'En directo · Q1 9:30',
+        tag: 'live:42',
+        silent: true,
+      }),
+    );
+    expect(shown(worker)[1]).toMatchObject({ tag: 'live:42', silent: true });
+
+    const other = load();
+    await other.dispatch('push', pushOf({ title: 'Final', tag: 'end:42' }));
+    expect(shown(other)[1]).not.toHaveProperty('silent');
+  });
+
+  it('takes the older notifications of the message off the screen, once the new one is up', async () => {
+    const worker = load();
+    const close = vi.fn();
+    worker.self.registration.getNotifications.mockImplementation(async ({ tag }) =>
+      tag === 'live:42' ? [{ close }] : [],
+    );
+    await worker.dispatch(
+      'push',
+      pushOf({ title: 'Final', tag: 'end:42', closes: ['live:42', 'start:42', 7] }),
+    );
+    expect(close).toHaveBeenCalledTimes(1);
+    const asked = worker.self.registration.getNotifications.mock.calls.map(
+      ([filter]) => filter.tag,
+    );
+    expect(asked).toEqual(['live:42', 'start:42']); // what is not a tag is left out
+  });
+
+  it('shows the notification even when the older ones cannot be looked up', async () => {
+    const worker = load();
+    worker.self.registration.getNotifications.mockRejectedValue(new Error('refused'));
+    await worker.dispatch('push', pushOf({ title: 'Final', tag: 'end:42', closes: ['live:42'] }));
+    expect(shown(worker)[0]).toBe('Final');
   });
 
   it('still shows something when the message cannot be read', async () => {
